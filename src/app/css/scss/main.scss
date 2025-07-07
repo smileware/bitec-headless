@@ -1,0 +1,265 @@
+body {
+  font-family: 'DBHeavent', sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+  scroll-behavior: smooth;
+}
+
+// You can also use DinPro for specific elements
+.font-brand {
+  font-family: 'DinPro', sans-serif;
+} 
+
+.site-nav-d { 
+  .menu-main-menu-container  {
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+  }
+  .btn  { 
+    color: white;
+    min-height: 38px;
+    font-size: 20px;
+    @media (max-width: 1480px) {
+      font-size: 18px;
+    }
+    @media (max-width: 1380px) {
+      font-size: 16px;
+    }
+    @media (max-width: 1295px) {
+      font-size: 14px;
+    }
+    @media (max-width: 1150px) {
+      font-size: 12px;
+    }
+    
+    &:hover { 
+      color: white;
+    }
+  }
+  .btn-cta-get-in-touch { 
+    background-color: #454545;
+    margin-right: 10px;
+    @media (max-width: 1295px) {
+      margin-right: 5px;
+    }
+    &:hover { 
+      background-color: var(--s-accent-hover);
+    }
+  }
+  .btn-cta-proposal { 
+    margin-left: 10px;
+    background-color: var(--s-accent);
+    @media (max-width: 1295px) {
+      margin-left: 5px;
+    }
+    &:hover { 
+      background-color: var(--s-accent-hover);
+    }
+  }
+}
+.menu { 
+  .menu-item  { 
+    transition: var(--c-transition-hover);
+    a { 
+      font-weight: 500;
+      font-size: 20px;
+      line-height: 150%;
+      text-align: center;
+      text-transform: uppercase;
+      padding: 0 10px;
+    }
+    &:hover { 
+      svg { 
+        @media (min-width: 1024px) {
+          transform: scaleY(-1);
+        }
+      }
+    }
+    &.menu-item-has-children { 
+      .sub-menu { 
+        background-color: #161616;
+        &::before { 
+          display: none;
+        }
+        .menu-item {
+          a { 
+            border-bottom: 0;
+            color: white;
+            font-size: 18px;
+            padding: 8px 0;
+            &:hover { 
+              color: var(--s-accent-hover);
+            }
+          }
+        }
+      }
+    }
+    @media (max-width: 1480px) {
+      a { 
+        font-size: 18px;
+      }
+      &.menu-item-has-children { 
+        .sub-menu { 
+          .menu-item {
+            a { 
+              font-size: 16px;
+            }
+          }
+        }
+      }
+    } 
+    @media (max-width: 1380px) {
+      a { 
+        font-size: 16px;
+      }
+      &.menu-item-has-children { 
+        .sub-menu { 
+          .menu-item {
+            a { 
+              font-size: 14px;
+            }
+          }
+        }
+      }
+    }
+    @media (max-width: 1295px) {
+      a { 
+        font-size: 14px;
+      }
+      &.menu-item-has-children { 
+        .sub-menu { 
+          .menu-item {
+            a { 
+              font-size: 13px;
+            }
+          }
+        }
+      }
+    }
+    @media (max-width: 1150px) {
+      a { 
+        padding: 0 5px; 
+      }
+    }
+    @media (max-width: 1048px) {
+      a {
+        font-size: 13px;
+      }
+    }
+  }
+}
+
+.top-nav-menu { 
+  .menu-item { 
+    a { 
+      color: #67676A;
+      font-weight: 400;
+      font-size: 18px;
+      text-transform: uppercase;
+      padding: 0 10px;
+      &:hover { 
+        color: var(--s-accent-hover);
+      }
+    }
+  }
+}
+
+.language-switcher {
+  img { 
+    width: 16px;
+    height: 16px;
+    @media (max-width: 1024px) { 
+      width: 22px;
+      height: 22px;
+    }
+  }
+  svg { 
+    color: #002F87;
+  }
+}
+
+.custom-s.site-toggle { 
+  right: 0;
+  left: unset;
+  b {
+    background-color: transparent;
+    &:before {
+      left: 0;
+      right: 0;
+      top: -4px;
+    }
+    &:after {
+      left: 0;
+      right: 0;
+      top: 4px;
+    }
+    @media (max-width: 1024px) {
+      &:before {
+        top: -3px;
+      }
+      &:after {
+        top: 3px;
+      }
+    }
+  }
+}
+
+.site-nav-m {
+  .menu {
+    padding: 0 20px;
+    .menu-item  { 
+      border-bottom: 0;
+      padding: 8px 0;
+      &:first-child { 
+        padding-top: 16px;
+      }
+      a {
+        color: #161616;
+        font-weight: 500;
+        font-size: 20px;
+        text-align: left;
+        text-transform: uppercase;
+        padding: 0;
+        .menu-icon { 
+          width: 20px;
+          height: 20px;
+          float: left;
+          margin-right: 10px;
+          margin-top: 5px;
+          svg { 
+            width: 20px;
+            height: 20px;
+            opacity: 1;
+          }
+        }
+      }
+      &.menu-item-has-children { 
+        svg { 
+          opacity: 1;
+          position: absolute;
+          right: 0;
+          top: 12px;
+          color: #000;
+        }
+      }
+      .sub-menu { 
+        background-color: transparent;
+        li.menu-item { 
+          a { 
+            color: #161616;
+            font-size: 20px;
+            padding: 0;
+            padding-left: 20px;
+          }
+        }
+      }
+    }
+    .line-separator { 
+      height: 1px;
+      width: calc(100% + 40px);
+      background-color: #DDDDDE;
+      margin: 0px calc(20px * (-1)) 20px;
+    }
+  }
+}

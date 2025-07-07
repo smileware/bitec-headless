@@ -1,0 +1,73 @@
+/*
+ * Font name: DBheavent
+ */
+ @font-face {
+    font-family: "DBheavent";
+    src: url('/fonts/db-heavent/DB Heavent Thin v3.2.1.woff2') format('woff2'),
+         url('/fonts/db-heavent/DB Heavent Thin v3.2.1.woff') format('woff'),
+         url('/fonts/db-heavent/DB Heavent Thin v3.2.1.eot') format('eot'),
+         url('/fonts/db-heavent/DB Heavent Thin v3.2.1.ttf') format('truetype'),
+         url('/fonts/db-heavent/DB Heavent Thin v3.2.1.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: fallback;
+    text-rendering: optimizeLegibility;
+  }
+  @font-face {
+    font-family: "DBheavent";
+    src: url('/fonts/db-heavent/DB Heavent v3.2.1.woff2') format('woff2'),
+         url('/fonts/db-heavent/DB Heavent v3.2.1.woff') format('woff'),
+         url('/fonts/db-heavent/DB Heavent v3.2.1.eot') format('eot'),
+         url('/fonts/db-heavent/DB Heavent v3.2.1.ttf') format('truetype'),
+         url('/fonts/db-heavent/DB Heavent v3.2.1.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: fallback;
+    text-rendering: optimizeLegibility;
+  }
+  @font-face {
+    font-family: "DBheavent";
+    src: url('/fonts/db-heavent/DB Heavent Med v3.2.1.woff2') format('woff2'),
+         url('/fonts/db-heavent/DB Heavent Med v3.2.1.woff') format('woff'),
+         url('/fonts/db-heavent/DB Heavent Med v3.2.1.eot') format('eot'),
+         url('/fonts/db-heavent/DB Heavent Med v3.2.1.ttf') format('truetype'),
+         url('/fonts/db-heavent/DB Heavent Med v3.2.1.otf') format('opentype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: fallback;
+    text-rendering: optimizeLegibility;
+  }
+  @font-face {
+    font-family: "DBheavent";
+    src: url('/fonts/db-heavent/DB Heavent Bd v3.2.1.woff2') format('woff2'),
+         url('/fonts/db-heavent/DB Heavent Bd v3.2.1.woff') format('woff'),
+         url('/fonts/db-heavent/DB Heavent Bd v3.2.1.eot') format('eot'),
+         url('/fonts/db-heavent/DB Heavent Bd v3.2.1.ttf') format('truetype'),
+         url('/fonts/db-heavent/DB Heavent Bd v3.2.1.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: fallback;
+    text-rendering: optimizeLegibility;
+  }
+  // DP Pro
+  @font-face {
+    font-family: "DinPro";
+    src: url("/fonts/din-pro/dinpro_light.otf") format("opentype");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "DinPro";
+    src: url("/fonts/din-pro/dinpro.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "DinPro";
+    src: url("/fonts/din-pro/dinpro_bold.otf") format("opentype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
