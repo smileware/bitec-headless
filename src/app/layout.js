@@ -1,6 +1,8 @@
 import { getSiteInfo, getGlobalStyle } from "./lib/api";
 
 import Header from './components/header/Header';
+import Footer from './components/footer/Footer';
+import FluentFormHandler from './components/FluentFormHandler';
 import "./globals.css";
 import "./css/scss/main.scss";
 
@@ -24,14 +26,17 @@ export default async function RootLayout({ children }) {
           <link rel="stylesheet" href={globalStyle.sMobileCssUrl} type="text/css"/>
         )}
         {globalStyle?.sDesktopCssUrl && (
-          <link rel="stylesheet" href={globalStyle.sDesktopCssUrl} type="text/css" media="(min-width: 1023px)" />
+          <link rel="stylesheet" href={globalStyle.sDesktopCssUrl} type="text/css" media="(min-width: 1024px)" />
         )}
       </head>
-      <body>
+      <body className="gspbody gspb-bodyfront">
         <div id="page" className="site">
           <Header />
           <div className="site-header-space"></div>
           {children}
+          <Footer />
+          {/* Global FluentForm handler for all pages */}
+          <FluentFormHandler />
         </div>
       </body>
     </html>

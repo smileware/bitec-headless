@@ -275,3 +275,121 @@ body {
   background-color: #DDDDDE;
   margin: 0px calc(20px * (-1)) 20px;
 }
+
+.widget-social {
+  display: flex;
+  gap: 20px;
+}
+
+.widget-social .icon-link {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.widget-social .icon-link svg {
+  color: white;
+  width: 22px;
+  height: 22px;
+}
+
+.block-nav-menu ul.menu {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.block-nav-menu ul.menu li.menu-item {
+  margin-bottom: 20px;
+}
+
+.block-nav-menu ul.menu li.menu-item a {
+  color: #fff;
+  font-weight: 400;
+  font-size: 23px;
+  text-transform: uppercase;
+  padding: 0;
+  line-height: 1;
+  font-weight: 400;
+  display: inline-block;
+  text-align: left;
+}
+
+@media (max-width: 1023px) {
+  .block-nav-menu ul.menu li.menu-item {
+    margin-bottom: 15px;
+  }
+}
+
+.menu-footer-accordion svg {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .menu-footer-accordion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+  .menu-footer-accordion.active svg {
+    transform: scaleY(-1);
+  }
+  .menu-footer-accordion svg {
+    display: block;
+  }
+}
+
+.fluentform form .ff-el-form-hide_label .ff-el-input--label {
+  display: none !important;
+}
+
+.fluentform form .ff-el-group {
+  margin-bottom: 20px;
+}
+
+.fluentform form .ff-el-group.ff-el-is-error {
+  margin-bottom: 5px;
+}
+
+.fluentform form .ff-el-group .ff-el-input--content input, .fluentform form .ff-el-group .ff-el-input--content textarea {
+  padding: 8px 15px;
+  width: 100%;
+  background-color: #fff;
+  border-radius: 0;
+  border: 0;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.fluentform form .ff-el-group .ff-el-input--content .ff-field-error {
+  color: #FAE7EA;
+  margin: 0;
+  line-height: 1.1;
+  font-size: 16px;
+}
+
+.fluentform form .ff-el-group.ff_submit_btn_wrapper {
+  margin-bottom: 0;
+}
+
+.fluentform form .ff-el-group.ff_submit_btn_wrapper .ff-btn-submit {
+  width: 100%;
+  background-color: #710819;
+  color: #fff;
+  font-size: 25px;
+  font-weight: 400;
+  padding: 8px 15px;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.fluentform form .ff-el-group.ff_submit_btn_wrapper .ff-btn-submit:disabled {
+  background-color: #CCCCCE;
+  cursor: not-allowed;
+}

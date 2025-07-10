@@ -58,7 +58,6 @@ export async function getMobileMenu(language = 'en') {
   const variables = { menuId: menuId };
   const data = await client.request(query, variables);
   const menuMobileItems = data.menu?.menuItems?.nodes || [];
-  console.log('mobile Menu:', menuMobileItems);
   return {
     menuMobileItems: menuMobileItems
   };
