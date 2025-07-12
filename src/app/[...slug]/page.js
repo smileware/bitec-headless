@@ -1,4 +1,5 @@
 import { getPageBySlug } from "../lib/api";
+import Script from 'next/script';
 
 export default async function DynamicPage({ params }) {
     const { slug } = await params;
@@ -56,6 +57,11 @@ export default async function DynamicPage({ params }) {
                 <style dangerouslySetInnerHTML={{ __html: displayCss }} />
             )}
             <div dangerouslySetInnerHTML={{ __html: displayContent }} />
+            
+            {/* Load greenshift scripts */}
+            {page.greenshiftScripts?.map((src, index) => (
+                <Script key={index} src={src} strategy="afterInteractive" />
+            ))}
         </div>
     );
 }

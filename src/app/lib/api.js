@@ -40,6 +40,14 @@ export async function getPageBySlug(slug) {
         slug
         content
         greenshiftInlineCss
+        enqueuedScripts(first: 100) {
+          edges {
+            node {
+              src
+              after
+            }
+          }
+        }
         translations {
           id
           slug
@@ -53,5 +61,27 @@ export async function getPageBySlug(slug) {
   const data = await graphQLClient.request(query, variables);
   const page = data.pageBy;
   if (!page) return null;
-  return page;
+  
+  // Get only greenshift scripts
+  const greenshiftScripts = getGreenshiftScripts(page.enqueuedScripts?.edges || []);
+  
+  return {
+    ...page,
+    greenshiftScripts
+  };
+}
+
+// Get only greenshift plugin scripts
+function getGreenshiftScripts(edges) {
+  const scripts = [];
+  
+  edges.forEach(({ node }) => {
+    const { src } = node;
+    
+    if (src && src.includes('greenshift-animation-and-page-builder-blocks')) {
+      scripts.push(src);
+    }
+  });
+  
+  return scripts;
 }

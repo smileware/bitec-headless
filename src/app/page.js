@@ -1,4 +1,5 @@
 import { getPageBySlug } from './lib/api';
+import Script from 'next/script';
 
 export default async function Home() {
   const page = await getPageBySlug("/");
@@ -13,6 +14,11 @@ export default async function Home() {
         <style dangerouslySetInnerHTML={{ __html: page.greenshiftInlineCss }} />
       )}
       <div dangerouslySetInnerHTML={{ __html: page.content }} />
+      
+      {/* Load greenshift scripts */}
+      {page.greenshiftScripts?.map((src, index) => (
+        <Script key={index} src={src} strategy="afterInteractive" />
+      ))}
     </main>
   );
 }
