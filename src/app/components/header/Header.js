@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from 'next/navigation';
@@ -12,6 +13,7 @@ import { getPrimaryMenu, getTopMenu, getCTA, getMobileMenu } from '../../lib/hea
 import { SkeletonText, SkeletonButton } from '../ui/Skeleton';
 
 export default function Header() {
+    const [isClient, setIsClient] = useState(false);
     const [menuItems, setMenuItems] = useState([]);
     const [menuTopItems, setMenuTopItems] = useState([]);
     const [menuMobileItems, setMenuMobileItems] = useState([]);
@@ -59,6 +61,30 @@ export default function Header() {
         }
         fetchMenuData();
     }, [currentLang]);
+
+    // Hydration fix - only set client state after component mounts
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    // Apply classes when nav state changes
+    useEffect(() => {
+        const pageElement = document.getElementById('page');
+        const siteToggle = document.querySelector('.site-toggle');
+        const siteNavM = document.querySelector('.site-nav-m');
+
+        if (isNavActive) {
+            // Add active classes
+            if (siteToggle) siteToggle.classList.add('active');
+            if (siteNavM) siteNavM.classList.add('active');
+            if (pageElement) pageElement.classList.add('show-nav');
+        } else {
+            // Remove active classes
+            if (siteToggle) siteToggle.classList.remove('active');
+            if (siteNavM) siteNavM.classList.remove('active');
+            if (pageElement) pageElement.classList.remove('show-nav');
+        }
+    }, [isNavActive]);
 
     // Memoize menu trees to avoid rebuilding on every render
     const tree = useMemo(() => buildMenuTree(menuItems), [menuItems]);
@@ -145,6 +171,24 @@ export default function Header() {
             if (pageElement) pageElement.classList.remove('show-nav');
         }
     }, [isNavActive]);
+
+    // Don't render until client-side to prevent hydration errors
+    if (!isClient) {
+        return (
+            <header className="site-header">
+                <div className="container">
+                    <div className="flex items-center justify-between py-4">
+                        <SkeletonText lines={1} className="w-32 h-8" />
+                        <div className="flex items-center space-x-4">
+                            <SkeletonText lines={1} className="w-16 h-4" />
+                            <SkeletonText lines={1} className="w-16 h-4" />
+                            <SkeletonText lines={1} className="w-16 h-4" />
+                        </div>
+                    </div>
+                </div>
+            </header>
+        );
+    }
     
     return (
         <header className="site-header _heading">

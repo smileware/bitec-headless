@@ -4,6 +4,9 @@ const nextConfig = {
     includePaths: ['./src/app/css/scss'],
     outputStyle: 'compressed',
   },
+  images: {
+    domains: ['bitec.local'],
+  },
 };
 
 export default nextConfig;

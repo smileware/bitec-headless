@@ -89,7 +89,8 @@ export default function LanguageSwitcher() {
     }
     
     setIsOpen(false);
-    router.push(newUrl);
+    window.location.href = newUrl;
+
   };
 
   if (loading) {
@@ -121,7 +122,7 @@ export default function LanguageSwitcher() {
               className="object-cover rounded-full"
             />
             <span className="font-medium text-[18px] uppercase lg:block hidden">
-              {currentLanguage.translated_name.toUpperCase()}
+              {currentLanguage.native_name.toUpperCase()}
             </span>
           </>
         )}
@@ -162,7 +163,7 @@ export default function LanguageSwitcher() {
                 className="object-cover rounded-full"
               />
               <span className="font-medium text-[18px] uppercase lg:block hidden">
-                {lang.translated_name.toUpperCase()}
+                {lang.native_name.toUpperCase()}
               </span>
             </button>
           ))}

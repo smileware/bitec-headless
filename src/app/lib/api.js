@@ -29,10 +29,8 @@ export async function getGlobalStyle() {
 }
 
 
-export async function getPageBySlug(slug) {
-  // Always use the base slug without language prefix for GraphQL
-  let uri = slug;
-  
+export async function getPageBySlug(slug, language = null) {
+  // Get everything from GraphQL
   const query = gql`
     query($uri: String!) {
       pageBy(uri: $uri) {
@@ -57,22 +55,54 @@ export async function getPageBySlug(slug) {
       }
     }
   `;
-  const variables = { uri };
+  
+  const variables = { uri: slug };
   const data = await graphQLClient.request(query, variables);
   const page = data.pageBy;
+  
   if (!page) return null;
   
-  // Get only greenshift scripts
+  // Get scripts from GraphQL
   const greenshiftScripts = getGreenshiftScripts(page.enqueuedScripts?.edges || []);
   
+  // For Thai language, just replace content with REST API
+  if (language === 'th') {
+    const thaiContent = await getThaiContent(slug);
+    if (thaiContent) {
+      page.translations[0].content = thaiContent;
+    }
+  }
   return {
     ...page,
     greenshiftScripts
   };
 }
 
+// Simple function to get Thai content from REST API
+async function getThaiContent(slug) {
+  try {
+    const restEndpoint = (process.env.API_DOMAIN || 'http://bitec.local').replace('/graphql', '');
+    
+    // For homepage, use 'home' instead of '/'
+    const pageSlug = slug === '/' ? 'home' : slug;
+    const restUrl = `${restEndpoint}/wp-json/wp/v2/pages?slug=${pageSlug}&lang=th`;
+    const response = await fetch(restUrl);
+    if (response.ok) {
+      const pages = await response.json();
+      if (pages && pages.length > 0) {
+        return pages[0].content.rendered;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching Thai content:', error);
+    return null;
+  }
+}
+
+
 // Get only greenshift plugin scripts
-function getGreenshiftScripts(edges) {
+export function getGreenshiftScripts(edges) {
   const scripts = [];
   
   edges.forEach(({ node }) => {

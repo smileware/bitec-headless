@@ -1,24 +1,21 @@
 import { getPageBySlug } from './lib/api';
-import Script from 'next/script';
+import ScriptLoader from './components/ScriptLoader';
 
 export default async function Home() {
-  const page = await getPageBySlug("/");
-  
-  if (!page) {
-    return <div>Home page not found</div>;
-  }
+    const page = await getPageBySlug('/', null);
 
-  return (
-    <main className="">
-       {page.greenshiftInlineCss && (
-        <style dangerouslySetInnerHTML={{ __html: page.greenshiftInlineCss }} />
-      )}
-      <div dangerouslySetInnerHTML={{ __html: page.content }} />
-      
-      {/* Load greenshift scripts */}
-      {page.greenshiftScripts?.map((src, index) => (
-        <Script key={index} src={src} strategy="afterInteractive" />
-      ))}
-    </main>
-  );
+    if (!page) {
+        return <div>Page not found</div>;
+    }
+
+    return (
+        <main>
+            {page.greenshiftInlineCss && (
+                <style dangerouslySetInnerHTML={{ __html: page.greenshiftInlineCss }} />
+            )}
+            <div dangerouslySetInnerHTML={{ __html: page.content }} />
+            
+            <ScriptLoader scripts={page.greenshiftScripts} />
+        </main>
+    );
 }

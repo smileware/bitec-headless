@@ -1,5 +1,5 @@
 import { getPageBySlug } from "../lib/api";
-import Script from 'next/script';
+import ScriptLoader from '../components/ScriptLoader';
 
 export default async function DynamicPage({ params }) {
     const { slug } = await params;
@@ -29,7 +29,8 @@ export default async function DynamicPage({ params }) {
     }
 
     // Fetch page content from GraphQL for all pages, including home page
-    const page = await getPageBySlug(actualSlug);
+    // Pass language parameter to determine API type
+    const page = await getPageBySlug(actualSlug, language);
 
     if (!page) {
         return (
@@ -58,10 +59,7 @@ export default async function DynamicPage({ params }) {
             )}
             <div dangerouslySetInnerHTML={{ __html: displayContent }} />
             
-            {/* Load greenshift scripts */}
-            {page.greenshiftScripts?.map((src, index) => (
-                <Script key={index} src={src} strategy="afterInteractive" />
-            ))}
+            <ScriptLoader scripts={page.greenshiftScripts} />
         </div>
     );
 }

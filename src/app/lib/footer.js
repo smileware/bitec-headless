@@ -28,7 +28,6 @@ export async function getFooter() {
     `;
     
     const { reusableBlock } = await client.request(query);
-    console.log('reusableBlock', reusableBlock);
     
     // Process the enqueued stylesheets and scripts
     const processedStyles = processEnqueuedStylesheets(reusableBlock?.enqueuedStylesheets?.edges || []);
