@@ -396,6 +396,16 @@ body {
       }
     }
   }
+  form.fluent_form_4 {
+    @media (min-width: 1024px) { 
+      .ff_submit_btn_wrapper { 
+        .ff-btn-submit { 
+          max-width: 300px;
+          margin-left: auto;
+        }
+      }
+    }
+  }
 }
 
 
@@ -535,6 +545,74 @@ body {
       }
     }
   }
+  &.-news { 
+    .pic { 
+      max-height: 275px;
+      height: 275px;
+      margin-bottom: 20px;
+    }
+    .info { 
+      padding: 0;
+      .entry-meta { 
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        .news-categories { 
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          .news-category { 
+            color: var(--s-accent);
+            position: relative;
+            font-size: 18px;
+            &:last-child {
+              &::after { 
+                display: none;
+              }
+            }
+            &::after { 
+              content: '|';
+              right: -10px;
+              position: absolute;
+              color: var(--s-accent);
+            }
+          }
+        }
+        .published-date { 
+          font-size: 18px;
+          color: #161616;
+        }
+        @media (max-width: 1023px) {
+          .news-categories { 
+            .news-category { 
+              font-size: 20px;
+            }
+          }
+          .published-date { 
+            font-size: 20px;
+          }
+        }
+      }
+      .entry-header { 
+        .entry-title { 
+          a { 
+            color: #000;
+            font-size: 24px;
+            font-weight: 500;
+            line-height: 1.1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            @media (max-width: 1023px) {
+              font-size: 25px;
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 
@@ -614,5 +692,35 @@ body {
     .swiper-button-prev { 
       right: 70px;
     }
+  }
+}
+
+
+// Pagination 
+.theme-pagination { 
+  width: 30px;
+  height: 30px;
+  background-color: transparent;
+  border: 0;
+  border-radius: 0;
+  margin: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #161616;
+  font-size: 22px;
+  font-weight: 400;
+  transition: var(--c-transition-hover);
+  cursor: pointer;
+  &:hover { 
+    color: var(--s-accent-hover);
+  }
+  &.active { 
+    background-color: var(--s-accent);
+    color: white;
+  }
+  &.disable { 
+    opacity: .5;
+    cursor: auto;
   }
 }

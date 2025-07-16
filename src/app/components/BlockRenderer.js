@@ -2,6 +2,7 @@
 
 import parse from 'html-react-parser';
 import EventCarouselBlock from './block/EventCarouselBlock';
+import NewsActivityBlock from './block/NewsActivityBlock';
 
 export default function BlockRenderer({ content }) {
     
@@ -12,6 +13,9 @@ export default function BlockRenderer({ content }) {
     const replace = (domNode) => {
         if (domNode.attribs?.id === 'block-event-carousel') {
             return <EventCarouselBlock {...domNode.attribs} />;
+        }
+        if (domNode.attribs?.id === 'block-news-activity') {
+            return <NewsActivityBlock {...domNode.attribs} />;
         }
         
         return undefined;

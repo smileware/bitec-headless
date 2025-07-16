@@ -258,7 +258,7 @@ export default async function EventPage({ params }) {
                                 </div>
 
                                 <div className="flex flex-col lg:flex-row justify-between">
-                                    <ShareButtons title={event.title} />
+                                    <ShareButtons title={event.title} color="#B5B5B8" />
                                     <Image
                                         src="/img/award-badge.png"
                                         alt="Award Badge"

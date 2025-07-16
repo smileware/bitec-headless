@@ -412,6 +412,13 @@ body {
   cursor: not-allowed;
 }
 
+@media (min-width: 1024px) {
+  .fluentform form.fluent_form_4 .ff_submit_btn_wrapper .ff-btn-submit {
+    max-width: 300px;
+    margin-left: auto;
+  }
+}
+
 .gs-swiper .gs-swiper-init .swiper-pagination {
   bottom: 50px;
 }
@@ -561,6 +568,77 @@ body {
   }
 }
 
+.content-item.-news .pic {
+  max-height: 275px;
+  height: 275px;
+  margin-bottom: 20px;
+}
+
+.content-item.-news .info {
+  padding: 0;
+}
+
+.content-item.-news .info .entry-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.content-item.-news .info .entry-meta .news-categories {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.content-item.-news .info .entry-meta .news-categories .news-category {
+  color: var(--s-accent);
+  position: relative;
+  font-size: 18px;
+}
+
+.content-item.-news .info .entry-meta .news-categories .news-category:last-child::after {
+  display: none;
+}
+
+.content-item.-news .info .entry-meta .news-categories .news-category::after {
+  content: '|';
+  right: -10px;
+  position: absolute;
+  color: var(--s-accent);
+}
+
+.content-item.-news .info .entry-meta .published-date {
+  font-size: 18px;
+  color: #161616;
+}
+
+@media (max-width: 1023px) {
+  .content-item.-news .info .entry-meta .news-categories .news-category {
+    font-size: 20px;
+  }
+  .content-item.-news .info .entry-meta .published-date {
+    font-size: 20px;
+  }
+}
+
+.content-item.-news .info .entry-header .entry-title a {
+  color: #000;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1023px) {
+  .content-item.-news .info .entry-header .entry-title a {
+    font-size: 25px;
+  }
+}
+
 .swiper-event-carousel {
   position: relative;
 }
@@ -654,4 +732,35 @@ body {
   .swiper-event-carousel .swiper-button-prev {
     right: 70px;
   }
+}
+
+.theme-pagination {
+  width: 30px;
+  height: 30px;
+  background-color: transparent;
+  border: 0;
+  border-radius: 0;
+  margin: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #161616;
+  font-size: 22px;
+  font-weight: 400;
+  transition: var(--c-transition-hover);
+  cursor: pointer;
+}
+
+.theme-pagination:hover {
+  color: var(--s-accent-hover);
+}
+
+.theme-pagination.active {
+  background-color: var(--s-accent);
+  color: white;
+}
+
+.theme-pagination.disable {
+  opacity: .5;
+  cursor: auto;
 }
