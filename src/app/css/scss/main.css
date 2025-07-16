@@ -621,6 +621,8 @@ body {
 
 .swiper-event-carousel .swiper-button-prev svg, .swiper-event-carousel .swiper-button-next svg {
   color: #67676A;
+  width: 14px;
+  height: 14px;
 }
 
 .swiper-event-carousel .swiper-button-prev:after, .swiper-event-carousel .swiper-button-next:after {

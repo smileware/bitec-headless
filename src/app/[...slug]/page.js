@@ -1,5 +1,6 @@
 import { getPageBySlug } from "../lib/api";
 import ScriptLoader from '../components/ScriptLoader';
+import BlockRenderer from '../components/BlockRenderer';
 
 export default async function DynamicPage({ params }) {
     const { slug } = await params;
@@ -45,11 +46,11 @@ export default async function DynamicPage({ params }) {
     }
 
     // Select content and CSS based on language
-    let displayContent = page.content;
+    let displayBlocks = page.content;
     let displayCss = page.greenshiftInlineCss; // Always use main page CSS
 
     if (language === 'th' && page.translations && page.translations.length > 0) {
-        displayContent = page.translations[0].content || page.content;
+        displayBlocks = page.translations[0].content || page.content;
     }
 
     return (
@@ -57,7 +58,7 @@ export default async function DynamicPage({ params }) {
             {displayCss && (
                 <style dangerouslySetInnerHTML={{ __html: displayCss }} />
             )}
-            <div dangerouslySetInnerHTML={{ __html: displayContent }} />
+            <BlockRenderer content={displayBlocks} />
             
             <ScriptLoader scripts={page.greenshiftScripts} />
         </div>

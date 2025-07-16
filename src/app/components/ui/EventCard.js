@@ -45,21 +45,54 @@ export default function EventCard({ event }) {
 
     // Helper function to format event date
     const formatEventDate = () => {
+        const monthNames = {
+            en: {
+                January: "January",
+                February: "February",
+                March: "March",
+                April: "April",
+                May: "May",
+                June: "June",
+                July: "July",
+                August: "August",
+                September: "September",
+                October: "October",
+                November: "November",
+                December: "December"
+            },
+            th: {
+                January: "มกราคม",
+                February: "กุมภาพันธ์",
+                March: "มีนาคม",
+                April: "เมษายน",
+                May: "พฤษภาคม",
+                June: "มิถุนายน",
+                July: "กรกฎาคม",
+                August: "สิงหาคม",
+                September: "กันยายน",
+                October: "ตุลาคม",
+                November: "พฤศจิกายน",
+                December: "ธันวาคม"
+            }
+        };
+
         if (!event.eventFieldGroup?.eventStartdate) return '';
         
         const startDate = new Date(event.eventFieldGroup.eventStartdate);
         const startDay = startDate.getDate();
-        const startMonth = startDate.toLocaleDateString('en-US', { month: 'long' });
+        const startMonthEn = startDate.toLocaleDateString('en-US', { month: 'long' });
+        const startMonth = monthNames[currentLang][startMonthEn];
         const startYear = startDate.getFullYear();
         
         if (event.eventFieldGroup.eventEnddate) {
             const endDate = new Date(event.eventFieldGroup.eventEnddate);
             const endDay = endDate.getDate();
-            const endMonth = endDate.toLocaleDateString('en-US', { month: 'long' });
+            const endMonthEn = endDate.toLocaleDateString('en-US', { month: 'long' });
+            const endMonth = monthNames[currentLang][endMonthEn];
             const endYear = endDate.getFullYear();
             
             // Same month & year → 22 – 30 March 2025
-            if (startMonth === endMonth && startYear === endYear) {
+            if (startMonthEn === endMonthEn && startYear === endYear) {
                 return `${startDay} – ${endDay} ${startMonth} ${startYear}`;
             }
             // Same year, different month → 28 Feb – 2 Mar 2025

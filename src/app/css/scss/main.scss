@@ -585,6 +585,8 @@ body {
     transition: var(--c-transition-hover);
     svg { 
       color: #67676A;
+      width: 14px;
+      height: 14px;
     }
     &:after { 
       display: none;

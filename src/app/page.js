@@ -1,5 +1,6 @@
 import { getPageBySlug } from './lib/api';
 import ScriptLoader from './components/ScriptLoader';
+import BlockRenderer from './components/BlockRenderer';
 
 export default async function Home() {
     const page = await getPageBySlug('/', null);
@@ -13,8 +14,9 @@ export default async function Home() {
             {page.greenshiftInlineCss && (
                 <style dangerouslySetInnerHTML={{ __html: page.greenshiftInlineCss }} />
             )}
-            <div dangerouslySetInnerHTML={{ __html: page.content }} />
             
+            <BlockRenderer content={page.content} />
+
             <ScriptLoader scripts={page.greenshiftScripts} />
         </main>
     );

@@ -37,6 +37,13 @@ export async function getPageBySlug(slug, language = null) {
         id
         slug
         content
+        blocks(
+          attributes: false
+          dynamicContent: false
+          htmlContent: false
+          originalContent: true
+          postTemplate: false
+        )
         greenshiftInlineCss
         enqueuedScripts(first: 100) {
           edges {
@@ -51,6 +58,13 @@ export async function getPageBySlug(slug, language = null) {
           slug
           content
           greenshiftInlineCss
+          blocks(
+            attributes: false
+            dynamicContent: false
+            htmlContent: false
+            originalContent: true
+            postTemplate: false
+          )
         }
       }
     }
@@ -59,25 +73,34 @@ export async function getPageBySlug(slug, language = null) {
   const variables = { uri: slug };
   const data = await graphQLClient.request(query, variables);
   const page = data.pageBy;
-  
+
   if (!page) return null;
   
-  // Get scripts from GraphQL
   const greenshiftScripts = getGreenshiftScripts(page.enqueuedScripts?.edges || []);
   
-  // For Thai language, just replace content with REST API
-  if (language === 'th') {
-    const thaiContent = await getThaiContent(slug);
-    if (thaiContent) {
-      page.translations[0].content = thaiContent;
-    }
-  }
   return {
     ...page,
     greenshiftScripts
   };
 }
 
+// Get only greenshift plugin scripts
+export function getGreenshiftScripts(edges) {
+  const scripts = [];
+  
+  edges.forEach(({ node }) => {
+    const { src } = node;
+    
+    if (src && src.includes('greenshift-animation-and-page-builder-blocks')) {
+      scripts.push(src);
+    }
+  });
+  
+  return scripts;
+}
+
+
+// DEPRECATED** NO LONGER USED. Use 100% GraphQL instead.
 // Simple function to get Thai content from REST API
 async function getThaiContent(slug) {
   try {
@@ -98,20 +121,4 @@ async function getThaiContent(slug) {
     console.error('Error fetching Thai content:', error);
     return null;
   }
-}
-
-
-// Get only greenshift plugin scripts
-export function getGreenshiftScripts(edges) {
-  const scripts = [];
-  
-  edges.forEach(({ node }) => {
-    const { src } = node;
-    
-    if (src && src.includes('greenshift-animation-and-page-builder-blocks')) {
-      scripts.push(src);
-    }
-  });
-  
-  return scripts;
 }
