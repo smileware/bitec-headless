@@ -3,6 +3,7 @@
 import parse from 'html-react-parser';
 import EventCarouselBlock from './block/EventCarouselBlock';
 import NewsActivityBlock from './block/NewsActivityBlock';
+import WhatsOnBlock from './block/WhatsOnBlock';
 
 export default function BlockRenderer({ content }) {
     
@@ -17,7 +18,11 @@ export default function BlockRenderer({ content }) {
         if (domNode.attribs?.id === 'block-news-activity') {
             return <NewsActivityBlock {...domNode.attribs} />;
         }
+        if (domNode.attribs?.id === 'block-whats-on') {
+            return <WhatsOnBlock {...domNode.attribs} />;
+        }
         
+
         return undefined;
     };
     const parsed = parse(content, { replace });

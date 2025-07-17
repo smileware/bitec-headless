@@ -419,6 +419,37 @@ body {
   }
 }
 
+@media (min-width: 768px) {
+  .fluentform .ff-t-container {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+  }
+  .fluentform .ff-t-cell {
+    display: flex;
+    flex-direction: column;
+    vertical-align: inherit;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.fluentform .privacy-text {
+  font-size: 15px;
+  font-weight: 400;
+  color: white;
+  line-height: 1.2;
+  text-transform: uppercase;
+  margin-bottom: 0;
+}
+
+@media (max-width: 1023px) {
+  .fluentform .privacy-text {
+    font-size: 18px;
+    margin-bottom: 30px;
+  }
+}
+
 .gs-swiper .gs-swiper-init .swiper-pagination {
   bottom: 50px;
 }

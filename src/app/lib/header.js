@@ -75,6 +75,7 @@ export async function getTopMenu(language = 'en') {
               id
               label
               url
+              path
             }
           }
         }

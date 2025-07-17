@@ -406,6 +406,33 @@ body {
       }
     }
   }
+  @media (min-width: 768px) {
+    
+    .ff-t-container { 
+      display: flex;
+      gap: 20px;
+      width: 100%;
+    }
+    .ff-t-cell { 
+      display: flex;
+      flex-direction: column;
+      vertical-align: inherit;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+  .privacy-text { 
+    font-size: 15px;
+    font-weight: 400;
+    color: white;
+    line-height: 1.2;
+    text-transform: uppercase;
+    margin-bottom: 0;
+    @media (max-width: 1023px) { 
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+  }
 }
 
 
