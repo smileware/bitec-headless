@@ -63,3 +63,91 @@ export async function getGalleryBySlug(slug) {
         ...gallery
     };
 } 
+
+
+export async function GetGalleryByTaxonomyType(taxonomySlug, limit = 12, after = null) {
+    const query = `
+        query GalleriesByType($slug: [String], $first: Int, $after: String) {
+            galleries(
+                where: { 
+                    taxQuery: {
+                        taxArray: [
+                            {
+                                taxonomy: GALLERYTYPE
+                                field: SLUG
+                                terms: $slug
+                            }
+                        ]
+                    }
+                }
+                first: $first
+                after: $after
+            ) {
+                nodes {
+                    id
+                    title
+                    slug
+                    date
+                    featuredImage {
+                        node {
+                            sourceUrl
+                            altText
+                            mediaDetails {
+                                width
+                                height
+                            }
+                        }
+                    }
+                    galleryUpload {
+                        fieldGroupName
+                        galleryUpload {
+                            nodes {
+                                altText
+                                sourceUrl
+                            }
+                        }
+                    }
+                }
+                pageInfo {
+                    hasNextPage
+                    endCursor
+                }
+            }
+        }
+    `;
+
+    const variables = {
+        slug: [taxonomySlug],
+        first: limit,
+        after: after,
+    };
+
+    const data = await graphQLClient.request(query, variables);
+
+    if (!data?.galleries?.nodes) {
+        return { galleries: [], pageInfo: { hasNextPage: false, endCursor: null } };
+    }
+
+    return {
+        galleries: data.galleries.nodes,
+        pageInfo: data.galleries.pageInfo,
+    };
+}
+
+export async function getGalleryTypeBySlug(slug) {
+    const query = `
+        query GalleryTypeBySlug($slug: [String]) {
+            galleryTypes(where: { slug: $slug }) {
+                nodes {
+                    id
+                    name
+                    slug
+                    description
+                }
+            }
+        }
+    `;
+    const variables = { slug: [slug] };
+    const data = await graphQLClient.request(query, variables);
+    return data.galleryTypes?.nodes?.[0] || null;
+}

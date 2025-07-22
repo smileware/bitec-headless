@@ -21,6 +21,48 @@ export default function GalleryCard({ gallery }) {
     };
     
     const currentLang = getCurrentLanguage();
+    const formatDate = () => {
+        const monthNames = {
+            en: {
+                January: "January",
+                February: "February",
+                March: "March",
+                April: "April",
+                May: "May",
+                June: "June",
+                July: "July",
+                August: "August",
+                September: "September",
+                October: "October",
+                November: "November",
+                December: "December"
+            },
+            th: {
+                January: "มกราคม",
+                February: "กุมภาพันธ์",
+                March: "มีนาคม",
+                April: "เมษายน",
+                May: "พฤษภาคม",
+                June: "มิถุนายน",
+                July: "กรกฎาคม",
+                August: "สิงหาคม",
+                September: "กันยายน",
+                October: "ตุลาคม",
+                November: "พฤศจิกายน",
+                December: "ธันวาคม"
+            }
+        };
+
+        if (!gallery.date) return '';
+        
+        const galleryDate = new Date(gallery.date);
+        const day = galleryDate.getDate();
+        const monthEn = galleryDate.toLocaleDateString('en-US', { month: 'long' });
+        const month = monthNames[currentLang][monthEn];
+        const year = galleryDate.getFullYear();
+        
+        return `${day} ${month} ${year}`;
+    };
 
     return (
         <article className="content-item -gallery">
@@ -64,13 +106,7 @@ export default function GalleryCard({ gallery }) {
                     </h2>
                     <div className="entry-date">
                         <span className="text-[18px] font-400 leading-[1.1] text-black">
-                            {gallery.date
-                                ? new Date(gallery.date).toLocaleDateString('en-GB', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric'
-                                })
-                                : ''}
+                            {formatDate()}
                         </span>
                     </div>
                 </header>
