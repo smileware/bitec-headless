@@ -4,6 +4,10 @@ import parse from 'html-react-parser';
 import EventCarouselBlock from './block/EventCarouselBlock';
 import NewsActivityBlock from './block/NewsActivityBlock';
 import WhatsOnBlock from './block/WhatsOnBlock';
+import BitecLiveCarouselBlock from './block/BitecLiveCarouselBlock';
+import BitecLiveGalleryBlock from './block/BitecLiveGalleryBlock';
+import BitecLiveFacilitiesBlock from './block/BitecLiveFacilitiesBlock';
+import QueryGalleryByTypeBlock from './block/QueryGalleryByTypeBlock';
 
 export default function BlockRenderer({ content }) {
     
@@ -21,8 +25,19 @@ export default function BlockRenderer({ content }) {
         if (domNode.attribs?.id === 'block-whats-on') {
             return <WhatsOnBlock {...domNode.attribs} />;
         }
+        if (domNode.attribs?.id === 'block-bitec-live-carousel') {
+            return <BitecLiveCarouselBlock {...domNode.attribs} />;
+        }
+        if (domNode.attribs?.id === 'block-bitec-live-gallery') {
+            return <BitecLiveGalleryBlock {...domNode.attribs} />;
+        }
+        if (domNode.attribs?.id === 'block-bitec-live-facilities') {
+            return <BitecLiveFacilitiesBlock {...domNode.attribs} />;
+        }
+        if (domNode.attribs?.id === 'block-query-gallery-by-type') {
+            return <QueryGalleryByTypeBlock {...domNode.attribs} />;
+        }
         
-
         return undefined;
     };
     const parsed = parse(content, { replace });

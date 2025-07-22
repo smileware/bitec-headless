@@ -640,6 +640,43 @@ body {
       }
     }
   }
+  &.-gallery { 
+    position: relative;
+    .pic { 
+      width: 100%;
+      img {
+        aspect-ratio: 1 / 1;
+        width: 100%;
+        object-fit: cover;
+      }
+    }
+    .info {
+      position: absolute;
+      width: 80%;
+      background-color: #fff;
+      padding: 20px 30px;
+      bottom: 20px;
+      left: 20px;
+      border-radius: 5px;
+      @media (max-width: 1023px) {
+        width: calc(100% - 40px);
+      }
+      .entry-title { 
+        a { 
+          color: #161616;
+          font-size: 25px;
+          font-weight: 500;
+          line-height: 1.1;
+          min-height: 55px;
+          display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+      }
+    }
+  }
 }
 
 
@@ -749,5 +786,120 @@ body {
   &.disable { 
     opacity: .5;
     cursor: auto;
+  }
+}
+
+
+
+// Swiper Event Carousel
+.swiper-bitec-gallery, .swiper-bitec-facilities, .swiper-gallery {  
+  position: relative;
+  .swiper { 
+    padding-bottom: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+    .swiper-pagination { 
+      bottom: 20px;
+      .swiper-pagination-bullet { 
+        border-radius: 0;
+        opacity: .7;
+        width: 13px;
+        height: 13px;
+        background-color: #CCCCCE;
+        &.swiper-pagination-bullet-active { 
+          width: 13px;
+          height: 13px;
+          opacity: 1;
+          background-color: var(--s-accent);
+        }
+        @media (max-width: 1023px) {
+          width: 10.5px;
+          height: 10.5px;
+          &.swiper-pagination-bullet-active { 
+            width: 10.5px;
+            height: 10.5px;
+          }
+        }
+      }
+      @media (max-width: 1023px) {
+        bottom: 20px;
+        padding-right: 20px;
+      }
+    }
+  }
+  .swiper-button-prev, .swiper-button-next { 
+    width: 40px;
+    height: 40px;
+    background-color: var(--s-accent);
+    border-radius: 0;
+    right: -30px;
+    transition: var(--c-transition-hover);
+    svg { 
+      color: #fff;
+      width: 14px;
+      height: 14px;
+    }
+    &:after { 
+      display: none;
+    }
+    &:hover { 
+      background-color: var(--s-accent);
+      border-color: var(--s-accent);
+      svg { 
+        color: white;
+      }
+    }
+    @media (max-width: 1023px) {
+      right: 0px;
+    }
+  }
+  .swiper-button-prev { 
+    left: -30px;
+    @media (max-width: 1023px) {
+      left: 0px;
+    }
+  }
+}
+
+.swiper-bitec-facilities { 
+  .swiper { 
+    padding-bottom: 60px;
+    .swiper-pagination { 
+      bottom: 0px;
+    }
+  }
+  .swiper-button-prev, .swiper-button-next { 
+    top: calc(50% - 20px);
+    @media (max-width: 1023px) {
+      right: 20px;
+    }
+  }
+  .swiper-button-prev { 
+    @media (max-width: 1023px) {
+      left: 20px;
+    }
+  }
+}
+
+.swiper-gallery { 
+  .swiper-slide {
+    transition: var(--c-transition-hover);
+    opacity: 0.5;
+  }
+  .swiper-slide-active {
+    opacity: 1;
+  }
+
+  .swiper-button-prev, .swiper-button-next { 
+    right: 140px;
+    @media (max-width: 1023px) {
+      right: 20px;
+    }
+  }
+  .swiper-button-prev { 
+    left: 140px;
+    @media (max-width: 1023px) {
+      left: 20px;
+    }
   }
 }

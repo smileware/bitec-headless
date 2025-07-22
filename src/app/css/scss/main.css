@@ -670,6 +670,49 @@ body {
   }
 }
 
+.content-item.-gallery {
+  position: relative;
+}
+
+.content-item.-gallery .pic {
+  width: 100%;
+}
+
+.content-item.-gallery .pic img {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  object-fit: cover;
+}
+
+.content-item.-gallery .info {
+  position: absolute;
+  width: 80%;
+  background-color: #fff;
+  padding: 20px 30px;
+  bottom: 20px;
+  left: 20px;
+  border-radius: 5px;
+}
+
+@media (max-width: 1023px) {
+  .content-item.-gallery .info {
+    width: calc(100% - 40px);
+  }
+}
+
+.content-item.-gallery .info .entry-title a {
+  color: #161616;
+  font-size: 25px;
+  font-weight: 500;
+  line-height: 1.1;
+  min-height: 55px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .swiper-event-carousel {
   position: relative;
 }
@@ -794,4 +837,148 @@ body {
 .theme-pagination.disable {
   opacity: .5;
   cursor: auto;
+}
+
+.swiper-bitec-gallery, .swiper-bitec-facilities, .swiper-gallery {
+  position: relative;
+}
+
+.swiper-bitec-gallery .swiper, .swiper-bitec-facilities .swiper, .swiper-gallery .swiper {
+  padding-bottom: 0px;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.swiper-bitec-gallery .swiper .swiper-pagination, .swiper-bitec-facilities .swiper .swiper-pagination, .swiper-gallery .swiper .swiper-pagination {
+  bottom: 20px;
+}
+
+.swiper-bitec-gallery .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-bitec-facilities .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-gallery .swiper .swiper-pagination .swiper-pagination-bullet {
+  border-radius: 0;
+  opacity: .7;
+  width: 13px;
+  height: 13px;
+  background-color: #CCCCCE;
+}
+
+.swiper-bitec-gallery .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-bitec-facilities .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-gallery .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active {
+  width: 13px;
+  height: 13px;
+  opacity: 1;
+  background-color: var(--s-accent);
+}
+
+@media (max-width: 1023px) {
+  .swiper-bitec-gallery .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-bitec-facilities .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-gallery .swiper .swiper-pagination .swiper-pagination-bullet {
+    width: 10.5px;
+    height: 10.5px;
+  }
+  .swiper-bitec-gallery .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-bitec-facilities .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-gallery .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active {
+    width: 10.5px;
+    height: 10.5px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .swiper-bitec-gallery .swiper .swiper-pagination, .swiper-bitec-facilities .swiper .swiper-pagination, .swiper-gallery .swiper .swiper-pagination {
+    bottom: 20px;
+    padding-right: 20px;
+  }
+}
+
+.swiper-bitec-gallery .swiper-button-prev, .swiper-bitec-gallery .swiper-button-next, .swiper-bitec-facilities .swiper-button-prev, .swiper-bitec-facilities .swiper-button-next, .swiper-gallery .swiper-button-prev, .swiper-gallery .swiper-button-next {
+  width: 40px;
+  height: 40px;
+  background-color: var(--s-accent);
+  border-radius: 0;
+  right: -30px;
+  transition: var(--c-transition-hover);
+}
+
+.swiper-bitec-gallery .swiper-button-prev svg, .swiper-bitec-gallery .swiper-button-next svg, .swiper-bitec-facilities .swiper-button-prev svg, .swiper-bitec-facilities .swiper-button-next svg, .swiper-gallery .swiper-button-prev svg, .swiper-gallery .swiper-button-next svg {
+  color: #fff;
+  width: 14px;
+  height: 14px;
+}
+
+.swiper-bitec-gallery .swiper-button-prev:after, .swiper-bitec-gallery .swiper-button-next:after, .swiper-bitec-facilities .swiper-button-prev:after, .swiper-bitec-facilities .swiper-button-next:after, .swiper-gallery .swiper-button-prev:after, .swiper-gallery .swiper-button-next:after {
+  display: none;
+}
+
+.swiper-bitec-gallery .swiper-button-prev:hover, .swiper-bitec-gallery .swiper-button-next:hover, .swiper-bitec-facilities .swiper-button-prev:hover, .swiper-bitec-facilities .swiper-button-next:hover, .swiper-gallery .swiper-button-prev:hover, .swiper-gallery .swiper-button-next:hover {
+  background-color: var(--s-accent);
+  border-color: var(--s-accent);
+}
+
+.swiper-bitec-gallery .swiper-button-prev:hover svg, .swiper-bitec-gallery .swiper-button-next:hover svg, .swiper-bitec-facilities .swiper-button-prev:hover svg, .swiper-bitec-facilities .swiper-button-next:hover svg, .swiper-gallery .swiper-button-prev:hover svg, .swiper-gallery .swiper-button-next:hover svg {
+  color: white;
+}
+
+@media (max-width: 1023px) {
+  .swiper-bitec-gallery .swiper-button-prev, .swiper-bitec-gallery .swiper-button-next, .swiper-bitec-facilities .swiper-button-prev, .swiper-bitec-facilities .swiper-button-next, .swiper-gallery .swiper-button-prev, .swiper-gallery .swiper-button-next {
+    right: 0px;
+  }
+}
+
+.swiper-bitec-gallery .swiper-button-prev, .swiper-bitec-facilities .swiper-button-prev, .swiper-gallery .swiper-button-prev {
+  left: -30px;
+}
+
+@media (max-width: 1023px) {
+  .swiper-bitec-gallery .swiper-button-prev, .swiper-bitec-facilities .swiper-button-prev, .swiper-gallery .swiper-button-prev {
+    left: 0px;
+  }
+}
+
+.swiper-bitec-facilities .swiper {
+  padding-bottom: 60px;
+}
+
+.swiper-bitec-facilities .swiper .swiper-pagination {
+  bottom: 0px;
+}
+
+.swiper-bitec-facilities .swiper-button-prev, .swiper-bitec-facilities .swiper-button-next {
+  top: calc(50% - 20px);
+}
+
+@media (max-width: 1023px) {
+  .swiper-bitec-facilities .swiper-button-prev, .swiper-bitec-facilities .swiper-button-next {
+    right: 20px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .swiper-bitec-facilities .swiper-button-prev {
+    left: 20px;
+  }
+}
+
+.swiper-gallery .swiper-slide {
+  transition: var(--c-transition-hover);
+  opacity: 0.5;
+}
+
+.swiper-gallery .swiper-slide-active {
+  opacity: 1;
+}
+
+.swiper-gallery .swiper-button-prev, .swiper-gallery .swiper-button-next {
+  right: 140px;
+}
+
+@media (max-width: 1023px) {
+  .swiper-gallery .swiper-button-prev, .swiper-gallery .swiper-button-next {
+    right: 20px;
+  }
+}
+
+.swiper-gallery .swiper-button-prev {
+  left: 140px;
+}
+
+@media (max-width: 1023px) {
+  .swiper-gallery .swiper-button-prev {
+    left: 20px;
+  }
 }

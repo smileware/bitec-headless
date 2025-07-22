@@ -236,6 +236,89 @@ export async function getRecentEvents(limit = 9) {
     return filteredEvents.slice(0, limit);
 }
 
+export async function getRecentBitecLiveEvents(locationId = 'BITEC Live', limit = 9) {
+    const query = gql`
+        query GetRecentEventsByLocation($first: Int!) {
+            events(first: $first, where: {orderby: {field: DATE, order: DESC}}) {
+                nodes {
+                    id
+                    slug
+                    title
+                    translations {
+                        title
+                        slug
+                    }
+                    featuredImage {
+                        node {
+                            sourceUrl
+                            altText
+                        }
+                    }
+                    eventFieldGroup {
+                        eventEnddate
+                        eventHall
+                        eventStartdate
+                        fieldGroupName
+                    }
+                    eventCategories(first: 10) {
+                        nodes {
+                            id
+                            name
+                        }
+                    }
+                    eventLocation(first: 10) {
+                        nodes {
+                            id
+                            name
+                            taxonomyEventLocation {
+                                eventLocationColor
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    `;
+    
+    const variables = { first: limit * 2 };
+    const data = await graphQLClient.request(query, variables);
+    const events = data.events?.nodes || [];
+    // Get today's date in UTC
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    
+    // Filter events to show only upcoming/current events at the specified location
+    const filteredEvents = events.filter(event => {
+        // Check if event has a start date
+        if (!event.eventFieldGroup?.eventStartdate) return false;
+        // Parse start date
+        const startDate = new Date(event.eventFieldGroup.eventStartdate);
+        if (isNaN(startDate.getTime())) return false;
+        // Check if event is upcoming or currently happening
+        let isUpcoming = false;
+        if (event.eventFieldGroup.eventEnddate) {
+            const endDate = new Date(event.eventFieldGroup.eventEnddate);
+            if (isNaN(endDate.getTime())) return false;
+            isUpcoming = today <= endDate;
+        } else {
+            isUpcoming = today <= startDate;
+        }
+        // Check if event location includes the specified locationId
+        const hasLocation = event.eventLocation?.nodes?.some(loc => {
+            return loc.name === locationId || loc.id === `term_${locationId}`;
+        });
+        return isUpcoming && hasLocation;
+    });
+    // Sort by start date (ascending - earliest first)
+    filteredEvents.sort((a, b) => {
+        const dateA = new Date(a.eventFieldGroup.eventStartdate);
+        const dateB = new Date(b.eventFieldGroup.eventStartdate);
+        return dateA - dateB;
+    });
+    // Return limited number of events
+    return filteredEvents.slice(0, limit);
+}
+
 export async function getAllEventCategories() {
     const query = gql`
         query GetAllEventCategories {
@@ -466,3 +549,6 @@ export async function getAllEventYears() {
     // Convert to array and sort in descending order (newest first)
     return Array.from(years).sort((a, b) => b - a);
 }
+
+
+
