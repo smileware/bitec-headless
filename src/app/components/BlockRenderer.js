@@ -8,6 +8,7 @@ import BitecLiveCarouselBlock from './block/BitecLiveCarouselBlock';
 import BitecLiveGalleryBlock from './block/BitecLiveGalleryBlock';
 import BitecLiveFacilitiesBlock from './block/BitecLiveFacilitiesBlock';
 import QueryGalleryByTypeBlock from './block/QueryGalleryByTypeBlock';
+import NewsActivitySustainabilityBlock from './block/NewsActivitySustainabilityBlock';
 
 export default function BlockRenderer({ content }) {
     
@@ -36,6 +37,9 @@ export default function BlockRenderer({ content }) {
         }
         if (domNode.attribs?.id === 'block-query-gallery-by-type') {
             return <QueryGalleryByTypeBlock {...domNode.attribs} />;
+        }
+        if (domNode.attribs?.id === 'block-news-activity-sustainability') {
+            return <NewsActivitySustainabilityBlock {...domNode.attribs} />;
         }
         
         return undefined;

@@ -94,7 +94,7 @@ export default function NewsCard({ news }) {
                     {news.categories?.nodes?.length > 0 && (
                         <div className="news-categories">
                             {news.categories.nodes.map((cat) => (
-                                <div key={cat.id} className="news-category">
+                                <div key={cat.id} className="news-category uppercase">
                                     {cat.name}
                                 </div>
                             ))}
