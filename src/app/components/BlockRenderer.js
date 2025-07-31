@@ -9,6 +9,7 @@ import BitecLiveGalleryBlock from './block/BitecLiveGalleryBlock';
 import BitecLiveFacilitiesBlock from './block/BitecLiveFacilitiesBlock';
 import QueryGalleryByTypeBlock from './block/QueryGalleryByTypeBlock';
 import NewsActivitySustainabilityBlock from './block/NewsActivitySustainabilityBlock';
+import TabAccordionBlock from './block/TabAccordionBlock';
 
 export default function BlockRenderer({ content }) {
     
@@ -40,6 +41,9 @@ export default function BlockRenderer({ content }) {
         }
         if (domNode.attribs?.id === 'block-news-activity-sustainability') {
             return <NewsActivitySustainabilityBlock {...domNode.attribs} />;
+        }
+        if (domNode.attribs?.id === 'block-tab-accordion') {
+            return <TabAccordionBlock {...domNode.attribs} />;
         }
         
         return undefined;

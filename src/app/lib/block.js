@@ -196,3 +196,65 @@ export async function GetGalleryByTaxonomyType(taxonomySlug, limit = 12) {
         console.error("GraphQL fetch error for gallery items:", error);
     }
 }
+
+export async function GetPageWithTabToAccordion(slug) {
+    const query = gql`
+        query GetPageWithTabToAccordion($uri: String!) {
+            pageBy(uri: $uri) {
+                editorBlocks {
+                    ... on AcfTabToAccordion {
+                        blockTabToAccordion {
+                            tabToAccordionTitle
+                            tabToAccordion {
+                                tabButton
+                                tabImageContent {
+                                    node {
+                                        id
+                                        sourceUrl
+                                        altText
+                                        mediaDetails {
+                                            width
+                                            height
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    `;
+    const variables = { uri: slug };
+    let data;
+    try {
+        data = await graphQLClient.request(query, variables);
+    } catch (error) {
+        console.error("GraphQL fetch error:", error);
+        return null;
+    }
+    const blocks = data?.pageBy?.editorBlocks || [];
+    const tabBlock = blocks.find(
+        (block) => block?.blockTabToAccordion
+    );
+    
+    if (!tabBlock) {
+        console.log('No tab to accordion block found');
+        return null;
+    }
+    
+    const blockData = tabBlock.blockTabToAccordion;
+    const tabs = (blockData.tabToAccordion || []).map(tab => {
+        return {
+            tabButton: tab.tabButton || '',
+            tabImage: tab.tabImageContent?.node?.sourceUrl || null,
+            altText: tab.tabImageContent?.node?.altText || tab.tabButton || '',
+            imageDetails: tab.tabImageContent?.node?.mediaDetails || null
+        };
+    });
+    
+    return {
+        title: blockData.tabToAccordionTitle || '',
+        tabs: tabs
+    };
+}
