@@ -36,7 +36,11 @@ export default function QueryGalleryByTypeBlock(props) {
     useEffect(() => {
         async function fetchGalleryData() {
             try {
-                const data = await GetPageWithQueryGalleryByType('bitec-live');
+
+                const currentPath = window.location.pathname;
+                const slug = currentPath === '/' ? 'home' : currentPath.replace(/^\//, '').replace(/\/$/, '');
+                
+                const data = await GetPageWithQueryGalleryByType(slug);
                 setGalleryData(data);
                 // If we have a taxonomy ID, fetch the gallery items
                 if (data?.queryGalleryByType) {

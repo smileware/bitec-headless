@@ -839,21 +839,21 @@ body {
   cursor: auto;
 }
 
-.swiper-bitec-gallery, .swiper-bitec-facilities, .swiper-gallery {
+.swiper-bitec-gallery, .swiper-bitec-facilities, .swiper-gallery, .swiper-bitec-live-hall-carousel, .swiper-hotel-carousel {
   position: relative;
 }
 
-.swiper-bitec-gallery .swiper, .swiper-bitec-facilities .swiper, .swiper-gallery .swiper {
+.swiper-bitec-gallery .swiper, .swiper-bitec-facilities .swiper, .swiper-gallery .swiper, .swiper-bitec-live-hall-carousel .swiper, .swiper-hotel-carousel .swiper {
   padding-bottom: 0px;
   padding-left: 0px;
   padding-right: 0px;
 }
 
-.swiper-bitec-gallery .swiper .swiper-pagination, .swiper-bitec-facilities .swiper .swiper-pagination, .swiper-gallery .swiper .swiper-pagination {
+.swiper-bitec-gallery .swiper .swiper-pagination, .swiper-bitec-facilities .swiper .swiper-pagination, .swiper-gallery .swiper .swiper-pagination, .swiper-bitec-live-hall-carousel .swiper .swiper-pagination, .swiper-hotel-carousel .swiper .swiper-pagination {
   bottom: 20px;
 }
 
-.swiper-bitec-gallery .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-bitec-facilities .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-gallery .swiper .swiper-pagination .swiper-pagination-bullet {
+.swiper-bitec-gallery .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-bitec-facilities .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-gallery .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-bitec-live-hall-carousel .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-hotel-carousel .swiper .swiper-pagination .swiper-pagination-bullet {
   border-radius: 0;
   opacity: .7;
   width: 13px;
@@ -861,7 +861,7 @@ body {
   background-color: #CCCCCE;
 }
 
-.swiper-bitec-gallery .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-bitec-facilities .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-gallery .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active {
+.swiper-bitec-gallery .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-bitec-facilities .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-gallery .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-bitec-live-hall-carousel .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-hotel-carousel .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active {
   width: 13px;
   height: 13px;
   opacity: 1;
@@ -869,24 +869,24 @@ body {
 }
 
 @media (max-width: 1023px) {
-  .swiper-bitec-gallery .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-bitec-facilities .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-gallery .swiper .swiper-pagination .swiper-pagination-bullet {
+  .swiper-bitec-gallery .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-bitec-facilities .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-gallery .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-bitec-live-hall-carousel .swiper .swiper-pagination .swiper-pagination-bullet, .swiper-hotel-carousel .swiper .swiper-pagination .swiper-pagination-bullet {
     width: 10.5px;
     height: 10.5px;
   }
-  .swiper-bitec-gallery .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-bitec-facilities .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-gallery .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active {
+  .swiper-bitec-gallery .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-bitec-facilities .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-gallery .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-bitec-live-hall-carousel .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active, .swiper-hotel-carousel .swiper .swiper-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active {
     width: 10.5px;
     height: 10.5px;
   }
 }
 
 @media (max-width: 1023px) {
-  .swiper-bitec-gallery .swiper .swiper-pagination, .swiper-bitec-facilities .swiper .swiper-pagination, .swiper-gallery .swiper .swiper-pagination {
+  .swiper-bitec-gallery .swiper .swiper-pagination, .swiper-bitec-facilities .swiper .swiper-pagination, .swiper-gallery .swiper .swiper-pagination, .swiper-bitec-live-hall-carousel .swiper .swiper-pagination, .swiper-hotel-carousel .swiper .swiper-pagination {
     bottom: 20px;
     padding-right: 20px;
   }
 }
 
-.swiper-bitec-gallery .swiper-button-prev, .swiper-bitec-gallery .swiper-button-next, .swiper-bitec-facilities .swiper-button-prev, .swiper-bitec-facilities .swiper-button-next, .swiper-gallery .swiper-button-prev, .swiper-gallery .swiper-button-next {
+.swiper-bitec-gallery .swiper-button-prev, .swiper-bitec-gallery .swiper-button-next, .swiper-bitec-facilities .swiper-button-prev, .swiper-bitec-facilities .swiper-button-next, .swiper-gallery .swiper-button-prev, .swiper-gallery .swiper-button-next, .swiper-bitec-live-hall-carousel .swiper-button-prev, .swiper-bitec-live-hall-carousel .swiper-button-next, .swiper-hotel-carousel .swiper-button-prev, .swiper-hotel-carousel .swiper-button-next {
   width: 40px;
   height: 40px;
   background-color: var(--s-accent);
@@ -895,37 +895,37 @@ body {
   transition: var(--c-transition-hover);
 }
 
-.swiper-bitec-gallery .swiper-button-prev svg, .swiper-bitec-gallery .swiper-button-next svg, .swiper-bitec-facilities .swiper-button-prev svg, .swiper-bitec-facilities .swiper-button-next svg, .swiper-gallery .swiper-button-prev svg, .swiper-gallery .swiper-button-next svg {
+.swiper-bitec-gallery .swiper-button-prev svg, .swiper-bitec-gallery .swiper-button-next svg, .swiper-bitec-facilities .swiper-button-prev svg, .swiper-bitec-facilities .swiper-button-next svg, .swiper-gallery .swiper-button-prev svg, .swiper-gallery .swiper-button-next svg, .swiper-bitec-live-hall-carousel .swiper-button-prev svg, .swiper-bitec-live-hall-carousel .swiper-button-next svg, .swiper-hotel-carousel .swiper-button-prev svg, .swiper-hotel-carousel .swiper-button-next svg {
   color: #fff;
   width: 14px;
   height: 14px;
 }
 
-.swiper-bitec-gallery .swiper-button-prev:after, .swiper-bitec-gallery .swiper-button-next:after, .swiper-bitec-facilities .swiper-button-prev:after, .swiper-bitec-facilities .swiper-button-next:after, .swiper-gallery .swiper-button-prev:after, .swiper-gallery .swiper-button-next:after {
+.swiper-bitec-gallery .swiper-button-prev:after, .swiper-bitec-gallery .swiper-button-next:after, .swiper-bitec-facilities .swiper-button-prev:after, .swiper-bitec-facilities .swiper-button-next:after, .swiper-gallery .swiper-button-prev:after, .swiper-gallery .swiper-button-next:after, .swiper-bitec-live-hall-carousel .swiper-button-prev:after, .swiper-bitec-live-hall-carousel .swiper-button-next:after, .swiper-hotel-carousel .swiper-button-prev:after, .swiper-hotel-carousel .swiper-button-next:after {
   display: none;
 }
 
-.swiper-bitec-gallery .swiper-button-prev:hover, .swiper-bitec-gallery .swiper-button-next:hover, .swiper-bitec-facilities .swiper-button-prev:hover, .swiper-bitec-facilities .swiper-button-next:hover, .swiper-gallery .swiper-button-prev:hover, .swiper-gallery .swiper-button-next:hover {
+.swiper-bitec-gallery .swiper-button-prev:hover, .swiper-bitec-gallery .swiper-button-next:hover, .swiper-bitec-facilities .swiper-button-prev:hover, .swiper-bitec-facilities .swiper-button-next:hover, .swiper-gallery .swiper-button-prev:hover, .swiper-gallery .swiper-button-next:hover, .swiper-bitec-live-hall-carousel .swiper-button-prev:hover, .swiper-bitec-live-hall-carousel .swiper-button-next:hover, .swiper-hotel-carousel .swiper-button-prev:hover, .swiper-hotel-carousel .swiper-button-next:hover {
   background-color: var(--s-accent);
   border-color: var(--s-accent);
 }
 
-.swiper-bitec-gallery .swiper-button-prev:hover svg, .swiper-bitec-gallery .swiper-button-next:hover svg, .swiper-bitec-facilities .swiper-button-prev:hover svg, .swiper-bitec-facilities .swiper-button-next:hover svg, .swiper-gallery .swiper-button-prev:hover svg, .swiper-gallery .swiper-button-next:hover svg {
+.swiper-bitec-gallery .swiper-button-prev:hover svg, .swiper-bitec-gallery .swiper-button-next:hover svg, .swiper-bitec-facilities .swiper-button-prev:hover svg, .swiper-bitec-facilities .swiper-button-next:hover svg, .swiper-gallery .swiper-button-prev:hover svg, .swiper-gallery .swiper-button-next:hover svg, .swiper-bitec-live-hall-carousel .swiper-button-prev:hover svg, .swiper-bitec-live-hall-carousel .swiper-button-next:hover svg, .swiper-hotel-carousel .swiper-button-prev:hover svg, .swiper-hotel-carousel .swiper-button-next:hover svg {
   color: white;
 }
 
 @media (max-width: 1023px) {
-  .swiper-bitec-gallery .swiper-button-prev, .swiper-bitec-gallery .swiper-button-next, .swiper-bitec-facilities .swiper-button-prev, .swiper-bitec-facilities .swiper-button-next, .swiper-gallery .swiper-button-prev, .swiper-gallery .swiper-button-next {
+  .swiper-bitec-gallery .swiper-button-prev, .swiper-bitec-gallery .swiper-button-next, .swiper-bitec-facilities .swiper-button-prev, .swiper-bitec-facilities .swiper-button-next, .swiper-gallery .swiper-button-prev, .swiper-gallery .swiper-button-next, .swiper-bitec-live-hall-carousel .swiper-button-prev, .swiper-bitec-live-hall-carousel .swiper-button-next, .swiper-hotel-carousel .swiper-button-prev, .swiper-hotel-carousel .swiper-button-next {
     right: 0px;
   }
 }
 
-.swiper-bitec-gallery .swiper-button-prev, .swiper-bitec-facilities .swiper-button-prev, .swiper-gallery .swiper-button-prev {
+.swiper-bitec-gallery .swiper-button-prev, .swiper-bitec-facilities .swiper-button-prev, .swiper-gallery .swiper-button-prev, .swiper-bitec-live-hall-carousel .swiper-button-prev, .swiper-hotel-carousel .swiper-button-prev {
   left: -30px;
 }
 
 @media (max-width: 1023px) {
-  .swiper-bitec-gallery .swiper-button-prev, .swiper-bitec-facilities .swiper-button-prev, .swiper-gallery .swiper-button-prev {
+  .swiper-bitec-gallery .swiper-button-prev, .swiper-bitec-facilities .swiper-button-prev, .swiper-gallery .swiper-button-prev, .swiper-bitec-live-hall-carousel .swiper-button-prev, .swiper-hotel-carousel .swiper-button-prev {
     left: 0px;
   }
 }
@@ -981,4 +981,74 @@ body {
   .swiper-gallery .swiper-button-prev {
     left: 20px;
   }
+}
+
+.event-hall-carousel .swiper-button-prev, .event-hall-carousel .swiper-button-next {
+  top: -60px;
+  border: 1px solid #fff;
+}
+
+.event-hall-carousel .swiper-button-prev svg, .event-hall-carousel .swiper-button-next svg {
+  color: #fff;
+}
+
+@media (min-width: 1024px) {
+  .event-hall-carousel .swiper-button-prev, .event-hall-carousel .swiper-button-next {
+    right: calc((100vw - 1340px) / 2);
+  }
+}
+
+@media (min-width: 1024px) {
+  .event-hall-carousel .swiper-button-prev {
+    right: calc((100vw - 1340px) / 2 + 50px);
+  }
+  .event-hall-carousel .swiper.event-hall-swiper .swiper-pagination {
+    padding-right: calc((100vw - 1380px + 30px) / 2);
+  }
+}
+
+@media (max-width: 1023px) {
+  .event-hall-carousel .swiper.event-hall-swiper .swiper-pagination {
+    padding-right: 0;
+  }
+}
+
+.event-hall-swiper {
+  overflow: visible;
+}
+
+.event-hall-swiper .swiper-wrapper {
+  align-items: stretch;
+}
+
+.event-hall-swiper .swiper-slide {
+  height: auto;
+  display: flex;
+}
+
+.event-hall-swiper .swiper-slide > div {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.swiper-hotel-carousel .swiper-slide {
+  height: auto;
+}
+
+.swiper-hotel-carousel .swiper-button-prev, .swiper-hotel-carousel .swiper-button-next {
+  border: 1px solid white;
+  bottom: 0;
+  top: unset;
+  left: -70px;
+}
+
+.swiper-hotel-carousel .swiper-button-prev:hover, .swiper-hotel-carousel .swiper-button-next:hover {
+  border-color: white;
+}
+
+.swiper-hotel-carousel .swiper-button-prev {
+  bottom: 0;
+  top: unset;
+  left: -120px;
 }

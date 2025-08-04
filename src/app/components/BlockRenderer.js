@@ -10,6 +10,10 @@ import BitecLiveFacilitiesBlock from './block/BitecLiveFacilitiesBlock';
 import QueryGalleryByTypeBlock from './block/QueryGalleryByTypeBlock';
 import NewsActivitySustainabilityBlock from './block/NewsActivitySustainabilityBlock';
 import TabAccordionBlock from './block/TabAccordionBlock';
+import EventHallCarouselBlock from './block/EventHallCarouselBlock';
+import BitecLiveHallCarouselBlock from './block/BitecLiveHallCarouselBlock';
+import PhotoGalleryBlock from './block/PhotoGalleryBlock';
+import QueryHotelCarouselBlock from './block/QueryHotelCarouselBlock';
 
 export default function BlockRenderer({ content }) {
     
@@ -44,6 +48,18 @@ export default function BlockRenderer({ content }) {
         }
         if (domNode.attribs?.id === 'block-tab-accordion') {
             return <TabAccordionBlock {...domNode.attribs} />;
+        }
+        if (domNode.attribs?.id?.startsWith('block-event-hall-carousel')) {
+            return <EventHallCarouselBlock {...domNode.attribs} />;
+        }
+        if (domNode.attribs?.id === 'block-bitec-live-hall-carousel') {
+            return <BitecLiveHallCarouselBlock {...domNode.attribs} />;
+        }
+        if (domNode.attribs?.id === 'block-photo-gallery') {
+            return <PhotoGalleryBlock {...domNode.attribs} />;
+        }
+        if (domNode.attribs?.id === 'block-query-hotel-carousel') {
+            return <QueryHotelCarouselBlock {...domNode.attribs} />;
         }
         
         return undefined;

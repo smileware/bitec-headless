@@ -41,12 +41,18 @@ export default function GallerySwiper({ images }) {
                 {images.map((img, idx) => (
                     <SwiperSlide key={idx}>
                         <div className="relative h-[400px]">
-                            <Image
-                                src={img.sourceUrl}
-                                alt={img.altText || `Gallery image ${idx + 1}`}
-                                fill
-                                className="w-full h-auto object-cover"
-                            />
+                            {(img.url || img.sourceUrl) && (img.url || img.sourceUrl).trim() !== '' ? (
+                                <Image
+                                    src={img.url || img.sourceUrl}
+                                    alt={img.alt || img.altText || `Gallery image ${idx + 1}`}
+                                    fill
+                                    className="w-full h-auto object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                    <span className="text-gray-500">No image available</span>
+                                </div>
+                            )}
                         </div>
                     </SwiperSlide>
                 ))}

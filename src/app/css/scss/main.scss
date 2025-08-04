@@ -792,7 +792,7 @@ body {
 
 
 // Swiper Event Carousel
-.swiper-bitec-gallery, .swiper-bitec-facilities, .swiper-gallery {  
+.swiper-bitec-gallery, .swiper-bitec-facilities, .swiper-gallery, .swiper-bitec-live-hall-carousel, .swiper-hotel-carousel {  
   position: relative;
   .swiper { 
     padding-bottom: 0px;
@@ -901,5 +901,70 @@ body {
     @media (max-width: 1023px) {
       left: 20px;
     }
+  }
+}
+
+// Event Hall Carousel
+.event-hall-carousel { 
+  .swiper-button-prev, .swiper-button-next {
+    top: -60px;
+    border: 1px solid #fff;
+    svg { 
+      color: #fff;
+    }
+    @media (min-width: 1024px) { 
+      right: calc((100vw - 1340px) / 2);
+    }
+  }
+  @media (min-width: 1024px) { 
+    .swiper-button-prev{
+      right: calc((100vw - 1340px) / 2 + 50px);
+    }
+    .swiper.event-hall-swiper .swiper-pagination {
+      padding-right: calc((100vw - 1380px + 30px) / 2);
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .swiper.event-hall-swiper .swiper-pagination {
+      padding-right: 0;
+    }
+  }
+}
+
+.event-hall-swiper {
+  overflow: visible;
+  .swiper-wrapper {
+    align-items: stretch;
+  }
+  .swiper-slide {
+    height: auto;
+    display: flex;
+    
+    > div {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
+
+.swiper-hotel-carousel {
+  .swiper-slide { 
+    height: auto;
+  }
+  .swiper-button-prev, .swiper-button-next { 
+    border: 1px solid white;
+    bottom: 0;
+    top: unset;
+    left: -70px;
+    &:hover { 
+      border-color: white;
+    }
+  }
+  .swiper-button-prev { 
+    bottom: 0;
+    top: unset;
+    left: -120px;
   }
 }
