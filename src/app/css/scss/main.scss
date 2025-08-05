@@ -968,3 +968,43 @@ body {
     left: -120px;
   }
 }
+
+.content-hotel { 
+  .content-map { 
+    iframe { 
+      width: 100%;
+      height: 100%;
+    }
+  }
+  .entry-content { 
+    ol, ul {
+      list-style: inherit;
+      display: block;
+      padding-inline-start: 20px;
+      unicode-bidi: isolate;
+    }
+  }
+  
+  // CSS Accordion - Default States
+  .lg\:hidden .plus-icon {
+    opacity: 1;
+  }
+  
+  .lg\:hidden .minus-icon {
+    opacity: 0;
+  }
+  
+  // CSS Accordion - Checked States
+  .lg\:hidden input[type="checkbox"]:checked + label svg .plus-icon {
+    opacity: 0 !important;
+  }
+  
+  .lg\:hidden input[type="checkbox"]:checked + label svg .minus-icon {
+    opacity: 1 !important;
+  }
+  
+  .lg\:hidden input[type="checkbox"]:checked ~ div {
+    max-height: 2000px !important;
+    opacity: 1 !important;
+  }
+}
