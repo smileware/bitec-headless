@@ -14,6 +14,7 @@ import EventHallCarouselBlock from './block/EventHallCarouselBlock';
 import BitecLiveHallCarouselBlock from './block/BitecLiveHallCarouselBlock';
 import PhotoGalleryBlock from './block/PhotoGalleryBlock';
 import QueryHotelCarouselBlock from './block/QueryHotelCarouselBlock';
+import RecommendedHotelCarouselBlock from './block/RecommendedHotelCarouselBlock';
 
 export default function BlockRenderer({ content }) {
     
@@ -60,6 +61,9 @@ export default function BlockRenderer({ content }) {
         }
         if (domNode.attribs?.id === 'block-query-hotel-carousel') {
             return <QueryHotelCarouselBlock {...domNode.attribs} />;
+        }
+        if (domNode.attribs?.id === 'block-recommended-hotel-carousel') {
+            return <RecommendedHotelCarouselBlock {...domNode.attribs} />;
         }
         
         return undefined;

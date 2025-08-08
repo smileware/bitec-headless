@@ -540,3 +540,69 @@ export async function GetHotels(limit = 8) {
         return [];
     }
 }
+
+export async function GetRecommendedHotels(limit = 8) {
+    const query = gql`
+        query GetRecommendedHotels($limit: Int!) {
+            hotels(
+                first: $limit
+                where: { 
+                    orderby: { field: DATE, order: DESC }
+                    taxQuery: {
+                        taxArray: [
+                            {
+                                taxonomy: HOTELCATEGORY
+                                terms: ["recommend"]
+                                field: SLUG
+                                operator: IN
+                            }
+                        ]
+                    }
+                }
+            ) {
+                nodes {
+                    id
+                    title
+                    slug
+                    excerpt
+                    date
+                    hotelDetail {
+                        hotelShortAddress
+                        hotelTransportation
+                    }
+                    hotelCategories {
+                        nodes {
+                            id
+                            name
+                            slug
+                        }
+                    }
+                    featuredImage {
+                        node {
+                            id
+                            sourceUrl
+                            altText
+                            mediaDetails {
+                                width
+                                height
+                            }
+                        }
+                    }
+                    translations {
+                        title
+                        slug
+                        excerpt
+                    }
+                }
+            }
+        }
+    `;
+
+    try {
+        const data = await graphQLClient.request(query, { limit });
+        return data?.hotels?.nodes || [];
+    } catch (error) {
+        console.error("GraphQL fetch error for recommended hotels:", error);
+        return [];
+    }
+}

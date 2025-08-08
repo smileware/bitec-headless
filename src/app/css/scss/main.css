@@ -1085,3 +1085,42 @@ body {
   max-height: 2000px !important;
   opacity: 1 !important;
 }
+
+.swiper-hotel-carousel-recommended .swiper-button-prev, .swiper-hotel-carousel-recommended .swiper-button-next {
+  left: unset;
+  right: 0;
+  background-color: transparent;
+}
+
+.swiper-hotel-carousel-recommended .swiper-button-prev:hover, .swiper-hotel-carousel-recommended .swiper-button-next:hover {
+  border: 1px solid var(--s-accent);
+}
+
+.swiper-hotel-carousel-recommended .swiper-button-prev {
+  right: 100px;
+}
+
+@media (max-width: 1023px) {
+  .swiper-hotel-carousel-recommended .swiper-button-prev {
+    right: unset;
+    left: 40px;
+  }
+}
+
+.swiper-hotel-carousel-recommended .recommended-nav-arrows {
+  right: 20px;
+  width: 100%;
+}
+
+.swiper-hotel-carousel-recommended .recommended-slide-counter {
+  right: 50%;
+}
+
+@media (min-width: 1024px) {
+  .swiper-hotel-carousel-recommended .recommended-slide-counter {
+    right: calc((100vw - 1340px + 20px + 40px + 40px) / 2);
+  }
+  .swiper-hotel-carousel-recommended .recommended-nav-arrows {
+    right: calc((100vw - 1340px - 20px) / 2);
+  }
+}

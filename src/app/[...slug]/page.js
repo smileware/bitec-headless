@@ -32,7 +32,6 @@ export default async function DynamicPage({ params }) {
     // Fetch page content from GraphQL for all pages, including home page
     // Pass language parameter to determine API type
     const page = await getPageBySlug(actualSlug, language);
-
     if (!page) {
         return (
             <div>
