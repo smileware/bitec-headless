@@ -45,7 +45,7 @@ export default function HotelCard({ hotel }) {
                         alt={hotel.featuredImage?.node?.altText || hotel.title}
                         width={400}
                         height={250}
-                        className="w-full h-auto object-cover min-h-[200px]"
+                        className="w-full h-auto object-cover min-h-[250px] max-h-[250px]"
                     />
                 </Link>
                 {hasRecommendCategory && (

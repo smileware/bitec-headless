@@ -29,11 +29,11 @@ export default async function HotelPage({ params }) {
                             <div className="h-full flex flex-col lg:justify-between lg:gap-4 text-white text-[20px] pb-5 lg:pb-0">
                                 <div className="">
 
-                                    <h1 className="lg:text-[51px] text-[39px] !leading-[1.1] font-[500] text-white mt-0">{hotel.title}</h1>
+                                    <h1 className="lg:text-[51px] text-[39px] !leading-[1.1] font-[500] text-white mt-0  lg:mb-[40px] mb-[20px]">{hotel.title}</h1>
                                     
                                     {/* Full Address */}
                                     {hotel.hotelDetail?.hotelAddress && (
-                                        <div className="flex gap-[15px] lg:mt-[40px] mt-[20px] text-[22px] mb-[20px]">
+                                        <div className="flex gap-[15px] text-[22px] mb-[20px]">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16" className="w-[20px] h-[20px] min-w-[18px] mt-[4px]">
                                                 <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/>
                                             </svg>

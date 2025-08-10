@@ -606,3 +606,59 @@ export async function GetRecommendedHotels(limit = 8) {
         return [];
     }
 }
+
+export async function GetAllHotels() {
+    const query = gql`
+        query GetAllHotels {
+            hotels(
+                first: 100
+                where: { orderby: { field: DATE, order: DESC } }
+            ) {
+                nodes {
+                    id
+                    title
+                    slug
+                    excerpt
+                    date
+                    hotelDetail {
+                        hotelShortAddress
+                        hotelTransportation
+                        latitude
+                        longitude
+                    }
+                    hotelCategories {
+                        nodes {
+                            id
+                            name
+                            slug
+                        }
+                    }
+                    featuredImage {
+                        node {
+                            id
+                            sourceUrl
+                            altText
+                            mediaDetails {
+                                width
+                                height
+                            }
+                        }
+                    }
+                    translations {
+                        title
+                        slug
+                        excerpt
+                    }
+                }
+            }
+        }
+    `;
+
+    try {
+        const data = await graphQLClient.request(query);
+        return data?.hotels?.nodes || [];
+    } catch (error) {
+        console.error("GraphQL fetch error for hotels with coordinates:", error);
+        return [];
+    }
+}
