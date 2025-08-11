@@ -5,7 +5,7 @@ const nextConfig = {
     outputStyle: 'compressed',
   },
   images: {
-    domains: ['https://wordpress-1328545-5763448.cloudwaysapps.com'],
+    domains: ['wordpress-1328545-5763448.cloudwaysapps.com'],
   },
 };
 
