@@ -1,5 +1,7 @@
 import { getSiteInfo, getGlobalStyle } from "./lib/api";
 
+export const revalidate = 300; // Re-generate pages every 5 minutes
+
 import Header from './components/header/Header';
 import Footer from './components/footer/Footer';
 import FluentFormHandler from './components/FluentFormHandler';
