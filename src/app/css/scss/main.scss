@@ -1058,3 +1058,76 @@ body {
     background: var(--s-accent); 
   }
 }
+
+
+.top-left-checked { 
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 0; height: 0;
+    /* size of the corner */
+    border-top: 60px solid var(--s-accent);
+    border-right: 60px solid transparent; /* shape it */
+    z-index: 1;
+  }
+  &::after {
+    content: "";
+    position: absolute;
+    /* nudge to sit inside the triangle; tweak as needed */
+    top: 12px;
+    left: 10px;
+    width: 17px; 
+    height: 13px;
+    background: no-repeat center / contain
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='17' height='13' viewBox='0 0 17 13' fill='none'><path d='M1.5625 7.06891L5.75392 11.2603L15.276 1.73828' stroke='%23fff' stroke-width='2.3951' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    z-index: 2;
+  }
+}
+
+
+.top-left-flagged { 
+  position: relative;
+}
+.top-left-flagged::before {
+  content: "";
+  position: absolute;
+  top: 0; 
+  left: 0;
+  width: 0; 
+  height: 0;
+  border-top: 60px solid var(--s-accent);
+  border-right: 60px solid transparent;
+  z-index: 1;
+}
+.top-left-flagged::after {
+  content: "";
+  position: absolute;
+  top: 12px; 
+  left: 10px;
+  width: 13px; 
+  height: 19px;
+  background: no-repeat center / contain
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='13' height='19' viewBox='0 0 13 19' fill='none'><g clip-path='url(%23clip0_12147_4478)'><path d='M1.12695 17.668V1.66797L12.2039 7.20643L1.12695 12.7449' stroke='%23fff' stroke-width='1.40659' stroke-linecap='round' stroke-linejoin='round'/></g><defs><clipPath id='clip0_12147_4478'><rect width='13' height='19' fill='white'/></clipPath></defs></svg>");
+  z-index: 2;
+}
+
+.simple-gallery-carousel-block { 
+  .swiper-gallery { 
+    .swiper-pagination { 
+      bottom: 10px;
+      .swiper-pagination-bullet, 
+        .swiper-pagination-bullet.swiper-pagination-bullet-active {
+        width: 10px;
+        height: 10px;
+      } 
+    }
+    .swiper-button-prev { 
+      left: -10px;
+    }
+    .swiper-button-next { 
+      right: -10px;
+    }
+  }
+}

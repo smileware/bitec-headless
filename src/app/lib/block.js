@@ -487,6 +487,70 @@ export async function GetPageWithPhotoGallery(slug) {
     return { photoGalleries: photoGalleries };
 }
 
+export async function GetPageWithSimpleGalleryCarousel(slug) {
+    const query = gql`
+        query GetPageWithSimpleGalleryCarousel($uri: String!) {
+            pageBy(uri: $uri) {
+                editorBlocks {
+                    ... on AcfSimpleGalleryCarousel {
+                        blockSimpleGalleryCarousel {
+                            simpleGalleryCarousel {
+                                nodes {
+                                    id
+                                    mediaItemUrl
+                                    altText
+                                    caption
+                                    mediaDetails {
+                                        width
+                                        height
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    `;
+    const variables = { uri: slug };
+    let data;
+    try {
+        data = await graphQLClient.request(query, variables);
+    } catch (error) {
+        console.error("GraphQL fetch error:", error);
+        return { simpleGalleryCarousels: [] };
+    }
+    
+    const blocks = data?.pageBy?.editorBlocks || [];
+    const simpleGalleryCarouselBlocks = blocks.filter((block) => block?.blockSimpleGalleryCarousel);
+    
+    if (simpleGalleryCarouselBlocks.length === 0) {
+        return { simpleGalleryCarousels: [] };
+    }
+    
+    const simpleGalleryCarousels = simpleGalleryCarouselBlocks.map((block, blockIndex) => {
+        const blockData = block.blockSimpleGalleryCarousel;
+        const gallery = blockData.simpleGalleryCarousel?.nodes || [];
+        const images = gallery.map((node) => ({
+            id: node.id,
+            url: node.mediaItemUrl,
+            alt: node.altText || "",
+            caption: node.caption || "",
+            width: node.mediaDetails?.width || 0,
+            height: node.mediaDetails?.height || 0,
+        }));
+        
+        return {
+            blockIndex: blockIndex,
+            simpleGalleryCarousel: {
+                nodes: images
+            }
+        };
+    });
+    
+    return { simpleGalleryCarousels: simpleGalleryCarousels };
+}
+
 export async function GetHotels(limit = 8) {
     const query = gql`
         query GetHotels($limit: Int!) {

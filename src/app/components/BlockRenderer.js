@@ -16,6 +16,7 @@ import PhotoGalleryBlock from './block/PhotoGalleryBlock';
 import QueryHotelCarouselBlock from './block/QueryHotelCarouselBlock';
 import RecommendedHotelCarouselBlock from './block/RecommendedHotelCarouselBlock';
 import HotelMapBlock from './block/HotelMapBlock';
+import SimpleGalleryCarouselBlock from './block/SimpleGalleryCarouselBlock';
 
 export default function BlockRenderer({ content }) {
     
@@ -68,6 +69,10 @@ export default function BlockRenderer({ content }) {
         }
         if (domNode.attribs?.id === 'block-hotel-map') {
             return <HotelMapBlock {...domNode.attribs} />;
+        }
+        if (domNode.attribs?.id?.startsWith('block-simple-gallery-carousel')) {
+        // if (domNode.attribs?.id === 'block-simple-gallery-carousel') {
+            return <SimpleGalleryCarouselBlock {...domNode.attribs} />;
         }
         
         return undefined;
