@@ -1,10 +1,10 @@
 // TODO: Add WPML content on custom field on each post or ctp.
 
-import { getHotelBySlug } from "../../lib/hotel";
-import ScriptLoader from '../../components/ScriptLoader';
+import { getHotelBySlug } from "../../../lib/hotel";
+import ScriptLoader from '../../../components/ScriptLoader';
 import Image from 'next/image';
-import ShareButtons from "../../components/ShareButtons";
-import GallerySwiper from "../../components/GallerySwiper";
+import ShareButtons from "../../../components/ShareButtons";
+import GallerySwiper from "../../../components/GallerySwiper";
 
 export default async function HotelPage({ params }) {
     const { slug } = await params;
