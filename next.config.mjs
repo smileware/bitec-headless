@@ -5,7 +5,7 @@ const nextConfig = {
     outputStyle: 'compressed',
   },
   images: {
-    domains: ['bitec.local'],
+    domains: ['https://wordpress-1328545-5763448.cloudwaysapps.com'],
   },
 };
 

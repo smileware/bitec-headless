@@ -1,6 +1,6 @@
 import { GraphQLClient, gql } from 'graphql-request';
 
-const endpoint = process.env.API_DOMAIN || 'http://bitec.local/graphql';
+const endpoint = process.env.API_DOMAIN || 'https://wordpress-1328545-5763448.cloudwaysapps.com/graphql';
 const client = new GraphQLClient(endpoint);
 
 export async function getWPMLLanguages() {

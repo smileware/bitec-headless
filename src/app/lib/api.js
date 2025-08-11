@@ -1,6 +1,6 @@
 import { GraphQLClient, gql } from 'graphql-request';
 
-const endpoint = process.env.API_DOMAIN || 'http://bitec.local/graphql';
+const endpoint = process.env.API_DOMAIN || 'https://wordpress-1328545-5763448.cloudwaysapps.com/graphql';
 export const graphQLClient = new GraphQLClient(endpoint);
 
 export async function getSiteInfo() {
@@ -104,7 +104,7 @@ export function getGreenshiftScripts(edges) {
 // Simple function to get Thai content from REST API
 async function getThaiContent(slug) {
   try {
-    const restEndpoint = (process.env.API_DOMAIN || 'http://bitec.local').replace('/graphql', '');
+    const restEndpoint = (process.env.API_DOMAIN || 'https://wordpress-1328545-5763448.cloudwaysapps.com/graphql').replace('/graphql', '');
     
     // For homepage, use 'home' instead of '/'
     const pageSlug = slug === '/' ? 'home' : slug;

@@ -4,7 +4,7 @@ export async function POST(request) {
         const { data, form_id, action } = body;
 
         // WordPress site URL - adjust this to match your WordPress installation
-        const wordpressUrl = process.env.API_DOMAIN?.replace('/graphql', '') || 'http://bitec.local';
+        const wordpressUrl = process.env.API_DOMAIN?.replace('/graphql', '') || 'https://wordpress-1328545-5763448.cloudwaysapps.com/graphql';
         const wpAjaxUrl = `${wordpressUrl}/wp-admin/admin-ajax.php`;
 
         console.log('FluentForm submission:', { form_id, action });
