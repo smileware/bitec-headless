@@ -6,6 +6,35 @@ import Image from 'next/image';
 import ShareButtons from "../../../components/ShareButtons";
 import GallerySwiper from "../../../components/GallerySwiper";
 
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const hotel = await getHotelBySlug(slug);
+  if (!hotel) return {};
+
+  const title = hotel.title || 'Hotel';
+  const description = ((hotel.hotelDetail?.hotelContent?.map?.(s => s?.hotelContent)?.join(' ') || '')
+    .replace(/<[^>]*>/g, '')
+    .trim() || '').slice(0, 160);
+  const image = hotel.featuredImage?.node?.sourceUrl;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      type: 'website',
+      title,
+      description,
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
+
 export default async function HotelPage({ params }) {
     const { slug } = await params;
     const hotel = await getHotelBySlug(slug);

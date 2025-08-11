@@ -36,6 +36,7 @@ export async function getPageBySlug(slug, language = null) {
       pageBy(uri: $uri) {
         id
         slug
+        title
         content
         blocks(
           attributes: false
@@ -45,6 +46,13 @@ export async function getPageBySlug(slug, language = null) {
           postTemplate: false
         )
         greenshiftInlineCss
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+            mediaDetails { width height }
+          }
+        }
         enqueuedScripts(first: 100) {
           edges {
             node {
@@ -56,6 +64,7 @@ export async function getPageBySlug(slug, language = null) {
         translations {
           id
           slug
+          title
           content
           greenshiftInlineCss
           blocks(

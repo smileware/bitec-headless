@@ -3,6 +3,35 @@ import ScriptLoader from '../../../components/ScriptLoader';
 import Image from 'next/image';
 import ShareButtons from "../../../components/ShareButtons";
 
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug, 'th');
+  if (!post) return {};
+
+  const title = post.title || 'ข่าว';
+  const description = ((post.excerpt || post.content || '')
+    .replace(/<[^>]*>/g, '')
+    .trim() || '').slice(0, 160);
+  const image = post.featuredImage?.node?.sourceUrl;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      type: 'article',
+      title,
+      description,
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
+
 export default async function ThaiNewsPage({ params }) {
     const { slug } = await params;
     const post = await getPostBySlug(slug, 'th');

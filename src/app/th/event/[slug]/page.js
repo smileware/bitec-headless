@@ -4,6 +4,35 @@ import Image from 'next/image';
 import ShareButtons from "../../../components/ShareButtons";
 import EventCard from "../../../components/ui/EventCard";
 
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const event = await getEventBySlug(slug);
+  if (!event) return {};
+
+  const title = event.translations?.[0]?.title || event.title || 'อีเวนต์';
+  const description = ((event.content || '')
+    .replace(/<[^>]*>/g, '')
+    .trim() || '').slice(0, 160);
+  const image = event.featuredImage?.node?.sourceUrl;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      type: 'website',
+      title,
+      description,
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
+
 export default async function EventPage({ params }) {
     const { slug } = await params;
     const event = await getEventBySlug(slug);

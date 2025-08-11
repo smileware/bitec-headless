@@ -3,6 +3,34 @@ import Image from 'next/image';
 import ShareButtons from "../../components/ShareButtons";
 import GallerySwiper from '../../components/GallerySwiper';
 
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const gallery = await getGalleryBySlug(slug);
+  if (!gallery) return {};
+
+  const title = gallery.title || 'Gallery';
+  const description = '';
+  const image = gallery?.featuredImage?.node?.sourceUrl
+    || gallery?.galleryUpload?.galleryUpload?.nodes?.[0]?.sourceUrl;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      type: 'website',
+      title,
+      description,
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
+
 export default async function GalleryPage({ params }) {
     const { slug } = await params;
     const gallery = await getGalleryBySlug(slug);
