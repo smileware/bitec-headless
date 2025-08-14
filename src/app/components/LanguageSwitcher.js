@@ -11,6 +11,7 @@ export default function LanguageSwitcher() {
   const [currentLang, setCurrentLang] = useState('');
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSwitching, setIsSwitching] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const dropdownRef = useRef(null);
@@ -89,9 +90,15 @@ export default function LanguageSwitcher() {
     }
     
     setIsOpen(false);
-    window.location.href = newUrl;
+    setIsSwitching(true);
+    router.push(newUrl);
 
   };
+
+  useEffect(() => {
+    // When the path changes after a switch, stop showing the local spinner
+    if (isSwitching) setIsSwitching(false);
+  }, [pathname]);
 
   if (loading) {
     return <SkeletonButton className="language-switcher" />;
@@ -122,8 +129,14 @@ export default function LanguageSwitcher() {
               className="object-cover rounded-full"
             />
             <span className="font-medium text-[18px] uppercase lg:block hidden">
-              {currentLanguage.native_name.toUpperCase()}
+              {isSwitching ? 'Loading…' : currentLanguage.native_name.toUpperCase()}
             </span>
+            {isSwitching && (
+              <svg className="animate-spin h-4 w-4 text-[#002F87]" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+            )}
           </>
         )}
         <svg

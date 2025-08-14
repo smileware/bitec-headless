@@ -52,6 +52,11 @@
   }
 }
 
+@keyframes bitecTopBar {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 
 @media (min-width: 992px) {
   :root {

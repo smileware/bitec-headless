@@ -19,6 +19,7 @@ export default function Header() {
     const [menuMobileItems, setMenuMobileItems] = useState([]);
     const [ctaData, setCtaData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isMenuRefreshing, setIsMenuRefreshing] = useState(false);
     const [isNavActive, setIsNavActive] = useState(false);
     const pathname = usePathname();
     
@@ -42,6 +43,7 @@ export default function Header() {
     useEffect(() => {
         async function fetchMenuData() {
             setIsLoading(true);
+            setIsMenuRefreshing(true);
             try {
                 const [primaryMenu, topMenu, mobileMenu, cta] = await Promise.all([
                     getPrimaryMenu(currentLang),
@@ -57,6 +59,8 @@ export default function Header() {
                 console.error('Error loading menu data:', error);
             } finally {
                 setIsLoading(false);
+                // show the top bar for a tiny bit to be noticeable
+                setTimeout(() => setIsMenuRefreshing(false), 200);
             }
         }
         fetchMenuData();
@@ -113,7 +117,7 @@ export default function Header() {
     );
 
     const MainNavSkeleton = () => (
-        <div className="flex items-center space-x-8 _desktop">
+        <div className="flex items-center space-x-8 _desktop" aria-label="Loading navigation">
             <SkeletonText lines={1} className="w-16 h-4" />
             <SkeletonText lines={1} className="w-16 h-4" />
             <SkeletonText lines={1} className="w-16 h-4" />
@@ -192,6 +196,13 @@ export default function Header() {
     
     return (
         <header className="site-header _heading">
+            {isMenuRefreshing && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, height: '3px',
+                    background: 'linear-gradient(90deg, #CE0E2D 0%, #FF6B81 50%, #CE0E2D 100%)',
+                    backgroundSize: '200% 100%', animation: 'bitecTopBar 1.2s ease-in-out infinite', zIndex: 10000
+                }} />
+            )}
             <div className="w-full flex justify-between items-center">
                 <div className="lg:border-r lg:border-[#ddddde] h-full min-h-[var(--s-header-height)] flex items-center lg:px-12 px-[20px]">
                     <Link

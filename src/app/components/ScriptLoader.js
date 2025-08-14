@@ -59,4 +59,4 @@ export default function ScriptLoader({ scripts }) {
     }, [scripts, pathname]);
     
     return null;
-} 
+}
