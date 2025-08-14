@@ -33,31 +33,25 @@ export default function EventCarouselBlock(props) {
 
     if (loading) {
         return (
-            <div {...props} className="wp-block-greenshift-blocks-swiper gs-swiper swiper-event-carousel">
-                <div className="gs-swiper-init">
-                    <div className="">
-                        <div className="">
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="p-4 bg-white">
-                                    <Skeleton width="w-full" height="h-48" rounded="rounded-md" className="mb-3" />
-                                    <Skeleton width="w-3/4" height="h-6" className="mb-2" />
-                                    <Skeleton width="w-1/2" height="h-4" className="mb-2" />
-                                    <Skeleton width="w-full" height="h-4" />
-                                </div>
-                                <div className="p-4 bg-white">
-                                    <Skeleton width="w-full" height="h-48" rounded="rounded-md" className="mb-3" />
-                                    <Skeleton width="w-3/4" height="h-6" className="mb-2" />
-                                    <Skeleton width="w-1/2" height="h-4" className="mb-2" />
-                                    <Skeleton width="w-full" height="h-4" />
-                                </div>
-                                <div className="p-4 bg-white">
-                                    <Skeleton width="w-full" height="h-48" rounded="rounded-md" className="mb-3" />
-                                    <Skeleton width="w-3/4" height="h-6" className="mb-2" />
-                                    <Skeleton width="w-1/2" height="h-4" className="mb-2" />
-                                    <Skeleton width="w-full" height="h-4" />
-                                </div>
-                            </div>
-                        </div>
+            <div {...props} className="swiper-event-carousel">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-[20px] lg:px-0">
+                    <div className="p-4 bg-white">
+                        <Skeleton width="w-full" height="h-48" rounded="rounded-md" className="mb-3" />
+                        <Skeleton width="w-3/4" height="h-6" className="mb-2" />
+                        <Skeleton width="w-1/2" height="h-4" className="mb-2" />
+                        <Skeleton width="w-full" height="h-4" />
+                    </div>
+                    <div className="hidden md:block p-4 bg-white">
+                        <Skeleton width="w-full" height="h-48" rounded="rounded-md" className="mb-3" />
+                        <Skeleton width="w-3/4" height="h-6" className="mb-2" />
+                        <Skeleton width="w-1/2" height="h-4" className="mb-2" />
+                        <Skeleton width="w-full" height="h-4" />
+                    </div>
+                    <div className="hidden lg:block p-4 bg-white">
+                        <Skeleton width="w-full" height="h-48" rounded="rounded-md" className="mb-3" />
+                        <Skeleton width="w-3/4" height="h-6" className="mb-2" />
+                        <Skeleton width="w-1/2" height="h-4" className="mb-2" />
+                        <Skeleton width="w-full" height="h-4" />
                     </div>
                 </div>
             </div>
@@ -66,21 +60,18 @@ export default function EventCarouselBlock(props) {
 
     if (events.length === 0) {
         return (
-            <div {...props} className="wp-block-greenshift-blocks-swiper gs-swiper swiper-event-carousel">
-                <div className="gs-swiper-init">
+            <div {...props} className="swiper-event-carousel">
                     <div className="swiper">
                         <div className="swiper-wrapper">
                             <div className="no-events-message text-center opacity-50">No upcoming events found.</div>
                         </div>
                     </div>
-                </div>
             </div>
         );
     }
 
     return (
-        <div {...props} className="wp-block-greenshift-blocks-swiper gs-swiper swiper-event-carousel">
-            <div className="gs-swiper-init">
+        <div {...props} className="swiper-event-carousel">
                 <Swiper
                     modules={[Navigation, Pagination]}
                     slidesPerView={3}
@@ -137,7 +128,6 @@ export default function EventCarouselBlock(props) {
                         <path d="M6.99992 0.833374L5.82492 2.00837L10.4749 6.66671H0.333252V8.33337H10.4749L5.82492 12.9917L6.99992 14.1667L13.6666 7.50004L6.99992 0.833374Z"/>
                     </svg>
                 </div>
-            </div>
         </div>
     );
 }
