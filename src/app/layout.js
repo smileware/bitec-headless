@@ -1,4 +1,5 @@
 import { getSiteInfo, getGlobalStyle } from "./lib/api";
+import { getFooterData } from "./lib/footer";
 
 export const revalidate = 300; // Re-generate pages every 5 minutes
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -18,7 +19,11 @@ export async function generateMetadata() {
 }
 
 export default async function RootLayout({ children }) {
-  const globalStyle = await getGlobalStyle();
+  const [globalStyle, footerData] = await Promise.all([
+    getGlobalStyle(),
+    getFooterData()
+  ]);
+
   return (
     <html lang="en">
       <head>
@@ -37,10 +42,14 @@ export default async function RootLayout({ children }) {
           <Header />
           <div className="site-header-space"></div>
           {children}
-          <Footer />
+          <Footer 
+            footerData={footerData}
+            isServerSide={true}
+          />
           {/* Global FluentForm handler for all pages */}
           <FluentFormHandler />
         </div>
+        <SpeedInsights />
       </body>
     </html>
   );

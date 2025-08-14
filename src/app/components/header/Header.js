@@ -9,10 +9,10 @@ import Nav from "./Nav";
 import TopNav from "./TopNav";
 import LanguageSwitcher from "../LanguageSwitcher";
 
-import { getPrimaryMenu, getTopMenu, getCTA, getMobileMenu } from '../../lib/header';
+import { getPrimaryMenu, getTopMenu, getCTA, getMobileMenu, getHeaderData } from '../../lib/header';
 import { SkeletonText, SkeletonButton } from '../ui/Skeleton';
 
-export default function Header() {
+export default function Header({ headerData = null, isServerSide = false }) {
     const [isClient, setIsClient] = useState(false);
     const [menuItems, setMenuItems] = useState([]);
     const [menuTopItems, setMenuTopItems] = useState([]);
@@ -40,21 +40,18 @@ export default function Header() {
         return currentLang === 'en' ? '/' : `/${currentLang}`;
     }, [currentLang]);
 
+    // Fetch data when language changes
     useEffect(() => {
         async function fetchMenuData() {
             setIsLoading(true);
             setIsMenuRefreshing(true);
             try {
-                const [primaryMenu, topMenu, mobileMenu, cta] = await Promise.all([
-                    getPrimaryMenu(currentLang),
-                    getTopMenu(currentLang),
-                    getMobileMenu(currentLang),
-                    getCTA()
-                ]);
-                setMenuItems(primaryMenu.menuItems || []);
-                setMenuTopItems(topMenu.menuTopItems || []);
-                setMenuMobileItems(mobileMenu.menuMobileItems || []);
-                setCtaData(cta);
+                // Use the new server-side function for better performance
+                const data = await getHeaderData(currentLang);
+                setMenuItems(data.primaryMenu?.menuItems || []);
+                setMenuTopItems(data.topMenu?.menuTopItems || []);
+                setMenuMobileItems(data.mobileMenu?.menuMobileItems || []);
+                setCtaData(data.cta);
             } catch (error) {
                 console.error('Error loading menu data:', error);
             } finally {

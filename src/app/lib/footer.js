@@ -2,7 +2,8 @@ import { GraphQLClient, gql } from "graphql-request";
 const endpoint = process.env.API_DOMAIN || "https://wordpress-1328545-5763448.cloudwaysapps.com/graphql";
 export const client = new GraphQLClient(endpoint);
 
-export async function getFooter() {
+// Server-side function to fetch footer data
+export async function getFooterData() {
     const query = gql`
         query GetFooterReusableBlock {
             reusableBlock(id: "theme-footer", idType: SLUG) {
@@ -27,17 +28,26 @@ export async function getFooter() {
         }
     `;
     
-    const { reusableBlock } = await client.request(query);
-    
-    // Process the enqueued stylesheets and scripts
-    const processedStyles = processEnqueuedStylesheets(reusableBlock?.enqueuedStylesheets?.edges || []);
-    const processedScripts = processEnqueuedScripts(reusableBlock?.enqueuedScripts?.edges || []);
-    
-    return {
-        ...reusableBlock,
-        processedStyles,
-        processedScripts
-    };
+    try {
+        const { reusableBlock } = await client.request(query);
+        
+        // Process the enqueued stylesheets and scripts
+        const processedStyles = processEnqueuedStylesheets(reusableBlock?.enqueuedStylesheets?.edges || []);
+        const processedScripts = processEnqueuedScripts(reusableBlock?.enqueuedScripts?.edges || []);
+        
+        return {
+            ...reusableBlock,
+            processedStyles,
+            processedScripts
+        };
+    } catch (error) {
+        console.error('Error fetching footer data:', error);
+        return {
+            content: '',
+            processedStyles: [],
+            processedScripts: []
+        };
+    }
 }
 
 function processEnqueuedStylesheets(edges) {

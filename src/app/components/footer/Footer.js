@@ -1,18 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getFooter, generateStyleTags } from "../../lib/footer";
+import { getFooterData, generateStyleTags } from "../../lib/footer";
 
-export default function Footer() {
-    const [footerData, setFooterData] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+export default function Footer({ footerData = null, isServerSide = false }) {
+    const [localFooterData, setLocalFooterData] = useState(footerData);
+    const [isLoading, setIsLoading] = useState(!isServerSide);
 
+    // Use server data if provided, otherwise fetch client-side
     useEffect(() => {
+        if (isServerSide && footerData) {
+            setLocalFooterData(footerData);
+            setIsLoading(false);
+            return;
+        }
+
         async function fetchFooterData() {
             setIsLoading(true);
             try {
-                const data = await getFooter();
-                setFooterData(data);
+                const data = await getFooterData();
+                setLocalFooterData(data);
             } catch (error) {
                 console.error("Error loading footer data:", error);
             } finally {
@@ -21,12 +28,12 @@ export default function Footer() {
         }
 
         fetchFooterData();
-    }, []);
+    }, [isServerSide, footerData]);
 
     // Mobile menu toggle functionality - runs after footer data is loaded
     useEffect(() => {
         // Only run if footer data is loaded and not loading
-        if (!footerData || isLoading) return;
+        if (!localFooterData || isLoading) return;
 
         const toggleButton = document.querySelector(".menu-footer-accordion");
         const mobileMenu = document.getElementById("mobile_menu");
@@ -61,22 +68,22 @@ export default function Footer() {
                 toggleButton.removeEventListener("click", handleToggle);
             }
         };
-    }, [footerData, isLoading]); // Depend on footerData and isLoading
+    }, [localFooterData, isLoading]); // Depend on localFooterData and isLoading
 
     if (isLoading) {
         return <footer></footer>;
     }
 
     // Generate style tags from processed styles
-    const styleTagsHTML = footerData?.processedStyles
-        ? generateStyleTags(footerData.processedStyles)
+    const styleTagsHTML = localFooterData?.processedStyles
+        ? generateStyleTags(localFooterData.processedStyles)
         : "";
 
     return (
         <footer className="relative">
             {/* Render the footer content */}
-            {footerData?.content && (
-                <div dangerouslySetInnerHTML={{ __html: footerData.content }} />
+            {localFooterData?.content && (
+                <div dangerouslySetInnerHTML={{ __html: localFooterData.content }} />
             )}
             
             {/* Add the processed styles to the head */}
