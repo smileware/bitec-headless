@@ -263,7 +263,7 @@ export default function Header({ headerData = null, isServerSide = false }) {
                                             <Link
                                                 href={ctaButtons.getInTouch.url}
                                                 target={ctaButtons.getInTouch.target || '_self'}
-                                                className="btn btn-cta-get-in-touch xl:px-[20px] px-[10px] py-[5px] font-medium uppercase border-0 rounded-md transition-colors flex items-center justify-center rounded-none"
+                                                className="btn btn-cta-get-in-touch xl:px-[16px] px-[10px] py-[5px] font-medium uppercase border-0 rounded-md transition-colors flex items-center justify-center rounded-none"
                                             >
                                                 {ctaButtons.getInTouch.title}
                                                 <svg width="24" height="24" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" className="pl-[10px]">
@@ -276,7 +276,7 @@ export default function Header({ headerData = null, isServerSide = false }) {
                                             <Link
                                                 href={ctaButtons.requestAProposal.url}
                                                 target={ctaButtons.requestAProposal.target || '_self'}
-                                                className="btn btn-cta-proposal xl:px-[20px] px-[10px] py-[5px] font-medium uppercase border-0 rounded-md transition-colors flex items-center justify-center rounded-none"
+                                                className="btn btn-cta-proposal xl:px-[16px] px-[10px] py-[5px] font-medium uppercase border-0 rounded-md transition-colors flex items-center justify-center rounded-none"
                                             >
                                                 {ctaButtons.requestAProposal.title}
                                             </Link>

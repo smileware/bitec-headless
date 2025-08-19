@@ -208,7 +208,7 @@ export async function getNewsActivitySustainability(page = 1, perPage = 6, langu
     `;
     // Category IDs for news and activity - different IDs for English and Thai
     const categoryIds = language === 'th' 
-        ? ['34'] // Thai category IDs (you'll need to verify these)
+        ? ['47'] // Thai category IDs (you'll need to verify these)
         : ['33']; // English category IDs
 
     // Pagination: calculate the cursor for the requested page
