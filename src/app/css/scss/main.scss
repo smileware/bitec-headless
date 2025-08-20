@@ -1131,3 +1131,20 @@ body {
     }
   }
 }
+
+// FIx Popup 
+.gspb_slidingPanel {
+  overflow-x: auto;
+  overflow-y: scroll;
+  position: fixed;
+  background: #000000b3;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  transition: opacity 500ms ease 0.45s, visibility 300ms ease 0.45s;
+  visibility: hidden;
+  opacity: 0;
+  z-index: 99999;
+}

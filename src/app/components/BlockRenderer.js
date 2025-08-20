@@ -25,58 +25,69 @@ export default function BlockRenderer({ content }) {
     }
 
     const replace = (domNode) => {
-        if (domNode.attribs?.id === 'block-event-carousel') {
+        // Ensure domNode and attribs exist before processing
+        if (!domNode || !domNode.attribs) {
+            return undefined;
+        }
+
+        if (domNode.attribs.id === 'block-event-carousel') {
             return <EventCarouselBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-news-activity') {
+        if (domNode.attribs.id === 'block-news-activity') {
             return <NewsActivityBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-whats-on') {
+        if (domNode.attribs.id === 'block-whats-on') {
             return <WhatsOnBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-bitec-live-carousel') {
+        if (domNode.attribs.id === 'block-bitec-live-carousel') {
             return <BitecLiveCarouselBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-bitec-live-gallery') {
+        if (domNode.attribs.id === 'block-bitec-live-gallery') {
             return <BitecLiveGalleryBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-bitec-live-facilities') {
+        if (domNode.attribs.id === 'block-bitec-live-facilities') {
             return <BitecLiveFacilitiesBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-query-gallery-by-type') {
+        if (domNode.attribs.id === 'block-query-gallery-by-type') {
             return <QueryGalleryByTypeBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-news-activity-sustainability') {
+        if (domNode.attribs.id === 'block-news-activity-sustainability') {
             return <NewsActivitySustainabilityBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-tab-accordion') {
+        if (domNode.attribs.id === 'block-tab-accordion') {
             return <TabAccordionBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id?.startsWith('block-event-hall-carousel')) {
+        if (domNode.attribs.id?.startsWith('block-event-hall-carousel')) {
             return <EventHallCarouselBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-bitec-live-hall-carousel') {
+        if (domNode.attribs.id === 'block-bitec-live-hall-carousel') {
             return <BitecLiveHallCarouselBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-photo-gallery') {
+        if (domNode.attribs.id === 'block-photo-gallery') {
             return <PhotoGalleryBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-query-hotel-carousel') {
+        if (domNode.attribs.id === 'block-query-hotel-carousel') {
             return <QueryHotelCarouselBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-recommended-hotel-carousel') {
+        if (domNode.attribs.id === 'block-recommended-hotel-carousel') {
             return <RecommendedHotelCarouselBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id === 'block-hotel-map') {
+        if (domNode.attribs.id === 'block-hotel-map') {
             return <HotelMapBlock {...domNode.attribs} />;
         }
-        if (domNode.attribs?.id?.startsWith('block-simple-gallery-carousel')) {
-        // if (domNode.attribs?.id === 'block-simple-gallery-carousel') {
+        if (domNode.attribs.id?.startsWith('block-simple-gallery-carousel')) {
             return <SimpleGalleryCarouselBlock {...domNode.attribs} />;
         }
         
         return undefined;
     };
-    const parsed = parse(content, { replace });
-    return parsed;
+
+    try {
+        const parsed = parse(content, { replace });
+        return parsed;
+    } catch (error) {
+        console.error('Error parsing content in BlockRenderer:', error);
+        // Fallback: render the content as-is if parsing fails
+        return <div dangerouslySetInnerHTML={{ __html: content }} />;
+    }
 }

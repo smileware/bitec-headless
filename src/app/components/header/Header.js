@@ -1,10 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from 'next/navigation';
-import { useState, useEffect, useMemo } from 'react';
 import Nav from "./Nav";
 import TopNav from "./TopNav";
 import LanguageSwitcher from "../LanguageSwitcher";

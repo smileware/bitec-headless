@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function FluentFormHandler() {
+    const initializedForms = useRef(new Set());
+
     useEffect(() => {
         // Set up global form handler
         const handleFormSubmission = async (e) => {
@@ -187,12 +189,24 @@ export default function FluentFormHandler() {
             form.parentNode.insertBefore(errorDiv, form);
         }
 
+        // Helper function to check if a form is already initialized
+        const isFormInitialized = (form) => {
+            return initializedForms.current.has(form);
+        };
+
+        // Helper function to mark a form as initialized
+        const markFormAsInitialized = (form) => {
+            initializedForms.current.add(form);
+        };
+
         // Watch for new forms being added to the DOM
         const observer = new MutationObserver(() => {
             // Find all FluentForm forms that haven't been initialized
-            document.querySelectorAll('form[data-form_id]:not([data-ff-initialized])').forEach(form => {
-                form.setAttribute('data-ff-initialized', 'true');
-                form.addEventListener('submit', handleFormSubmission);
+            document.querySelectorAll('form[data-form_id]').forEach(form => {
+                if (!isFormInitialized(form)) {
+                    markFormAsInitialized(form);
+                    form.addEventListener('submit', handleFormSubmission);
+                }
             });
         });
 
@@ -200,9 +214,11 @@ export default function FluentFormHandler() {
         observer.observe(document.body, { childList: true, subtree: true });
 
         // Initialize existing forms
-        document.querySelectorAll('form[data-form_id]:not([data-ff-initialized])').forEach(form => {
-            form.setAttribute('data-ff-initialized', 'true');
-            form.addEventListener('submit', handleFormSubmission);
+        document.querySelectorAll('form[data-form_id]').forEach(form => {
+            if (!isFormInitialized(form)) {
+                markFormAsInitialized(form);
+                form.addEventListener('submit', handleFormSubmission);
+            }
         });
 
         return () => observer.disconnect();

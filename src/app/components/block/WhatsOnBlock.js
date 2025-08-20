@@ -369,7 +369,7 @@ export default function WhatsOnBlock(props) {
                 <div className="flex items-center gap-[10px]">
                     {/* Event Type Filter */}
                     <div className="flex items-center mr-[10px]">
-                        <div className="text-[18px] font-normal text-[#919195]">
+                        <div className="text-[18px] font-normal text-[#919195] min-w-max">
                             <button
                                 onClick={() => handleFilterChange('eventType', 'upcoming')}
                                 className={`transition-colors duration-200 cursor-pointer ${
@@ -401,7 +401,7 @@ export default function WhatsOnBlock(props) {
                         <select
                             value={filters.month || ''}
                             onChange={(e) => handleFilterChange('month', e.target.value ? parseInt(e.target.value) : null)}
-                            className="w-full px-[5px] border-1 border-[var(--s-accent)] font-normarl text-[var(--s-accent)] w-[100px] h-[34px]"
+                            className="w-full px-[5px] border-1 border-[var(--s-accent)] font-normal text-[var(--s-accent)] w-[100px] min-w-[100px] h-[34px]"
                         >
                             {monthOptions.map((option) => (
                                 <option key={option.value} value={option.value || ''}>
@@ -416,7 +416,7 @@ export default function WhatsOnBlock(props) {
                         <select
                             value={filters.year || ''}
                             onChange={(e) => handleFilterChange('year', e.target.value ? parseInt(e.target.value) : null)}
-                            className="w-full px-[5px] border-1 border-[var(--s-accent)] font-normarl text-[var(--s-accent)] w-[100px] h-[34px]"
+                            className="w-full px-[5px] border-1 border-[var(--s-accent)] font-normarl text-[var(--s-accent)] w-[100px] min-w-[80px] h-[34px]"
                         >
                             {yearOptions.map((option) => (
                                 <option key={option.value} value={option.value || ''}>

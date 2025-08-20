@@ -1,11 +1,10 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import { usePathname } from 'next/navigation';
 
 export default function ScriptLoader({ scripts }) {
-    const pathname = usePathname();
     const scriptRefs = useRef([]);
     const isLoading = useRef(false);
+    const hasLoadedCounter = useRef(false);
     
     useEffect(() => {
         // Prevent double loading
@@ -32,7 +31,24 @@ export default function ScriptLoader({ scripts }) {
                     await new Promise((resolve, reject) => {
                         const script = document.createElement('script');
                         script.src = src;
-                        script.onload = resolve;
+                        script.onload = () => {
+                            // Handle counters - show final values on return visits only
+                            if (src.includes('counter')) {
+                                const counterElements = document.querySelectorAll('.gs-counter');
+                                counterElements.forEach(element => {
+                                    // If counter script was loaded before, show final values
+                                    if (hasLoadedCounter.current) {
+                                        const endValue = element.getAttribute('data-end');
+                                        if (endValue) {
+                                            element.textContent = endValue;
+                                            element.classList.add('countfinished');
+                                        }
+                                    }
+                                });
+                                hasLoadedCounter.current = true;
+                            }
+                            resolve();
+                        };
                         script.onerror = reject;
                         document.body.appendChild(script);
                         scriptRefs.current.push(script);
@@ -56,7 +72,7 @@ export default function ScriptLoader({ scripts }) {
             scriptRefs.current = [];
             isLoading.current = false;
         };
-    }, [scripts, pathname]);
+    }, [scripts]);
     
     return null;
 }

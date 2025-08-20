@@ -1,74 +1,155 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { getFooterData, generateStyleTags } from "../../lib/footer";
+import { usePathname } from 'next/navigation';
+
+
+export function useLangFromPath() {
+    const pathname = usePathname();
+    const pathSegments = pathname.split("/").filter(Boolean);
+  
+    if (pathSegments.length > 0 && ["en", "th"].includes(pathSegments[0])) {
+      return pathSegments[0];
+    }
+    return "en"; // default
+}
 
 export default function Footer({ footerData = null, isServerSide = false }) {
     const [localFooterData, setLocalFooterData] = useState(footerData);
     const [isLoading, setIsLoading] = useState(!isServerSide);
-
+    const currentLang = useLangFromPath();
     // Use server data if provided, otherwise fetch client-side
     useEffect(() => {
         if (isServerSide && footerData) {
-            setLocalFooterData(footerData);
-            setIsLoading(false);
-            return;
+          setLocalFooterData(footerData);
+          setIsLoading(false);
+          return;
         }
-
-        async function fetchFooterData() {
-            setIsLoading(true);
-            try {
-                const data = await getFooterData();
-                setLocalFooterData(data);
-            } catch (error) {
-                console.error("Error loading footer data:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        }
-
-        fetchFooterData();
-    }, [isServerSide, footerData]);
+        let cancelled = false;
+        (async () => {
+          setIsLoading(true);
+          try {
+            const data = await getFooterData();
+            if (!cancelled) setLocalFooterData(data);
+          } catch (error) {
+            console.error("Error loading footer data:", error);
+          } finally {
+            if (!cancelled) setIsLoading(false);
+          }
+        })();
+        return () => { cancelled = true; };
+      }, [isServerSide, footerData]);
+    
 
     // Mobile menu toggle functionality - runs after footer data is loaded
     useEffect(() => {
-        // Only run if footer data is loaded and not loading
         if (!localFooterData || isLoading) return;
 
-        const toggleButton = document.querySelector(".menu-footer-accordion");
-        const mobileMenu = document.getElementById("mobile_menu");
+        let timeoutId;
+        let retryCount = 0;
+        const maxRetries = 10;
+        let cleanupFunction = null;
+        let observer = null;
 
-        if (mobileMenu) {
-            mobileMenu.style.display = 'none';
-        }
+        const setupToggle = () => {
+            const toggleButton = document.querySelector(".menu-footer-accordion");
+            const mobileMenu = document.getElementById("mobile_menu");
 
-        const handleToggle = () => {
-            if (mobileMenu) {
-                const isHidden = mobileMenu.style.display === 'none';
-                mobileMenu.style.display = isHidden ? 'block' : 'none';
+            if (!toggleButton || !mobileMenu) {
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    timeoutId = setTimeout(setupToggle, 100);
+                }
+                return;
+            }
+
+            // Always reset hidden state & active class after render/lang swap
+            mobileMenu.style.display = "none";
+            toggleButton.classList.remove("active");
+
+            const handleToggle = () => {
+                const isHidden = mobileMenu.style.display === "none";
+                mobileMenu.style.display = isHidden ? "block" : "none";
                 
-                // Toggle active class on the toggle button
-                if (toggleButton) {
+                if (isHidden) {
+                    toggleButton.classList.add("active");
+                } else {
+                    toggleButton.classList.remove("active");
+                }
+            };
+
+            // Remove any existing listeners first
+            toggleButton.removeEventListener("click", handleToggle);
+            // Add new listener
+            toggleButton.addEventListener("click", handleToggle);
+
+            // Store cleanup function
+            cleanupFunction = () => {
+                toggleButton.removeEventListener("click", handleToggle);
+            };
+
+            // Set up MutationObserver to watch for DOM changes
+            const footerElement = document.querySelector('footer');
+            if (footerElement && !observer) {
+                observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'childList') {
+                            // Check if toggle elements were added/removed
+                            const hasToggleButton = footerElement.querySelector(".menu-footer-accordion");
+                            const hasMobileMenu = footerElement.querySelector("#mobile_menu");
+                            
+                            if (hasToggleButton && hasMobileMenu) {
+                                // Re-setup toggle if elements are present
+                                retryCount = 0;
+                                setupToggle();
+                            }
+                        }
+                    });
+                });
+
+                observer.observe(footerElement, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+        };
+
+        // Global click handler as fallback
+        const globalClickHandler = (event) => {
+            if (event.target.classList.contains('menu-footer-accordion')) {
+                const mobileMenu = document.getElementById("mobile_menu");
+                if (mobileMenu) {
+                    const isHidden = mobileMenu.style.display === "none";
+                    mobileMenu.style.display = isHidden ? "block" : "none";
+                    
                     if (isHidden) {
-                        toggleButton.classList.add('active');
+                        event.target.classList.add("active");
                     } else {
-                        toggleButton.classList.remove('active');
+                        event.target.classList.remove("active");
                     }
                 }
             }
         };
 
-        if (toggleButton && mobileMenu) {
-            toggleButton.addEventListener("click", handleToggle);
-        }
+        // Add global click listener
+        document.addEventListener('click', globalClickHandler);
 
-        // Cleanup function
+        // Start setup with a small delay to ensure DOM is ready
+        timeoutId = setTimeout(setupToggle, 50);
+        
         return () => {
-            if (toggleButton) {
-                toggleButton.removeEventListener("click", handleToggle);
+            if (timeoutId) {
+                clearTimeout(timeoutId);
             }
+            if (cleanupFunction) {
+                cleanupFunction();
+            }
+            if (observer) {
+                observer.disconnect();
+            }
+            document.removeEventListener('click', globalClickHandler);
         };
-    }, [localFooterData, isLoading]); // Depend on localFooterData and isLoading
+    }, [localFooterData, isLoading, currentLang]);
 
     if (isLoading) {
         return <footer></footer>;
@@ -81,9 +162,24 @@ export default function Footer({ footerData = null, isServerSide = false }) {
 
     return (
         <footer className="relative">
+
             {/* Render the footer content */}
-            {localFooterData?.content && (
-                <div dangerouslySetInnerHTML={{ __html: localFooterData.content }} />
+            {currentLang === 'th' ? (
+                localFooterData?.translations[0]?.content && (
+                    <div
+                        dangerouslySetInnerHTML={{
+                            __html: localFooterData.translations[0].content,
+                        }}
+                    />
+                )
+            ) : (
+                localFooterData?.content && (
+                    <div
+                        dangerouslySetInnerHTML={{
+                            __html: localFooterData.content,
+                        }}
+                    />
+                )
             )}
             
             {/* Add the processed styles to the head */}

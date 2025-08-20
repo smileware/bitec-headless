@@ -8,6 +8,9 @@ export async function getFooterData() {
         query GetFooterReusableBlock {
             reusableBlock(id: "theme-footer", idType: SLUG) {
                 content
+                translations {
+                    content
+                }
                 enqueuedStylesheets(first: 100) {
                     edges {
                         node {
