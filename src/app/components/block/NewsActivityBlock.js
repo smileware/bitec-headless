@@ -35,11 +35,16 @@ export default function NewsActivityBlock(props) {
             setNews(result.content);
             setPageInfo(result.pageInfo);
             
-            if (page === 1) {
-                setTotalPages(result.pageInfo.hasNextPage ? 2 : 1);
-            } else {
-                setTotalPages(result.pageInfo.hasNextPage ? page + 1 : page);
+            
+            // if (page === 1) {
+            //     setTotalPages(result.pageInfo.hasNextPage ? 2 : 1);
+            // } else {
+            //     setTotalPages(result.pageInfo.hasNextPage ? page + 1 : page);
+            // }
+            if (result.pageInfo?.offsetPagination?.total) {
+                setTotalPages(Math.ceil(result.pageInfo.offsetPagination.total / 9));
             }
+
         } catch (error) {
             console.error('Error fetching news:', error);
         } finally {
@@ -60,18 +65,10 @@ export default function NewsActivityBlock(props) {
 
     const renderPagination = () => {
         if (totalPages <= 1) return null;
-
+      
         const pages = [];
-        const maxVisiblePages = 5;
-        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-        if (endPage - startPage + 1 < maxVisiblePages) {
-            startPage = Math.max(1, endPage - maxVisiblePages + 1);
-        }
-
-        // Previous button
-        // Always show Previous button, add -disable if on first page
+      
+        // Previous
         pages.push(
             <button
                 key="prev"
@@ -84,38 +81,74 @@ export default function NewsActivityBlock(props) {
                 </svg>
             </button>
         );
-
-        // Page numbers
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(
-                <button
-                    key={i}
-                    onClick={() => handlePageChange(i)}
-                    className={`theme-pagination${i === currentPage ? ' active' : ''}`}
-                >
-                    {i}
-                </button>
-            );
-        }
-
-        // Always show Next button, add -disable if on last page
+        // Always show page 1
         pages.push(
             <button
-                key="next"
-                onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
-                className={`theme-pagination -next${currentPage === totalPages ? ' disable' : ''}`}
-                disabled={currentPage === totalPages}
+                key={1}
+                onClick={() => handlePageChange(1)}
+                className={`theme-pagination${currentPage === 1 ? ' active' : ''}`}
             >
-                <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0.738281 13.7375L6.46328 8L0.738281 2.2625L2.50078 0.5L10.0008 8L2.50078 15.5L0.738281 13.7375Z" fill="#CE0E2D"/>
-                </svg>
+                1
             </button>
         );
+        let startPage = Math.max(2, currentPage - 2);
+        let endPage = Math.min(totalPages - 1, currentPage + 2);
+      
+        // Add ellipsis after first page if needed
+        if (startPage > 2) {
+            pages.push(<span key="start-ellipsis" className="px-2">…</span>);
+        }
 
+        
+        // Middle pages
+        for (let i = startPage; i <= endPage; i++) {
+          pages.push(
+            <button
+              key={i}
+              onClick={() => handlePageChange(i)}
+              className={`theme-pagination${i === currentPage ? ' active' : ''}`}
+            >
+              {i}
+            </button>
+          );
+        }
+      
+        // Add ellipsis before last page if needed
+        if (endPage < totalPages - 1) {
+          pages.push(<span key="end-ellipsis" className="px-2">…</span>);
+        }
+      
+        // Always show last page (if > 1)
+        if (totalPages > 1) {
+          pages.push(
+            <button
+              key={totalPages}
+              onClick={() => handlePageChange(totalPages)}
+              className={`theme-pagination${currentPage === totalPages ? ' active' : ''}`}
+            >
+              {totalPages}
+            </button>
+          );
+        }
+      
+        // Next
+        pages.push(
+          <button
+            key="next"
+            onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+            className={`theme-pagination -next${currentPage === totalPages ? ' disable' : ''}`}
+            disabled={currentPage === totalPages}
+          >
+            <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0.738281 13.7375L6.46328 8L0.738281 2.2625L2.50078 0.5L10.0008 8L2.50078 15.5L0.738281 13.7375Z" fill="#CE0E2D"/>
+            </svg>
+          </button>
+        );
+      
         return (
-            <div className="flex justify-center items-center mt-8 mb-4">
-                {pages}
-            </div>
+          <div className="flex justify-center items-center mt-8 mb-4">
+            {pages}
+          </div>
         );
     };
 
