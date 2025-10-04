@@ -1,10 +1,26 @@
 import { gql } from "graphql-request";
 import { graphQLClient } from "./api";
 
-export async function GetPageWithBitecLiveGallery(slug) {
+export async function GetPageWithBitecLiveGallery(slug, preferTranslation = false) {
     const query = gql`
         query GetPageWithBitecLiveGallery($uri: String!) {
             pageBy(uri: $uri) {
+                translations { 
+                    editorBlocks {
+                        ... on AcfBitecLiveGallery {
+                            blockBitecLiveGallery {
+                                bitecLiveGallery {
+                                    nodes {
+                                        id
+                                        mediaItemUrl
+                                        altText
+                                        caption
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 editorBlocks {
                     ... on AcfBitecLiveGallery {
                         blockBitecLiveGallery {
@@ -30,8 +46,12 @@ export async function GetPageWithBitecLiveGallery(slug) {
         console.error("GraphQL fetch error:", error);
         return [];
     }
-    // Find the AcfBitecLiveGallery block with images
-    const blocks = data?.pageBy?.editorBlocks || [];
+    // Manage Translate Content.
+    const baseBlocks = data?.pageBy?.editorBlocks || [];
+    const transBlocks = data?.pageBy?.translations?.[0]?.editorBlocks || [];
+    const blocks = (preferTranslation && transBlocks?.length) ? transBlocks : baseBlocks;
+    // const blocks = data?.pageBy?.editorBlocks || [];
+
     const galleryBlock = blocks.find(
         (block) =>
             block?.blockBitecLiveGallery?.bitecLiveGallery?.nodes?.length > 0
@@ -49,21 +69,66 @@ export async function GetPageWithBitecLiveGallery(slug) {
     return images;
 }
 
-export async function GetPageWithBitecLiveFacilities(slug) {
+export async function GetPageWithBitecLiveFacilities(slug, preferTranslation = false) {
     const query = gql`
         query GetPageWithBitecLiveFacilities($uri: String!) {
             pageBy(uri: $uri) {
+                translations { 
+                    editorBlocks {
+                        ... on AcfBitecLiveFacilities {
+                            blockBitecLiveFacilities {
+                                bitecLiveFacilities {
+                                    facilityName
+                                    facilityDescription
+                                    facilityImage {
+                                        node {
+                                            id
+                                            sourceUrl
+                                            altText
+                                            mimeType
+                                            mediaDetails {
+                                                width
+                                                height
+                                            }
+                                        }
+                                    }
+                                    facilityGallery {
+                                        nodes {
+                                            sourceUrl
+                                            altText
+                                            mediaDetails {
+                                                width
+                                                height
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 editorBlocks {
                     ... on AcfBitecLiveFacilities {
                         blockBitecLiveFacilities {
                             bitecLiveFacilities {
                                 facilityName
+                                facilityDescription
                                 facilityImage {
                                     node {
                                         id
                                         sourceUrl
                                         altText
                                         mimeType
+                                        mediaDetails {
+                                            width
+                                            height
+                                        }
+                                    }
+                                }
+                                facilityGallery {
+                                    nodes {
+                                        sourceUrl
+                                        altText
                                         mediaDetails {
                                             width
                                             height
@@ -81,11 +146,17 @@ export async function GetPageWithBitecLiveFacilities(slug) {
     let data;
     try {
         data = await graphQLClient.request(query, variables);
+      
     } catch (error) {
         console.error("GraphQL fetch error:", error);
         return [];
     }
-    const blocks = data?.pageBy?.editorBlocks || [];
+
+    const baseBlocks = data?.pageBy?.editorBlocks || [];
+    const transBlocks = data?.pageBy?.translations?.[0]?.editorBlocks || [];
+    const blocks = (preferTranslation && transBlocks?.length) ? transBlocks : baseBlocks;
+
+    // const blocks = data?.pageBy?.editorBlocks || [];
     // Find all facilities arrays and flatten them
     const facilitiesArrays = blocks
         .map((block) => block?.blockBitecLiveFacilities?.bitecLiveFacilities)
@@ -93,14 +164,42 @@ export async function GetPageWithBitecLiveFacilities(slug) {
     const facilities = facilitiesArrays.flat().map((facility) => ({
         name: facility.facilityName || "",
         image: facility.facilityImage || "",
+        description: facility.facilityDescription || "", 
+        gallery: facility.facilityGallery?.nodes || []
     }));
+    console.log(facilities, 'faci');
     return facilities;
 }
 
-export async function GetPageWithQueryGalleryByType(slug) {
+export async function GetPageWithQueryGalleryByType(slug, preferTranslation = false) {
     const query = gql`
         query GetPageWithQueryGalleryByType($uri: String!) {
             pageBy(uri: $uri) {
+                translations { 
+                    editorBlocks {
+                        ... on AcfQueryGalleryByType {
+                            blockQueryGalleryByType {
+                                fieldGroupName
+                                queryGalleryDescription
+                                queryGalleryTitle
+                                queryGalleryLink {
+                                    target
+                                    title
+                                    url
+                                }
+                                queryGalleryByType {
+                                    edges {
+                                        node {
+                                            id
+                                            name
+                                            slug
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 editorBlocks {
                     ... on AcfQueryGalleryByType {
                         blockQueryGalleryByType {
@@ -135,7 +234,12 @@ export async function GetPageWithQueryGalleryByType(slug) {
         console.error("GraphQL fetch error:", error);
         return null;
     }
-    const blocks = data?.pageBy?.editorBlocks || [];
+
+    const baseBlocks = data?.pageBy?.editorBlocks || [];
+    const transBlocks = data?.pageBy?.translations?.[0]?.editorBlocks || [];
+    const blocks = (preferTranslation && transBlocks?.length) ? transBlocks : baseBlocks;
+
+    // const blocks = data?.pageBy?.editorBlocks || [];
     const galleryBlock = blocks.find((block) => block?.blockQueryGalleryByType);
 
     if (!galleryBlock) {
@@ -272,10 +376,60 @@ export async function GetPageWithTabToAccordion(slug) {
     };
 }
 
-export async function GetPageWithEventHallCarousel(slug) {
+export async function GetPageWithEventHallCarousel(slug, preferTranslation = false) {
     const query = gql`
         query GetPageWithEventHallCarousel($uri: String!) {
             pageBy(uri: $uri) {
+                translations { 
+                    editorBlocks {
+                        ... on AcfEventHallCarousel {
+                            blockEventHallCarousel {
+                                eventHallCarousel {
+                                    eventHallImage {
+                                        node {
+                                            sourceUrl
+                                            altText
+                                            mediaDetails {
+                                                width
+                                                height
+                                            }
+                                        }
+                                    }
+                                    eventHallTitle
+                                    eventHallDescription
+                                    eventHallSize
+                                    eventHallTags {
+                                        tagName
+                                    }
+                                    eventHallGallery {
+                                        nodes {
+                                            sourceUrl
+                                            altText
+                                            mediaDetails {
+                                                width
+                                                height
+                                            }
+                                        }
+                                    }
+                                    eventHallDetail { 
+                                        iconImage {
+                                            node {
+                                                sourceUrl
+                                                altText
+                                                mediaDetails {
+                                                    width
+                                                    height
+                                                }
+                                            }
+                                        }
+                                        iconSvg
+                                        iconDetail
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 editorBlocks {
                     ... on AcfEventHallCarousel {
                         blockEventHallCarousel {
@@ -291,9 +445,34 @@ export async function GetPageWithEventHallCarousel(slug) {
                                     }
                                 }
                                 eventHallTitle
+                                eventHallDescription
                                 eventHallSize
                                 eventHallTags {
                                     tagName
+                                }
+                                eventHallGallery {
+                                    nodes {
+                                        sourceUrl
+                                        altText
+                                        mediaDetails {
+                                            width
+                                            height
+                                        }
+                                    }
+                                }
+                                eventHallDetail { 
+                                    iconImage {
+                                        node {
+                                            sourceUrl
+                                            altText
+                                            mediaDetails {
+                                                width
+                                                height
+                                            }
+                                        }
+                                    }
+                                    iconSvg
+                                    iconDetail
                                 }
                             }
                         }
@@ -310,7 +489,12 @@ export async function GetPageWithEventHallCarousel(slug) {
         console.error("GraphQL fetch error:", error);
         return null;
     }
-    const blocks = data?.pageBy?.editorBlocks || [];
+
+    // Manage Translate Content.
+    const baseBlocks = data?.pageBy?.editorBlocks || [];
+    const transBlocks = data?.pageBy?.translations?.[0]?.editorBlocks || [];
+    const blocks = (preferTranslation && transBlocks?.length) ? transBlocks : baseBlocks;
+
     const eventHallBlocks = blocks.filter(
         (block) => block?.blockEventHallCarousel
     );
@@ -338,6 +522,9 @@ export async function GetPageWithEventHallCarousel(slug) {
                 tags: (eventHall.eventHallTags || []).map(
                     (tag) => tag.tagName || ""
                 ),
+                description: eventHall.eventHallDescription || "",
+                gallery: eventHall.eventHallGallery?.nodes || [],
+                detail: eventHall.eventHallDetail || []
             };
         });
         
@@ -352,10 +539,34 @@ export async function GetPageWithEventHallCarousel(slug) {
     };
 }
 
-export async function GetPageWithBitecLiveHallCarousel(slug) {
+export async function GetPageWithBitecLiveHallCarousel(slug, preferTranslation = false) {
     const query = gql`
         query GetPageWithBitecLiveHallCarousel($uri: String!) {
             pageBy(uri: $uri) {
+                translations { 
+                    editorBlocks {
+                        ... on AcfBitecLiveHallCarousel {
+                            blockBitecLiveHallCarousel {
+                                bitecLiveHallGallery {
+                                    nodes {
+                                        id
+                                        mediaItemUrl
+                                        altText
+                                        caption
+                                    }
+                                }
+                                bitecLiveHallTitle
+                                bitecLiveHallSize
+                                bitecLiveHallCapacity
+                                bitecLiveHallLink {
+                                    url
+                                    title
+                                    target
+                                }
+                            }
+                        }
+                    }
+                }
                 editorBlocks {
                     ... on AcfBitecLiveHallCarousel {
                         blockBitecLiveHallCarousel {
@@ -389,7 +600,12 @@ export async function GetPageWithBitecLiveHallCarousel(slug) {
         console.error("GraphQL fetch error:", error);
         return null;
     }
-    const blocks = data?.pageBy?.editorBlocks || [];
+
+    // Manage Translate Content.
+    const baseBlocks = data?.pageBy?.editorBlocks || [];
+    const transBlocks = data?.pageBy?.translations?.[0]?.editorBlocks || [];
+    const blocks = (preferTranslation && transBlocks?.length) ? transBlocks : baseBlocks;
+
     const bitecLiveHallBlock = blocks.find(
         (block) => block?.blockBitecLiveHallCarousel
     );
@@ -423,10 +639,30 @@ export async function GetPageWithBitecLiveHallCarousel(slug) {
     };
 }
 
-export async function GetPageWithPhotoGallery(slug) {
+export async function GetPageWithPhotoGallery(slug, preferTranslation = false) {
     const query = gql`
         query GetPageWithPhotoGallery($uri: String!) {
             pageBy(uri: $uri) {
+                translations { 
+                    editorBlocks {
+                        ... on AcfPhotoGallery {
+                            blockPhotoGallery {
+                                photoGallery {
+                                    nodes {
+                                        id
+                                        mediaItemUrl
+                                        altText
+                                        caption
+                                        mediaDetails {
+                                            width
+                                            height
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 editorBlocks {
                     ... on AcfPhotoGallery {
                         blockPhotoGallery {
@@ -457,7 +693,13 @@ export async function GetPageWithPhotoGallery(slug) {
         return { photoGalleries: [] };
     }
     
-    const blocks = data?.pageBy?.editorBlocks || [];
+
+    // Manage Translate Content.
+    const baseBlocks = data?.pageBy?.editorBlocks || [];
+    const transBlocks = data?.pageBy?.translations?.[0]?.editorBlocks || [];
+    const blocks = (preferTranslation && transBlocks?.length) ? transBlocks : baseBlocks;
+
+    // const blocks = data?.pageBy?.editorBlocks || [];
     const photoGalleryBlocks = blocks.filter((block) => block?.blockPhotoGallery);
     
     if (photoGalleryBlocks.length === 0) {
@@ -605,9 +847,10 @@ export async function GetHotels(limit = 8) {
     }
 }
 
-export async function GetRecommendedHotels(limit = 8) {
+export async function GetRecommendedHotels(limit = 8, isTH = false) {
+    const terms = isTH ? ["recommend-th"] : ["recommend", "highlight"];
     const query = gql`
-        query GetRecommendedHotels($limit: Int!) {
+        query GetRecommendedHotels($limit: Int!, $terms: [String]) {
             hotels(
                 first: $limit
                 where: { 
@@ -616,7 +859,7 @@ export async function GetRecommendedHotels(limit = 8) {
                         taxArray: [
                             {
                                 taxonomy: HOTELCATEGORY
-                                terms: ["recommend"]
+                                terms: $terms
                                 field: SLUG
                                 operator: IN
                             }
@@ -653,9 +896,33 @@ export async function GetRecommendedHotels(limit = 8) {
                         }
                     }
                     translations {
+                        id
                         title
                         slug
                         excerpt
+                        date
+                        hotelDetail {
+                            hotelShortAddress
+                            hotelTransportation
+                        }
+                        hotelCategories {
+                            nodes {
+                                id
+                                name
+                                slug
+                            }
+                        }
+                        featuredImage {
+                            node {
+                                id
+                                sourceUrl
+                                altText
+                                mediaDetails {
+                                    width
+                                    height
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -663,19 +930,37 @@ export async function GetRecommendedHotels(limit = 8) {
     `;
 
     try {
-        const data = await graphQLClient.request(query, { limit });
-        return data?.hotels?.nodes || [];
+        const data = await graphQLClient.request(query, { limit, terms });
+        const nodes = data?.hotels?.nodes || [];
+      
+        if (!isTH) return nodes;
+      
+        return nodes.map(h => {
+            const t = h.translations?.[0];
+            if (!t) return h; 
+            return {
+                ...h,
+                title: t.title ?? h.title,
+                slug: t.slug ?? h.slug,
+                excerpt: t.excerpt ?? h.excerpt,
+                date: t.date ?? h.date,
+                hotelDetail: t.hotelDetail ?? h.hotelDetail,
+                hotelCategories: t.hotelCategories ?? h.hotelCategories,
+                featuredImage: t.featuredImage ?? h.featuredImage,
+            };
+        });
+        
     } catch (error) {
         console.error("GraphQL fetch error for recommended hotels:", error);
         return [];
     }
 }
 
-export async function GetAllHotels() {
+export async function GetAllHotels(isTH = false) {
     const query = gql`
         query GetAllHotels {
             hotels(
-                first: 100
+                first: 200
                 where: { orderby: { field: DATE, order: DESC } }
             ) {
                 nodes {
@@ -709,9 +994,35 @@ export async function GetAllHotels() {
                         }
                     }
                     translations {
+                        id
                         title
                         slug
                         excerpt
+                        date
+                        hotelDetail {
+                            hotelShortAddress
+                            hotelTransportation
+                            latitude
+                            longitude
+                        }
+                        hotelCategories {
+                            nodes {
+                                id
+                                name
+                                slug
+                            }
+                        }
+                        featuredImage {
+                            node {
+                                id
+                                sourceUrl
+                                altText
+                                mediaDetails {
+                                    width
+                                    height
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -720,7 +1031,69 @@ export async function GetAllHotels() {
 
     try {
         const data = await graphQLClient.request(query);
-        return data?.hotels?.nodes || [];
+        const nodes = data?.hotels?.nodes || [];
+    
+        // EN (default)
+        if (!isTH) return nodes;
+    
+        // TH: override fields with the first translation (WPGraphQL returns “other locales” here)
+        return nodes.map(h => {
+          const t = h.translations?.[0];
+          if (!t) return h; // fallback to base if no TH
+          return {
+            ...h,
+            title: t.title ?? h.title,
+            slug: t.slug ?? h.slug,
+            excerpt: t.excerpt ?? h.excerpt,
+            date: t.date ?? h.date,
+            hotelDetail: t.hotelDetail ?? h.hotelDetail,
+            hotelCategories: t.hotelCategories ?? h.hotelCategories,
+            featuredImage: t.featuredImage ?? h.featuredImage,
+          };
+        });
+    } catch (error) {
+        console.error("GraphQL fetch error for hotels with coordinates:", error);
+        return [];
+    }
+}
+
+
+export async function GetAllCategories(isTH = false) {
+    const query = gql`
+      query GetAllCategories {
+        hotelCategories {
+          nodes {
+            id
+            name
+            slug
+            count
+            translations {
+              id
+              name
+              slug
+              count
+            }
+          }
+        }
+      }
+    `;
+    
+    try {
+        const data = await graphQLClient.request(query);
+        const nodes = data?.hotelCategories?.nodes ?? [];
+        const cats = nodes
+            .map(c => {
+                const t = isTH && c.translations?.[0] ? c.translations[0] : null;
+                return {
+                id: t?.id ?? c.id,
+                name: t?.name ?? c.name,
+                slug: t?.slug ?? c.slug,
+                count: (isTH ? t?.count : c.count) ?? 0,
+                };
+            })
+            .filter(c => c.count > 0); // ✅ only categories that have posts
+        return cats.map(({ count, ...rest }) => rest);
+
     } catch (error) {
         console.error("GraphQL fetch error for hotels with coordinates:", error);
         return [];

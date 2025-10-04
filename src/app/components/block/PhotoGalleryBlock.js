@@ -13,9 +13,20 @@ export default function PhotoGalleryBlock(props) {
     useEffect(() => {
         async function fetchGalleryData() {
             try {
-                const currentPath = window.location.pathname;
-                const slug = currentPath === '/' ? 'home' : currentPath.replace(/^\//, '').replace(/\/$/, '');
-                const galleryData = await GetPageWithPhotoGallery(slug);
+                // const currentPath = window.location.pathname;
+                // const slug = currentPath === '/' ? 'home' : currentPath.replace(/^\//, '').replace(/\/$/, '');
+                // const galleryData = await GetPageWithPhotoGallery(slug);
+
+
+                const path = window.location.pathname.replace(/^\/|\/$/g, "");
+                const parts = path.split("/").filter(Boolean);
+                const hasLangPrefix = parts[0] === "th";
+                const isTH = hasLangPrefix;
+                const slug = hasLangPrefix ? (parts.slice(1).join("/") || "home") : (path || "home");
+                const galleryData = await GetPageWithPhotoGallery(slug, isTH);
+
+
+
 
                 setGalleryData(galleryData);
                 

@@ -23,7 +23,15 @@ export default function RecommendedHotelCarouselBlock(props) {
         const fetchRecommendedHotels = async () => {
             try {
                 setLoading(true);
-                const recommendedHotels = await GetRecommendedHotels(8);
+
+                const path = window.location.pathname.replace(/^\/|\/$/g, "");
+                const parts = path.split("/").filter(Boolean);
+                const hasLangPrefix = parts[0] === "th";
+                const isTH = hasLangPrefix;
+                const recommendedHotels = await GetRecommendedHotels(8, isTH);
+
+                // const recommendedHotels = await GetRecommendedHotels(8);
+
                 setHotels(recommendedHotels);
             } catch (err) {
                 console.error('Error fetching recommended hotels:', err);
@@ -146,7 +154,7 @@ export default function RecommendedHotelCarouselBlock(props) {
                                         <div className="max-w-full lg:px-0 px-[20px]">
 
                                             <div className="text-white text-[22px]">
-                                                HOTEL RECOMMENDED
+                                                HOTEL HIGHLIGHT
                                             </div>
                                             <h3 className="lg:text-[67px] text-[39px] font-bold mb-[16px] leading-[1.1] lg:mb-[30px]">
                                                 {hotel.title}

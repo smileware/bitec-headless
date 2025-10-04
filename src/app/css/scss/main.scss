@@ -1148,3 +1148,77 @@ body {
   opacity: 0;
   z-index: 99999;
 }
+
+/* ฉากหลังมืด (ของ Popover API) */
+[popover]::backdrop {
+  background: rgba(0, 0, 0, .7);
+}
+:where([popover]) { inset: unset; }
+
+:popover-open {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  background: #fff;
+  border: none;
+  width: min(90vw, 830px);
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+
+.popup-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 35px;
+  width: 35px;
+  background-color: var(--s-accent);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:hover { 
+    background-color: var(--s-accent-hover);
+  }
+  z-index: 2;
+}
+
+.swiper-popup {  
+  position: relative;
+  .swiper { 
+    padding-bottom: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+    .swiper-pagination { 
+      bottom: 10px;
+      .swiper-pagination-bullet { 
+        border-radius: 0;
+        opacity: .7;
+        width: 10px;
+        height: 10px;
+        background-color: #CCCCCE;
+        &.swiper-pagination-bullet-active { 
+          width: 10px;
+          height: 10px;
+          opacity: 1;
+          background-color: var(--s-accent);
+        }
+        @media (max-width: 1023px) {
+          width: 10px;
+          height: 10px;
+          &.swiper-pagination-bullet-active { 
+            width: 10px;
+            height: 10px;
+          }
+        }
+      }
+      @media (max-width: 1023px) {
+        bottom: 20px;
+        padding-right: 20px;
+      }
+    }
+  }
+}

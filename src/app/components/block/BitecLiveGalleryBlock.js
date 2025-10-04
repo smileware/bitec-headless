@@ -19,7 +19,15 @@ export default function BitecLiveGalleryBlock(props) {
     useEffect(() => {
         async function fetchEvents() {
             try {
-                const recentEvents = await GetPageWithBitecLiveGallery('bitec-live');
+
+                const path = window.location.pathname.replace(/^\/|\/$/g, "");
+                const parts = path.split("/").filter(Boolean);
+                const hasLangPrefix = parts[0] === "th";
+                const isTH = hasLangPrefix;
+                const slug = hasLangPrefix ? (parts.slice(1).join("/") || "home") : (path || "home");
+                const recentEvents = await GetPageWithBitecLiveGallery(slug, isTH);
+                // const recentEvents = await GetPageWithBitecLiveGallery('bitec-live');
+
                 setEvents(recentEvents);
             } catch (error) {
                 setError(error);

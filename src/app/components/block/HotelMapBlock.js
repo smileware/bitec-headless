@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { GetAllHotels } from '@/app/lib/block';
+import { GetAllHotels, GetAllCategories } from '@/app/lib/block';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -20,6 +20,7 @@ export default function HotelMapBlock(props) {
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markersRef = useRef([]);
+    const [categories, setCategories] = useState([]);
 
     // Simple language detection from URL path
     const getCurrentLanguage = () => {
@@ -65,8 +66,12 @@ export default function HotelMapBlock(props) {
         const fetchHotels = async () => {
             try {
                 setLoading(true);
-                const hotelsData = await GetAllHotels();
-                console.log(hotelsData);
+                const isTH = (pathname.split('/').filter(Boolean)[0] === 'th');
+                
+                const hotelsData = await GetAllHotels(isTH);
+                const cats = await GetAllCategories(isTH);
+                setCategories(cats);
+
                 // Filter hotels that have coordinates (ACF fields are strings)
                 const hotelsWithCoords = hotelsData.filter(hotel => 
                     hotel.hotelDetail?.latitude && 
@@ -163,8 +168,8 @@ export default function HotelMapBlock(props) {
     const createCustomMarker = (hotel, index, map) => {
         // Check if hotel has 'recommended' category
         const isRecommended = hotel.hotelCategories?.nodes?.some(category => 
-            category.name.toLowerCase() === 'recommend' || 
-            category.slug.toLowerCase() === 'recommend'
+            category.slug.toLowerCase() === 'recommend' ||
+            category.slug.toLowerCase() === 'recommend-th' 
         );
 
         // Choose SVG based on recommendation status
@@ -229,9 +234,10 @@ export default function HotelMapBlock(props) {
         });
 
         // Check if hotel has "Recommend" category
-        const hasRecommendCategory = hotel.hotelCategories?.nodes?.some(category => 
-            category.name?.toLowerCase() === 'recommend'
-        );
+        const hasRecommendCategory = hotel.hotelCategories?.nodes?.some(category => {
+            const name = (category.name || '').toLowerCase().trim();
+            return name === 'highlight' || name === 'ไฮไลท์';
+        });
 
         // Get hotel title and excerpt based on language
         const hotelTitle = currentLang === 'th'
@@ -310,31 +316,56 @@ export default function HotelMapBlock(props) {
         markersRef.current.push(bitecMarker);
     };
 
-    // Get unique categories from all hotels
-    const getAllCategories = () => {
-        const categories = new Set();
-        hotels.forEach(hotel => {
-            hotel.hotelCategories?.nodes?.forEach(category => {
-                categories.add(JSON.stringify({ id: category.id, name: category.name, slug: category.slug }));
-            });
-        });
-        return Array.from(categories).map(cat => JSON.parse(cat));
-    };
+    // // Get unique categories from all hotels
+    // const getAllCategories = () => {
+    //     const categories = new Set();
+    //     hotels.forEach(hotel => {
+    //         hotel.hotelCategories?.nodes?.forEach(category => {
+    //             categories.add(JSON.stringify({ id: category.id, name: category.name, slug: category.slug }));
+    //         });
+    //     });
+    //     return Array.from(categories).map(cat => JSON.parse(cat));
+    // };
 
     // Filter hotels based on search and categories
+    // const getFilteredHotels = () => {
+    //     return hotels.filter(hotel => {
+    //         // Search filter
+    //         const matchesSearch = searchTerm === '' || 
+    //             hotel.title.toLowerCase().includes(searchTerm.toLowerCase());
+
+    //         // Category filter
+    //         const matchesCategory = selectedCategories.length === 0 || 
+    //             hotel.hotelCategories?.nodes?.some(category => 
+    //                 selectedCategories.includes(category.id)
+    //             );
+
+    //         return matchesSearch && matchesCategory;
+    //     });
+    // };
     const getFilteredHotels = () => {
-        return hotels.filter(hotel => {
-            // Search filter
-            const matchesSearch = searchTerm === '' || 
-                hotel.title.toLowerCase().includes(searchTerm.toLowerCase());
 
-            // Category filter
-            const matchesCategory = selectedCategories.length === 0 || 
-                hotel.hotelCategories?.nodes?.some(category => 
-                    selectedCategories.includes(category.id)
-                );
+        // category order map: lower = earlier in your taxonomy order
+        const catRank = Object.fromEntries(categories.map((c, i) => [c.id, i]));
+        const rankOf = (h) => {
+          const ranks = h.hotelCategories?.nodes?.map(c => catRank[c.id]).filter(r => r !== undefined) || [];
+          return ranks.length ? Math.min(...ranks) : Number.POSITIVE_INFINITY; // no cat -> last
+        };
 
-            return matchesSearch && matchesCategory;
+        const filtered = hotels.filter(hotel => {
+          const matchesSearch =
+            !searchTerm || hotel.title.toLowerCase().includes(searchTerm.toLowerCase());
+          const matchesCategory =
+            selectedCategories.length === 0 ||
+            hotel.hotelCategories?.nodes?.some(c => selectedCategories.includes(c.id));
+          return matchesSearch && matchesCategory;
+        });
+      
+        // sort by category order, then by date DESC
+        return filtered.sort((a, b) => {
+          const ra = rankOf(a), rb = rankOf(b);
+          if (ra !== rb) return ra - rb;
+          return new Date(b.date) - new Date(a.date);
         });
     };
 
@@ -442,7 +473,7 @@ export default function HotelMapBlock(props) {
                                     HOTEL FILTER:
                                 </label>
                                 <div className="flex flex-wrap gap-[10px]">
-                                    {getAllCategories().map((category) => (
+                                    {categories.map((category) => (
                                         <button
                                             key={category.id}
                                             onClick={() => handleCategoryToggle(category.id)}
@@ -485,15 +516,18 @@ export default function HotelMapBlock(props) {
                                                                 height={80}
                                                                 className="object-cover w-[207px] h-full"
                                                             />
-                                                            
-                                                            {hotel.hotelCategories?.nodes?.some(category => 
-                                                                category.name?.toLowerCase() === 'recommend'
-                                                            ) && (
+
+
+                                                            {hotel.hotelCategories?.nodes?.some(({ name, slug }) => {
+                                                                const n = (name || '').toLowerCase().trim();
+                                                                const s = (slug || '').toLowerCase().trim();
+                                                                return n === 'highlight' || n === 'ไฮไลท์' || s === 'highlight' || s === 'recommend' || s === 'recommend-th';
+                                                            }) && (
                                                                 <div className="absolute bottom-[20px] left-[20px] bg-[#CE0E2D] text-white px-[20px] py-[2px] rounded-full text-[16px] font-[400] flex items-center gap-[10px]">
-                                                                    <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                     <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                         <path d="M8.61967 6.16683L6.99967 0.833496L5.37967 6.16683H0.333008L4.45301 9.10683L2.88634 14.1668L6.99967 11.0402L11.1197 14.1668L9.55301 9.10683L13.6663 6.16683H8.61967Z" fill="white"/>
                                                                     </svg>
-                                                                    Recommend
+                                                                    {currentLang === 'th' ? 'ไฮไลท์' : 'Highlight'}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -560,16 +594,32 @@ export default function HotelMapBlock(props) {
                                                             className="w-full h-auto object-cover min-h-[180px] max-h-[180px]"
                                                         />
                                                     </Link>
+
+
+
+                                                    {hotel.hotelCategories?.nodes?.some(({ name, slug }) => {
+                                                        const n = (name || '').toLowerCase().trim();
+                                                        const s = (slug || '').toLowerCase().trim();
+                                                        return n === 'highlight' || n === 'ไฮไลท์' || s === 'highlight' || s === 'recommend' || s === 'recommend-th';
+                                                    }) && (
+                                                        <div className="absolute top-[20px] lg:right-[30px] right-[20px] bg-[#CE0E2D] text-white px-[20px] py-[2px] rounded-full text-[16px] font-[400] flex items-center gap-[10px]">
+                                                            <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M8.61967 6.16683L6.99967 0.833496L5.37967 6.16683H0.333008L4.45301 9.10683L2.88634 14.1668L6.99967 11.0402L11.1197 14.1668L9.55301 9.10683L13.6663 6.16683H8.61967Z" fill="white"/>
+                                                            </svg>
+                                                            {currentLang === 'th' ? 'ไฮไลท์' : 'Highlight'}
+                                                        </div>
+                                                    )}
+{/* 
                                                     {hotel.hotelCategories?.nodes?.some(category => 
-                                                        category.name?.toLowerCase() === 'recommend'
+                                                        category.name?.toLowerCase() === 'highlight'
                                                     ) && (
                                                         <div className="absolute top-[20px] lg:right-[30px] right-[20px] bg-[#CE0E2D] text-white px-[20px] py-[2px] rounded-full text-[16px] font-[400] flex items-center gap-[10px]">
                                                             <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                 <path d="M8.61967 6.16683L6.99967 0.833496L5.37967 6.16683H0.333008L4.45301 9.10683L2.88634 14.1668L6.99967 11.0402L11.1197 14.1668L9.55301 9.10683L13.6663 6.16683H8.61967Z" fill="white"/>
                                                             </svg>
-                                                            Recommend
+                                                            Highlight
                                                         </div>
-                                                    )}
+                                                    )} */}
                                                 </div>
                                                 <div className="lg:p-[30px] p-[20px]">
                                                     <header className="entry-header">

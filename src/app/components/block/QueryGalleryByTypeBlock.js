@@ -37,10 +37,16 @@ export default function QueryGalleryByTypeBlock(props) {
         async function fetchGalleryData() {
             try {
 
-                const currentPath = window.location.pathname;
-                const slug = currentPath === '/' ? 'home' : currentPath.replace(/^\//, '').replace(/\/$/, '');
-                
-                const data = await GetPageWithQueryGalleryByType(slug);
+                // const currentPath = window.location.pathname;
+                // const slug = currentPath === '/' ? 'home' : currentPath.replace(/^\//, '').replace(/\/$/, '');
+                const path = window.location.pathname.replace(/^\/|\/$/g, "");
+                const parts = path.split("/").filter(Boolean);
+                const hasLangPrefix = parts[0] === "th";
+                const isTH = hasLangPrefix;
+                const slug = hasLangPrefix ? (parts.slice(1).join("/") || "home") : (path || "home");
+                const data = await GetPageWithQueryGalleryByType(slug, isTH);
+
+                // const data = await GetPageWithQueryGalleryByType(slug);
                 setGalleryData(data);
                 // If we have a taxonomy ID, fetch the gallery items
                 if (data?.queryGalleryByType) {

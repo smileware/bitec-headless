@@ -19,7 +19,15 @@ export default function BitecLiveHallCarouselBlock(props) {
     useEffect(() => {
         async function fetchBitecLiveHallData() {
             try {
-                const data = await GetPageWithBitecLiveHallCarousel('plan-and-event/exhibition');
+
+                const path = window.location.pathname.replace(/^\/|\/$/g, "");
+                const parts = path.split("/").filter(Boolean);
+                const hasLangPrefix = parts[0] === "th";
+                const isTH = hasLangPrefix;
+                const slug = hasLangPrefix ? (parts.slice(1).join("/") || "home") : (path || "home");
+                const data = await GetPageWithBitecLiveHallCarousel(slug, isTH);
+
+                // const data = await GetPageWithBitecLiveHallCarousel('plan-and-event/exhibition');
                 setBitecLiveHallData(data);
             } catch (error) {
                 setError(error);
