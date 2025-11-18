@@ -75,6 +75,7 @@ export default function NewsCard({ news }) {
                             ? `/th/news/${news.translations && news.translations[0]?.slug ? news.translations[0].slug : news.slug}`
                             : `/news/${news.slug}`
                     }
+                    prefetch={true}
                     title={`Permalink to ${currentLang === 'th'
                         ? (news.translations && news.translations[0]?.title ? news.translations[0].title : news.title)
                         : news.title
@@ -116,6 +117,7 @@ export default function NewsCard({ news }) {
                                     ? `/th/news/${news.translations && news.translations[0]?.slug ? news.translations[0].slug : news.slug}`
                                     : `/news/${news.slug}`
                             }
+                            prefetch={true}
                         >
                             {currentLang === 'th'
                                 ? (news.translations && news.translations[0]?.title ? news.translations[0].title : news.title)

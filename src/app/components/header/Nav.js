@@ -81,6 +81,7 @@ export default function Nav({ nav, isMobile = false, onCloseMenu }) {
               href={item.path || item.url || '#'}
               className={`font-medium text-[#161616] flex items-center`}
               onClick={(e) => handleLinkClick(e, item)}
+              prefetch={true}
             >
 
               {item.menuItemIcon?.menuIcon && (

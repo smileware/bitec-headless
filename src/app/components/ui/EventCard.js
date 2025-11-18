@@ -119,6 +119,7 @@ export default function EventCard({ event }) {
                             ? `/th/event/${event.translations && event.translations[0]?.slug ? event.translations[0].slug : event.slug}`
                             : `/event/${event.slug}`
                     }
+                    prefetch={true}
                     title={`Permalink to ${currentLang === 'th'
                         ? (event.translations && event.translations[0]?.title ? event.translations[0].title : event.title)
                         : event.title
@@ -164,6 +165,7 @@ export default function EventCard({ event }) {
                                     ? `/th/event/${event.translations && event.translations[0]?.slug ? event.translations[0].slug : event.slug}`
                                     : `/event/${event.slug}`
                             }
+                            prefetch={true}
                         >
                             {currentLang === 'th'
                                 ? (event.translations && event.translations[0]?.title ? event.translations[0].title : event.title)

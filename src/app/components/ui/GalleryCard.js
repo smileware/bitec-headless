@@ -73,6 +73,7 @@ export default function GalleryCard({ gallery }) {
                             ? `/th/gallery/${gallery.translations && gallery.translations[0]?.slug ? gallery.translations[0].slug : gallery.slug}`
                             : `/gallery/${gallery.slug}`
                     }
+                    prefetch={true}
                     title={`Permalink to ${currentLang === 'th'
                         ? (gallery.translations && gallery.translations[0]?.title ? gallery.translations[0].title : gallery.title)
                         : gallery.title
@@ -97,6 +98,7 @@ export default function GalleryCard({ gallery }) {
                                     ? `/th/gallery/${gallery.translations && gallery.translations[0]?.slug ? gallery.translations[0].slug : gallery.slug}`
                                     : `/gallery/${gallery.slug}`
                             }
+                            prefetch={true}
                         >
                             {currentLang === 'th'
                                 ? (gallery.translations && gallery.translations[0]?.title ? gallery.translations[0].title : gallery.title)
