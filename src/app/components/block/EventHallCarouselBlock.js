@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import { GetPageWithEventHallCarousel } from "../../lib/block";
@@ -14,11 +14,15 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+// Store block ID to index mapping per page (using hash from ID)
+const pageBlockMappings = new Map();
+
 export default function EventHallCarouselBlock(props) {
     const [eventHallData, setEventHallData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const blockIndexRef = useRef(null);
+    const [blockIndexAssigned, setBlockIndexAssigned] = useState(null);
+    const pathname = usePathname();
 
     useEffect(() => {
         async function fetchEventHallData() {
@@ -47,19 +51,46 @@ export default function EventHallCarouselBlock(props) {
                         .map(Number)
                         .sort((a, b) => a - b);
 
-                    if (blockIndexRef.current === null) {
-                        // Use simple counter for block assignment
-                        if (!window.eventHallBlockCount) {
-                            window.eventHallBlockCount = 0;
+                    // Determine block index to use for this component instance
+                    let blockIndex = 0;
+                    
+                    // Check if we already have an assigned block index for this component instance
+                    if (blockIndexAssigned === null && props.id) {
+                        const pageKey = pathname || slug;
+                        
+                        // Initialize page mapping if it doesn't exist
+                        if (!pageBlockMappings.has(pageKey)) {
+                            pageBlockMappings.set(pageKey, {
+                                idToIndex: new Map(),
+                                counter: 0
+                            });
                         }
-                        blockIndexRef.current = window.eventHallBlockCount++;
+                        
+                        const pageMapping = pageBlockMappings.get(pageKey);
+                        
+                        // Check if this block ID already has an assigned index
+                        if (pageMapping.idToIndex.has(props.id)) {
+                            blockIndex = pageMapping.idToIndex.get(props.id);
+                            console.log('Reusing existing mapping for', props.id, '→ blockIndex:', blockIndex);
+                        } else {
+                            // Assign the next available block index based on mounting order
+                            blockIndex = blockIndices[pageMapping.counter % blockIndices.length];
+                            pageMapping.idToIndex.set(props.id, blockIndex);
+                            pageMapping.counter++;
+                            console.log('New mapping created:', props.id, '→ blockIndex:', blockIndex);
+                        }
+                        
+                        // Save the assigned block index so it doesn't change on re-renders
+                        setBlockIndexAssigned(blockIndex);
+                    } else if (blockIndexAssigned !== null) {
+                        // Use the previously assigned block index
+                        blockIndex = blockIndexAssigned;
                     }
 
-                    const blockIndex =
-                        blockIndices[
-                            blockIndexRef.current % blockIndices.length
-                        ];
+                    console.log('Final blockIndex:', blockIndex);
+                    console.log('Available blockIndices:', blockIndices);
                     const blockEventHalls = blocks[blockIndex] || [];
+                    console.log('Event halls for this block:', blockEventHalls.map(h => h.title));
 
                     setEventHallData({
                         eventHalls: blockEventHalls,
@@ -75,7 +106,21 @@ export default function EventHallCarouselBlock(props) {
             }
         }
         fetchEventHallData();
-    }, []);
+    }, [props.id, pathname, blockIndexAssigned, props]);
+    
+    // Reset block mapping when navigating to a new page
+    useEffect(() => {
+        const pageKey = pathname;
+        // Clear the mapping for this page on navigation
+        return () => {
+            setTimeout(() => {
+                if (pageBlockMappings.has(pageKey)) {
+                    pageBlockMappings.delete(pageKey);
+                    console.log('Cleared mappings for page:', pageKey);
+                }
+            }, 100);
+        };
+    }, [pathname]);
 
     if (loading) {
         return (
