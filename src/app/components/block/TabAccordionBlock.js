@@ -123,7 +123,7 @@ export default function TabAccordionBlock(props) {
                                         <img
                                             src={tab.tabImage}
                                             alt={tab.altText || tab.tabButton}
-                                            className="w-full h-auto mb-[20px]"
+                                            className="w-full h-auto mb-[20px] min-h-[268px] max-h-[268px] object-cover"
                                         />
                                     )}
                                 </div>
@@ -135,7 +135,7 @@ export default function TabAccordionBlock(props) {
                 // Two-column layout for desktop
                 <div className="flex flex-col lg:flex-row">
                     {/* Left column - Title and vertical tabs */}
-                    <div className="space-y-6 lg:w-[calc(50%-100px)] lg:pr-8 lg:pl-[calc((100vw-1380px+30px)/2)] py-[100px]" >
+                    <div className="space-y-6 lg:w-[calc(50%-100px)] lg:pr-8 lg:pl-[calc((100vw-1380px+30px)/2)] py-[30px] flex flex-col justify-center" >
                         {tabData.title && (
                             <h2 className="text-white text-[67px] font-bold leading-[1.2] mb-[40px]">
                                 {tabData.title}
@@ -165,7 +165,7 @@ export default function TabAccordionBlock(props) {
                     </div>
                     
                     {/* Right column - Tab content */}
-                    <div className="min-h-[400px] flex items-center lg:w-[calc(50%+100px)] lg:pl-8">
+                    <div className="min-h-[588px] max-h-[588px] flex items-center lg:w-[calc(50%+100px)] lg:pl-8">
                         {tabData.tabs[activeTab] && (
                             <div className="w-full h-full">
                                 {tabData.tabs[activeTab].tabImage && (

@@ -16,10 +16,13 @@ export default function GallerySwiper({ images }) {
                 modules={[Navigation]}
                 slidesPerView={1.5}
                 centeredSlides={true}
+                loop={true}
+                watchOverflow={false}
                 spaceBetween={30}
                 navigation={{
                     nextEl: '.swiper-button-next',
                     prevEl: '.swiper-button-prev',
+                    disabledClass: 'swiper-button-disabled-custom',
                 }}
                 className="swiper"
                 breakpoints={{
@@ -36,7 +39,10 @@ export default function GallerySwiper({ images }) {
                         spaceBetween: 30,
                     },
                 }}
-                onSlideChange={(swiper) => setCurrent(swiper.activeIndex + 1)}
+                onSlideChange={(swiper) => {
+                    // Use realIndex for accurate counting in loop mode
+                    setCurrent((swiper.realIndex !== undefined ? swiper.realIndex : swiper.activeIndex) + 1);
+                }}
             >
                 {images.map((img, idx) => (
                     <SwiperSlide key={idx}>

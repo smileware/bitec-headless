@@ -188,8 +188,8 @@ export default function BitecLiveFacilitiesBlock(props) {
                         </svg>
                     </button>
 
-                    <div className="flex flex-col lg:flex-row min-h-[412px]">
-                        <div className="swiper-popup w-full lg:w-[50%]">
+                    <div className="flex flex-col lg:flex-row min-h-[300px]">
+                        <div className="swiper-popup w-full lg:w-[100%]">
                             <Swiper
                                 modules={[Pagination]} 
                                 slidesPerView={1}
@@ -207,7 +207,7 @@ export default function BitecLiveFacilitiesBlock(props) {
                                             <img
                                                 src={img.sourceUrl}
                                                 alt={img.altText}
-                                                className="w-full h-full min-h-[320px] object-cover"
+                                                className="w-full h-full min-h-[300px] object-cover"
                                             />
                                         </SwiperSlide>
                                     ))
@@ -220,12 +220,6 @@ export default function BitecLiveFacilitiesBlock(props) {
                                 )}
                                 <div className={`swiper-pagination`}></div>
                             </Swiper>
-                        </div>
-                        <div className="lg:px-[50px] lg:py-[50px] px-[20px] py-[30px] w-full lg:w-[50%] flex flex-col justify-center">
-                            <h2 className="text-[#3D3D3F] font-[500] text-[30px] leading-[1.1]">{facility.name}</h2>
-                            <p className="text-[#3D3D3F] text-[20px] leading-[1.2] lg:mt-[20px] mt-[10px]">
-                                {facility.description}
-                            </p>
                         </div>
                     </div>
                 </div>
