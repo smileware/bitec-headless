@@ -19,7 +19,7 @@ export default function EventCarouselBlock(props) {
     useEffect(() => {
         async function fetchEvents() {
             try {
-                const recentEvents = await getRecentBitecLiveEvents('BITEC Live', 9);
+                const recentEvents = await getRecentBitecLiveEvents('Bitec Live', 9);
                 setEvents(recentEvents);
             } catch (error) {
                 console.error('Error fetching events:', error);

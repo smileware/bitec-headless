@@ -167,7 +167,6 @@ export async function GetPageWithBitecLiveFacilities(slug, preferTranslation = f
         description: facility.facilityDescription || "", 
         gallery: facility.facilityGallery?.nodes || []
     }));
-    console.log(facilities, 'faci');
     return facilities;
 }
 
@@ -313,6 +312,179 @@ export async function GetGalleryByTaxonomyType(taxonomySlug, limit = 12) {
         return data?.galleries?.nodes || [];
     } catch (error) {
         console.error("GraphQL fetch error for gallery items:", error);
+        return [];
+    }
+}
+
+export async function GetPageWithDisplayGalleryByType(slug, preferTranslation = false) {
+    const query = gql`
+        query GetPageWithDisplayGalleryByType($uri: String!) {
+            pageBy(uri: $uri) {
+                translations { 
+                    editorBlocks {
+                        ... on AcfGallery {
+                            blockDisplayGalleryByType {
+                                fieldGroupName
+                                displayGalleryByType {
+                                    edges {
+                                        node {
+                                            id
+                                            name
+                                            slug
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                editorBlocks {
+                    ... on AcfGallery {
+                        blockDisplayGalleryByType {
+                            fieldGroupName
+                            displayGalleryByType {
+                                edges {
+                                    node {
+                                        id
+                                        name
+                                        slug
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    `;
+    
+    const variables = { uri: slug };
+    
+    try {
+        const data = await graphQLClient.request(query, variables);
+        console.log(data,' datafuck');
+        const baseBlocks = data?.pageBy?.editorBlocks || [];
+        const transBlocks = data?.pageBy?.translations?.[0]?.editorBlocks || [];
+        const blocks = (preferTranslation && transBlocks?.length) ? transBlocks : baseBlocks;
+        
+        const galleryBlock = blocks.find((block) => block?.blockDisplayGalleryByType);
+        
+        if (!galleryBlock) {
+            console.log("No display gallery block found");
+            return null;
+        }
+        
+        const blockData = galleryBlock.blockDisplayGalleryByType;
+        
+        // Extract all selected taxonomy terms (can be multiple since it's checkbox)
+        const selectedTypes = blockData.displayGalleryByType?.edges?.map(edge => edge.node.slug) || [];
+        
+        return {
+            displayGalleryByType: selectedTypes.length > 0 ? selectedTypes : null,
+        };
+    } catch (error) {
+        console.error("GraphQL fetch error:", error);
+        return null;
+    }
+}
+
+export async function GetGalleriesByTypes(typeSlugs = null, limit = 12) {
+    // Query with filters
+    const queryWithFilter = gql`
+        query GetGalleriesByTypes($typeSlugs: [String]!, $limit: Int!) {
+            galleries(
+                where: {
+                    taxQuery: {
+                        taxArray: [
+                            {
+                                taxonomy: GALLERYTYPE
+                                terms: $typeSlugs
+                                field: SLUG
+                                operator: IN
+                            }
+                        ]
+                    }
+                }
+                first: $limit
+            ) {
+                nodes {
+                    id
+                    title
+                    slug
+                    date
+                    featuredImage {
+                        node {
+                            id
+                            sourceUrl
+                            altText
+                            mediaDetails {
+                                width
+                                height
+                            }
+                        }
+                    }
+                    translations {
+                        title
+                        slug
+                        date
+                    }
+                }
+            }
+        }
+    `;
+    
+    // Query without filters (get all)
+    const queryAll = gql`
+        query GetAllGalleries($limit: Int!) {
+            galleries(first: $limit) {
+                nodes {
+                    id
+                    title
+                    slug
+                    date
+                    featuredImage {
+                        node {
+                            id
+                            sourceUrl
+                            altText
+                            mediaDetails {
+                                width
+                                height
+                            }
+                        }
+                    }
+                    translations {
+                        title
+                        slug
+                        date
+                    }
+                }
+            }
+        }
+    `;
+    
+    try {
+        let data;
+        
+        if (typeSlugs && typeSlugs.length > 0) {
+            // Fetch galleries by selected types
+            console.log('Fetching galleries by types:', typeSlugs);
+            data = await graphQLClient.request(queryWithFilter, {
+                typeSlugs: typeSlugs,
+                limit,
+            });
+        } else {
+            // No types selected, fetch all galleries
+            console.log('No types selected, fetching all galleries');
+            data = await graphQLClient.request(queryAll, {
+                limit,
+            });
+        }
+        
+        return data?.galleries?.nodes || [];
+    } catch (error) {
+        console.error("GraphQL fetch error for galleries:", error);
+        return [];
     }
 }
 

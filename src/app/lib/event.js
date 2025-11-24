@@ -236,7 +236,7 @@ export async function getRecentEvents(limit = 9) {
     return filteredEvents.slice(0, limit);
 }
 
-export async function getRecentBitecLiveEvents(locationId = 'BITEC Live', limit = 9) {
+export async function getRecentBitecLiveEvents(locationId = 'Bitec Live', limit = 9) {
     const query = gql`
         query GetRecentEventsByLocation($first: Int!) {
             events(first: $first, where: {orderby: {field: DATE, order: DESC}}) {
@@ -287,7 +287,7 @@ export async function getRecentBitecLiveEvents(locationId = 'BITEC Live', limit 
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     
-    // Filter events to show only upcoming/current events at the specified location
+    // Filter events to show only upcoming/current events that match "bitec live" in categories OR location
     const filteredEvents = events.filter(event => {
         // Check if event has a start date
         if (!event.eventFieldGroup?.eventStartdate) return false;
@@ -303,11 +303,19 @@ export async function getRecentBitecLiveEvents(locationId = 'BITEC Live', limit 
         } else {
             isUpcoming = today <= startDate;
         }
-        // Check if event location includes the specified locationId
-        const hasLocation = event.eventLocation?.nodes?.some(loc => {
-            return loc.name === locationId || loc.id === `term_${locationId}`;
+        
+        // Check if event category includes "bitec live" (case insensitive)
+        const hasCategory = event.eventCategories?.nodes?.some(cat => {
+            return cat.name?.toLowerCase().includes('bitec live');
         });
-        return isUpcoming && hasLocation;
+        
+        // Check if event location includes "bitec live" (case insensitive)
+        const hasLocation = event.eventLocation?.nodes?.some(loc => {
+            return loc.name?.toLowerCase().includes('bitec live');
+        });
+        
+        // Return true if upcoming AND (has category OR has location)
+        return isUpcoming && (hasCategory || hasLocation);
     });
     // Sort by start date (ascending - earliest first)
     filteredEvents.sort((a, b) => {
@@ -327,13 +335,23 @@ export async function getAllEventCategories() {
                     id
                     name
                     slug
+                    count
                 }
             }
         }
     `;
     
-    const data = await graphQLClient.request(query);
-    return data.eventCategories?.nodes || [];
+    try {
+        const data = await graphQLClient.request(query);
+        const categories = data.eventCategories?.nodes || [];
+        // Filter to only show categories that have at least 1 event
+        const categoriesWithPosts = categories.filter(category => category.count > 0);
+        return categoriesWithPosts;
+
+    } catch (error) {
+        console.error('Error fetching event categories:', error);
+        return [];
+    }
 }
 
 export async function getFilteredEvents(filters = {}) {
