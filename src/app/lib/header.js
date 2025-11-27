@@ -22,6 +22,10 @@ export async function getHeaderData(language = 'en') {
                         url
                         path
                         parentId
+                        menuItemIcon {
+                            menuIcon
+                        }
+                        cssClasses
                     }
                 }
             }
@@ -34,6 +38,9 @@ export async function getHeaderData(language = 'en') {
                         label
                         url
                         path
+                        menuItemIcon {
+                            menuIcon
+                        }
                     }
                 }
             }

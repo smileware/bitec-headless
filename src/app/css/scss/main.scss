@@ -253,6 +253,25 @@ body {
           top: 12px;
           color: #000;
         }
+        &.menu-has-icon { 
+          .sub-menu li.menu-item a {
+            padding: 0;
+          }
+          .menu-icon svg { 
+            padding: 0;
+          }
+        }
+        &.underline-above { 
+          a > svg { 
+            top: 35px;
+          }
+        }
+        .menu-icon { 
+          svg { 
+            position: relative;
+            top: unset;
+          }
+        }
       }
       .sub-menu { 
         background-color: transparent;

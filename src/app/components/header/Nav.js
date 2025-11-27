@@ -90,6 +90,7 @@ export default function Nav({ nav, isMobile = false, onCloseMenu }) {
                   dangerouslySetInnerHTML={{ __html: item.menuItemIcon.menuIcon }}
                 />
               )}
+              
               {item.label}
 
               {hasChildren && (
@@ -117,9 +118,16 @@ export default function Nav({ nav, isMobile = false, onCloseMenu }) {
                   <li key={child.id} className="menu-item">
                     <Link
                       href={child.path || child.url || '#'}
-                      className={`block px-2 py-1 text-sm ${path.startsWith(child.path || '') ? 'font-bold' : ''}`}
+                      className={`block px-2 py-1 text-sm flex items-center ${path.startsWith(child.path || '') ? 'font-bold' : ''}`}
                       onClick={(e) => handleLinkClick(e, child)}
+                      prefetch={true}
                     >
+                      {child.menuItemIcon?.menuIcon && (
+                        <span 
+                          className="menu-icon" 
+                          dangerouslySetInnerHTML={{ __html: child.menuItemIcon.menuIcon }}
+                        />
+                      )}
                       {child.label}
                     </Link>
                   </li>

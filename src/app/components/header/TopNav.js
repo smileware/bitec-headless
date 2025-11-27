@@ -11,9 +11,15 @@ export default function Nav({ nav }) {
         <li key={item.id} className={`menu-item ${item.children?.length > 0 ? 'menu-item-has-children' : ''}`}>
           <Link
             href={item.path || item.url || '#'}
-            className={`font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white ${path.startsWith(item.path || '') ? 'font-bold text-gray-800 dark:text-white' : ''}`}
+            className={`font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white flex items-center ${path.startsWith(item.path || '') ? 'font-bold text-gray-800 dark:text-white' : ''}`}
             prefetch={true}
           >
+            {item.menuItemIcon?.menuIcon && (
+              <span 
+                className="menu-icon" 
+                dangerouslySetInnerHTML={{ __html: item.menuItemIcon.menuIcon }}
+              />
+            )}
             {item.label}
           </Link>
 
@@ -23,9 +29,15 @@ export default function Nav({ nav }) {
                 <li key={child.id} className="menu-item">
                   <Link
                     href={child.path || child.url || '#'}
-                    className={`block px-2 py-1 text-sm hover:text-blue-500 ${path.startsWith(child.path || '') ? 'font-bold' : ''}`}
+                    className={`block px-2 py-1 text-sm hover:text-blue-500 flex items-center ${path.startsWith(child.path || '') ? 'font-bold' : ''}`}
                     prefetch={true}
                   >
+                    {child.menuItemIcon?.menuIcon && (
+                      <span 
+                        className="menu-icon" 
+                        dangerouslySetInnerHTML={{ __html: child.menuItemIcon.menuIcon }}
+                      />
+                    )}
                     {child.label}
                   </Link>
                 </li>
