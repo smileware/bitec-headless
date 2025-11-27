@@ -135,7 +135,7 @@ export default function EventCard({ event }) {
                 </Link>
             </div>
             <div className="info">
-                <div className="entry-meta">
+                <div className="entry-meta min-h-[30px]">
                     {isHappeningNow() && (
                         <div className="happening-now-label">
                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">

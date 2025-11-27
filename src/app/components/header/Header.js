@@ -20,6 +20,7 @@ export default function Header({ headerData = null, isServerSide = false }) {
     const [isLoading, setIsLoading] = useState(true);
     const [isMenuRefreshing, setIsMenuRefreshing] = useState(false);
     const [isNavActive, setIsNavActive] = useState(false);
+    const [isGetInTouchOpen, setIsGetInTouchOpen] = useState(false);
     const pathname = usePathname();
     
     const currentLang = useMemo(() => {
@@ -99,7 +100,8 @@ export default function Header({ headerData = null, isServerSide = false }) {
         
         return {
             requestAProposal: currentLang === 'th' ? buttons.requestAProposalThai : buttons.requestAProposal,
-            getInTouch: currentLang === 'th' ? buttons.getInTouchThai : buttons.getInTouch
+            getInTouch: currentLang === 'th' ? buttons.getInTouchThai : buttons.getInTouch,
+            getInTouchLabel: currentLang === 'th' ? buttons.getInTouchLabelThai : buttons.getInTouchLabel
         };
     }, [ctaData, currentLang]);
 
@@ -153,6 +155,22 @@ export default function Header({ headerData = null, isServerSide = false }) {
         setIsNavActive(false);
     };
 
+    // Toggle Get In Touch dropdown
+    const toggleGetInTouch = () => {
+        setIsGetInTouchOpen(!isGetInTouchOpen);
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isGetInTouchOpen && !event.target.closest('.get-in-touch-dropdown')) {
+                setIsGetInTouchOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isGetInTouchOpen]);
+
     // Apply classes when nav state changes
     useEffect(() => {
         const pageElement = document.getElementById('page');
@@ -191,14 +209,23 @@ export default function Header({ headerData = null, isServerSide = false }) {
     }
     
     return (
-        <header className="site-header _heading">
-            {isMenuRefreshing && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, height: '3px',
-                    background: 'linear-gradient(90deg, #CE0E2D 0%, #FF6B81 50%, #CE0E2D 100%)',
-                    backgroundSize: '200% 100%', animation: 'bitecTopBar 1.2s ease-in-out infinite', zIndex: 10000
-                }} />
-            )}
+        <>
+            <style jsx>{`
+                .get-in-touch-dropdown svg {
+                    width: 24px;
+                    height: 24px;
+                    max-width: 24px;
+                    max-height: 24px;
+                }
+            `}</style>
+            <header className="site-header _heading">
+                {isMenuRefreshing && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, height: '3px',
+                        background: 'linear-gradient(90deg, #CE0E2D 0%, #FF6B81 50%, #CE0E2D 100%)',
+                        backgroundSize: '200% 100%', animation: 'bitecTopBar 1.2s ease-in-out infinite', zIndex: 10000
+                    }} />
+                )}
             <div className="w-full flex justify-between items-center">
                 <div className="lg:border-r lg:border-[#ddddde] h-full min-h-[var(--s-header-height)] flex items-center lg:px-12 px-[20px]">
                     <Link
@@ -258,17 +285,43 @@ export default function Header({ headerData = null, isServerSide = false }) {
                                     </>
                                 ) : (
                                     <>
-                                        {ctaButtons?.getInTouch && (
-                                            <Link
-                                                href={ctaButtons.getInTouch.url}
-                                                target={ctaButtons.getInTouch.target || '_self'}
-                                                className="btn btn-cta-get-in-touch xl:px-[16px] px-[10px] py-[5px] font-medium uppercase border-0 rounded-md transition-colors flex items-center justify-center rounded-none"
-                                            >
-                                                {ctaButtons.getInTouch.title}
-                                                <svg width="24" height="24" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" className="pl-[10px]">
-                                                    <path d="M14.8896 3.10813C11.6345 -0.146883 6.36617 -0.147371 3.1107 3.10813C0.493192 5.7256 -0.00142664 9.6176 1.54605 12.7171L0.688134 16.4908C0.576622 16.9813 1.01622 17.4211 1.5069 17.3096L5.2806 16.4516C10.7675 19.1911 17.3291 15.225 17.3291 8.99759C17.3291 6.7729 16.4627 4.68131 14.8896 3.10813ZM10.7376 11.0716H5.52522C5.14739 11.0716 4.8411 10.7654 4.8411 10.3875C4.8411 10.0097 5.14739 9.70341 5.52522 9.70341H10.7376C11.1154 9.70341 11.4217 10.0097 11.4217 10.3875C11.4217 10.7654 11.1154 11.0716 10.7376 11.0716ZM12.475 8.29174H5.52522C5.14739 8.29174 4.8411 7.98545 4.8411 7.60762C4.8411 7.22979 5.14739 6.9235 5.52522 6.9235H12.475C12.8529 6.9235 13.1592 7.22979 13.1592 7.60762C13.1592 7.98545 12.8528 8.29174 12.475 8.29174Z" fill="white"/>
-                                                </svg>
-                                            </Link>
+                                        {ctaButtons?.getInTouch && ctaButtons.getInTouch.length > 0 && (
+                                            <div className="get-in-touch-dropdown relative">
+                                                <button
+                                                    onClick={toggleGetInTouch}
+                                                    className="btn btn-cta-get-in-touch xl:px-[16px] px-[10px] py-[5px] font-medium uppercase border-0 rounded-md transition-colors flex items-center justify-center rounded-none cursor-pointer"
+                                                >
+                                                    {ctaButtons.getInTouchLabel || 'GET IN TOUCH'}
+
+                                                    <svg width="24" height="24" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" className="pl-[10px]">
+                                                        <path d="M14.8896 3.10813C11.6345 -0.146883 6.36617 -0.147371 3.1107 3.10813C0.493192 5.7256 -0.00142664 9.6176 1.54605 12.7171L0.688134 16.4908C0.576622 16.9813 1.01622 17.4211 1.5069 17.3096L5.2806 16.4516C10.7675 19.1911 17.3291 15.225 17.3291 8.99759C17.3291 6.7729 16.4627 4.68131 14.8896 3.10813ZM10.7376 11.0716H5.52522C5.14739 11.0716 4.8411 10.7654 4.8411 10.3875C4.8411 10.0097 5.14739 9.70341 5.52522 9.70341H10.7376C11.1154 9.70341 11.4217 10.0097 11.4217 10.3875C11.4217 10.7654 11.1154 11.0716 10.7376 11.0716ZM12.475 8.29174H5.52522C5.14739 8.29174 4.8411 7.98545 4.8411 7.60762C4.8411 7.22979 5.14739 6.9235 5.52522 6.9235H12.475C12.8529 6.9235 13.1592 7.22979 13.1592 7.60762C13.1592 7.98545 12.8528 8.29174 12.475 8.29174Z" fill="white"/>
+                                                    </svg>
+                                                </button>
+                                                
+                                                {isGetInTouchOpen && (
+                                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white shadow-lg overflow-hidden z-50">
+                                                        {ctaButtons.getInTouch.map((item, index) => (
+                                                            <Link
+                                                                key={index}
+                                                                href={item.ctaLink?.url || '#'}
+                                                                target={item.ctaLink?.target || '_blank'}
+                                                                className="btn btn-cta-get-in-touch xl:px-[16px] px-[10px] py-[5px] font-medium uppercase border-0 rounded-md transition-colors flex items-center justify-between rounded-none cursor-pointer border-b border-[#636363] last:border-b-0 !mr-0"
+                                                                onClick={() => setIsGetInTouchOpen(false)}
+                                                            >
+                                                                
+                                                                {item.ctaLink?.title || 'Link'}
+
+                                                                {item.ctaIcon && (
+                                                                    <span 
+                                                                        className="flex-shrink-0 flex items-center justify-center"
+                                                                        dangerouslySetInnerHTML={{ __html: item.ctaIcon }}
+                                                                    />
+                                                                )}
+                                                            </Link>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
 
                                         {ctaButtons?.requestAProposal && (
@@ -289,5 +342,6 @@ export default function Header({ headerData = null, isServerSide = false }) {
                 
             </div>
         </header>
+        </>
     );
 }

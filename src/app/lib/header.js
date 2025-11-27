@@ -63,16 +63,24 @@ export async function getHeaderData(language = 'en') {
                   title
                   url
                 }
+                getInTouchLabel
                 getInTouch {
-                  target
-                  title
-                  url
+                  ctaLink {
+                    target
+                    title
+                    url
+                  }
+                  ctaIcon
                 }
                 fieldGroupName
+                getInTouchLabelThai
                 getInTouchThai {
-                  target
-                  title
-                  url
+                  ctaLink {
+                    target
+                    title
+                    url
+                  }
+                  ctaIcon
                 }
                 requestAProposalThai {
                   target

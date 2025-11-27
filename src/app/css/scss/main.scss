@@ -54,12 +54,8 @@ body {
   }
   .btn-cta-get-in-touch { 
     background-color: #454545;
-    margin-right: 10px;
-    @media (max-width: 1295px) {
-      margin-right: 5px;
-    }
     &:hover { 
-      background-color: var(--s-accent-hover);
+      background-color: #CE0E2D;
     }
   }
   .btn-cta-proposal { 
