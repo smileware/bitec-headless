@@ -15,20 +15,43 @@ function isPersistentScript(src = '') {
 }
 
 function handleCounters(hasLoadedCounter) {
-    if (typeof document === 'undefined') {
+    if (typeof document === 'undefined' || hasLoadedCounter.current) {
+        return; // Already processed or not in browser
+    }
+    
+    const counterElements = document.querySelectorAll('.gs-counter');
+    
+    // If no counter elements found, try again after a delay (for production timing issues)
+    if (counterElements.length === 0) {
+        setTimeout(() => {
+            if (!hasLoadedCounter.current) {
+                handleCounters(hasLoadedCounter);
+            }
+        }, 300);
         return;
     }
-    const counterElements = document.querySelectorAll('.gs-counter');
+    
+    // Mark as processed to prevent multiple calls
+    hasLoadedCounter.current = true;
+    
+    // Check if WordPress script already initialized counters
     counterElements.forEach((element) => {
-        if (hasLoadedCounter.current) {
-            const endValue = element.getAttribute('data-end');
-            if (endValue) {
-                element.textContent = endValue;
-                element.classList.add('countfinished');
+        const endValue = element.getAttribute('data-end');
+        if (!endValue) return;
+        
+        // If WordPress script didn't initialize (no countfinished class), set fallback
+        if (!element.classList.contains('countfinished')) {
+            // Try WordPress counter function first (if available)
+            if (typeof window !== 'undefined' && (window.gsCounterInit || window.greenshiftCounterInit)) {
+                // WordPress script exists, let it handle initialization
+                return;
             }
+            
+            // Fallback: Set final value directly (for production when script fails)
+            element.textContent = endValue;
+            element.classList.add('countfinished');
         }
     });
-    hasLoadedCounter.current = true;
 }
 
 function refreshPersistentAnimations(scope) {
@@ -225,11 +248,22 @@ export default function ScriptLoader({ scripts }) {
                                 persistentScripts.add(src);
                             }
                             if (src.includes('counter')) {
-                                handleCounters(hasLoadedCounter);
+                                // Wait a bit for WordPress script to initialize counters
+                                setTimeout(() => {
+                                    handleCounters(hasLoadedCounter);
+                                }, 200);
                             }
                             resolve();
                         };
-                        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+                        script.onerror = () => {
+                            // If counter script fails to load, still try to initialize counters
+                            if (src.includes('counter')) {
+                                setTimeout(() => {
+                                    handleCounters(hasLoadedCounter);
+                                }, 300);
+                            }
+                            reject(new Error(`Failed to load script: ${src}`));
+                        };
                         document.body.appendChild(script);
                         scriptRefs.current.push(script);
                     });
@@ -260,3 +294,4 @@ export default function ScriptLoader({ scripts }) {
 
     return null;
 }
+
