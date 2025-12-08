@@ -1,10 +1,26 @@
 import { GraphQLClient, gql } from 'graphql-request';
+import { unstable_cache } from 'next/cache';
 
 const endpoint = process.env.API_DOMAIN || 'https://wordpress-1328545-5763448.cloudwaysapps.com/graphql';
 export const client = new GraphQLClient(endpoint);
 
-// Server-side function to fetch all header data in one query
+// Server-side function to fetch all header data in one query (CACHED)
 export async function getHeaderData(language = 'en') {
+    // Use unstable_cache to cache header data (menus don't change often)
+    return unstable_cache(
+        async () => {
+            return await fetchHeaderDataFromGraphQL(language);
+        },
+        [`header-data-${language}`],
+        {
+            revalidate: 30 * 60, // Cache for 30 minutes (menus rarely change)
+            tags: ['header-menu'],
+        }
+    )();
+}
+
+// Internal function to actually fetch from GraphQL
+async function fetchHeaderDataFromGraphQL(language = 'en') {
     const primaryMenuId = language === 'th' ? 12 : 3;
     const topMenuId = language === 'th' ? 13 : 4;
     const mobileMenuId = language === 'th' ? 16 : 15;

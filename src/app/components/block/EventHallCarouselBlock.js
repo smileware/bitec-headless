@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
-import { GetPageWithEventHallCarousel } from "../../lib/block";
+import { useEventHallCarousel } from "../../hooks/useBlockQueries";
 import Skeleton from "../ui/Skeleton";
 import EventHallCard from "../ui/EventHallCard";
 
@@ -18,109 +18,122 @@ import "swiper/css/pagination";
 const pageBlockMappings = new Map();
 
 export default function EventHallCarouselBlock(props) {
-    const [eventHallData, setEventHallData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [blockIndexAssigned, setBlockIndexAssigned] = useState(null);
     const pathname = usePathname();
+    
+    // Use React Query hook - automatically caches and deduplicates requests
+    const { data, isLoading: loading, error } = useEventHallCarousel();
 
-    useEffect(() => {
-        async function fetchEventHallData() {
-            try {
-           
-                // Manage Translate Slug.
-                const path = window.location.pathname.replace(/^\/|\/$/g, "");
-                const parts = path.split("/").filter(Boolean);
-                const hasLangPrefix = parts[0] === "th";
-                const isTH = hasLangPrefix;
-                const slug = hasLangPrefix ? (parts.slice(1).join("/") || "home") : (path || "home");
-                const data = await GetPageWithEventHallCarousel(slug, isTH);
+    // Process and match block data using useMemo
+    const eventHallData = useMemo(() => {
+        if (!data || !data.eventHalls || data.eventHalls.length === 0) {
+            return null;
+        }
 
-
-                if (data && data.eventHalls && data.eventHalls.length > 0) {
-                    // Group event halls by block index
-                    const blocks = {};
-                    data.eventHalls.forEach((eventHall) => {
-                        if (!blocks[eventHall.blockIndex]) {
-                            blocks[eventHall.blockIndex] = [];
-                        }
-                        blocks[eventHall.blockIndex].push(eventHall);
-                    });
-
-                    const blockIndices = Object.keys(blocks)
-                        .map(Number)
-                        .sort((a, b) => a - b);
-
-                    // Determine block index to use for this component instance
-                    let blockIndex = 0;
-                    
-                    // Check if we already have an assigned block index for this component instance
-                    if (blockIndexAssigned === null && props.id) {
-                        const pageKey = pathname || slug;
-                        
-                        // Initialize page mapping if it doesn't exist
-                        if (!pageBlockMappings.has(pageKey)) {
-                            pageBlockMappings.set(pageKey, {
-                                idToIndex: new Map(),
-                                counter: 0
-                            });
-                        }
-                        
-                        const pageMapping = pageBlockMappings.get(pageKey);
-                        
-                        // Check if this block ID already has an assigned index
-                        if (pageMapping.idToIndex.has(props.id)) {
-                            blockIndex = pageMapping.idToIndex.get(props.id);
-                            console.log('Reusing existing mapping for', props.id, '→ blockIndex:', blockIndex);
-                        } else {
-                            // Assign the next available block index based on mounting order
-                            blockIndex = blockIndices[pageMapping.counter % blockIndices.length];
-                            pageMapping.idToIndex.set(props.id, blockIndex);
-                            pageMapping.counter++;
-                            console.log('New mapping created:', props.id, '→ blockIndex:', blockIndex);
-                        }
-                        
-                        // Save the assigned block index so it doesn't change on re-renders
-                        setBlockIndexAssigned(blockIndex);
-                    } else if (blockIndexAssigned !== null) {
-                        // Use the previously assigned block index
-                        blockIndex = blockIndexAssigned;
-                    }
-
-                    console.log('Final blockIndex:', blockIndex);
-                    console.log('Available blockIndices:', blockIndices);
-                    const blockEventHalls = blocks[blockIndex] || [];
-                    console.log('Event halls for this block:', blockEventHalls.map(h => h.title));
-
-                    setEventHallData({
-                        eventHalls: blockEventHalls,
-                    });
-                } else {
-                    setEventHallData(data);
+        // Group event halls by blockIdentifierId (if available) or blockIndex (fallback)
+        const blocksByIdentifier = {};
+        const blocksByIndex = {};
+        
+        data.eventHalls.forEach((eventHall) => {
+            // Group by blockIdentifierId if available
+            if (eventHall.blockIdentifierId) {
+                if (!blocksByIdentifier[eventHall.blockIdentifierId]) {
+                    blocksByIdentifier[eventHall.blockIdentifierId] = [];
                 }
-            } catch (error) {
-                setError(error);
-                console.error("Error fetching event hall data:", error);
-            } finally {
-                setLoading(false);
+                blocksByIdentifier[eventHall.blockIdentifierId].push(eventHall);
+            }
+            
+            // Also group by blockIndex for fallback
+            if (!blocksByIndex[eventHall.blockIndex]) {
+                blocksByIndex[eventHall.blockIndex] = [];
+            }
+            blocksByIndex[eventHall.blockIndex].push(eventHall);
+        });
+
+        const blockIndices = Object.keys(blocksByIndex)
+            .map(Number)
+            .sort((a, b) => a - b);
+
+        // Get the blockIndex to identifier mapping from GraphQL response
+        const blockIndexToIdentifier = data.blockIndexToIdentifier || {};
+
+        // Try to match by blockIdentifierId from props OR by blockIndex mapping
+        let blockEventHalls = [];
+        let blockIndex = 0;
+        
+        // Check if props has blockIdentifierId (from data attribute)
+        const blockIdentifierId = props.dataBlockIdentifierId || 
+                                 props['data-block-identifier-id'] ||
+                                 props['dataBlockIdentifierId'] ||
+                                 props.blockIdentifierId ||
+                                 props['blockIdentifierId'] ||
+                                 null;
+        
+        // Strategy 1: If identifier provided in props, use it
+        if (blockIdentifierId && blocksByIdentifier[blockIdentifierId]) {
+            blockEventHalls = blocksByIdentifier[blockIdentifierId];
+        }
+        // Strategy 2: Map blockIndex to identifier
+        else if (blockIndexAssigned === null && props.id) {
+            const pageKey = pathname;
+            
+            // Initialize page mapping if it doesn't exist
+            if (!pageBlockMappings.has(pageKey)) {
+                pageBlockMappings.set(pageKey, {
+                    idToIndex: new Map(),
+                    counter: 0
+                });
+            }
+            
+            const pageMapping = pageBlockMappings.get(pageKey);
+            
+            // Check if this block ID already has an assigned index
+            if (pageMapping.idToIndex.has(props.id)) {
+                blockIndex = pageMapping.idToIndex.get(props.id);
+            } else {
+                // Assign the next available block index based on mounting order
+                blockIndex = blockIndices[pageMapping.counter % blockIndices.length];
+                pageMapping.idToIndex.set(props.id, blockIndex);
+                pageMapping.counter++;
+            }
+            
+            // Save the assigned block index
+            setBlockIndexAssigned(blockIndex);
+            
+            // Map blockIndex to identifier using the mapping from GraphQL
+            const identifierByIndex = blockIndexToIdentifier[blockIndex];
+            if (identifierByIndex && blocksByIdentifier[identifierByIndex]) {
+                blockEventHalls = blocksByIdentifier[identifierByIndex];
+            } else {
+                // Fallback to blockIndex-based grouping
+                blockEventHalls = blocksByIndex[blockIndex] || [];
+            }
+        } else if (blockIndexAssigned !== null) {
+            // Use the previously assigned block index
+            blockIndex = blockIndexAssigned;
+            
+            // Map blockIndex to identifier using the mapping from GraphQL
+            const identifierByIndex = blockIndexToIdentifier[blockIndex];
+            if (identifierByIndex && blocksByIdentifier[identifierByIndex]) {
+                blockEventHalls = blocksByIdentifier[identifierByIndex];
+            } else {
+                blockEventHalls = blocksByIndex[blockIndex] || [];
+            }
+        } else {
+            // Last resort: use first block
+            blockIndex = blockIndices[0] || 0;
+            const identifierByIndex = blockIndexToIdentifier[blockIndex];
+            if (identifierByIndex && blocksByIdentifier[identifierByIndex]) {
+                blockEventHalls = blocksByIdentifier[identifierByIndex];
+            } else {
+                blockEventHalls = blocksByIndex[blockIndex] || [];
             }
         }
-        fetchEventHallData();
-    }, [props.id, pathname, blockIndexAssigned, props]);
-    
-    // Reset block mapping when navigating to a new page
-    useEffect(() => {
-        const pageKey = pathname;
-        // Clear the mapping for this page on navigation
-        return () => {
-            setTimeout(() => {
-                if (pageBlockMappings.has(pageKey)) {
-                    pageBlockMappings.delete(pageKey);
-                    console.log('Cleared mappings for page:', pageKey);
-                }
-            }, 100);
+
+        return {
+            eventHalls: blockEventHalls,
         };
-    }, [pathname]);
+    }, [data, props.id, pathname, blockIndexAssigned, props.dataBlockIdentifierId, props['data-block-identifier-id'], props['dataBlockIdentifierId'], props.blockIdentifierId, props['blockIdentifierId']]);
 
     if (loading) {
         return (
@@ -240,7 +253,6 @@ export default function EventHallCarouselBlock(props) {
         );
     }
 
-    console.log(eventHallData.eventHalls);
     return (
         <div>
             <div

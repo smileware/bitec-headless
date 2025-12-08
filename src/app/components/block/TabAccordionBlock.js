@@ -1,30 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { GetPageWithTabToAccordion } from '../../lib/block';
+import { useState, useEffect } from 'react';
+import { useTabAccordion } from '../../hooks/useBlockQueries';
 import Skeleton from '../ui/Skeleton';
 
 export default function TabAccordionBlock(props) {
-    const [tabData, setTabData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState(0);
     const [isMobile, setIsMobile] = useState(false);
-
-    useEffect(() => {
-        async function fetchTabData() {
-            try {
-                const data = await GetPageWithTabToAccordion('plan-and-event');
-                setTabData(data);
-            } catch (error) {
-                setError(error);
-                console.error('Error fetching tab data:', error);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchTabData();
-    }, []);
+    
+    // Use React Query hook - automatically caches and deduplicates requests
+    const { data: tabData, isLoading: loading, error } = useTabAccordion('plan-and-event');
 
     useEffect(() => {
         const checkMobile = () => {

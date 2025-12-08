@@ -1,5 +1,6 @@
 import { getSiteInfo, getGlobalStyle } from "./lib/api";
 import { getFooterData } from "./lib/footer";
+import { getHeaderData } from "./lib/header";
 
 export const revalidate = 300; // Re-generate pages every 5 minutes
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -7,6 +8,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import Header from './components/header/Header';
 import Footer from './components/footer/Footer';
 import FluentFormHandler from './components/FluentFormHandler';
+import { QueryProvider } from './components/QueryProvider';
 import "./globals.css";
 import "./css/scss/main.scss";
 
@@ -19,10 +21,19 @@ export async function generateMetadata() {
 }
 
 export default async function RootLayout({ children }) {
-  const [globalStyle, footerData] = await Promise.all([
+  // Fetch header data server-side (cached) - only loads once per language
+  const [globalStyle, footerData, headerDataEn, headerDataTh] = await Promise.all([
     getGlobalStyle(),
-    getFooterData()
+    getFooterData(),
+    getHeaderData('en'), // Cache English menu
+    getHeaderData('th')  // Cache Thai menu
   ]);
+  
+  // Create header data object for both languages
+  const headerData = {
+    en: headerDataEn,
+    th: headerDataTh
+  };
 
   return (
     <html lang="en">
@@ -38,18 +49,20 @@ export default async function RootLayout({ children }) {
         )}
       </head>
       <body className="gspbody gspb-bodyfront">
-        <div id="page" className="site">
-          <Header />
-          <div className="site-header-space"></div>
-          {children}
-          <Footer 
-            footerData={footerData}
-            isServerSide={true}
-          />
-          {/* Global FluentForm handler for all pages */}
-          <FluentFormHandler />
-        </div>
-        <SpeedInsights />
+        <QueryProvider>
+          <div id="page" className="site">
+            <Header headerData={headerData} isServerSide={true} />
+            <div className="site-header-space"></div>
+            {children}
+            <Footer 
+              footerData={footerData}
+              isServerSide={true}
+            />
+            {/* Global FluentForm handler for all pages */}
+            <FluentFormHandler />
+          </div>
+          <SpeedInsights />
+        </QueryProvider>
       </body>
     </html>
   );

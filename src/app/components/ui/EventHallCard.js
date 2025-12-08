@@ -1,12 +1,18 @@
-export default function EventHallCard({ eventHall }) {
+import Image from 'next/image';
+
+export default function EventHallCard({ eventHall, priority = false }) {
     return (
         <div className="bg-white overflow-hidden h-full flex flex-col">
             {eventHall.image && (
                 <div className="relative aspect-square overflow-hidden">
-                    <img
+                    <Image
                         src={eventHall.image}
-                        alt={eventHall.altText}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        alt={eventHall.altText || eventHall.title || 'Event hall'}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover hover:scale-105 transition-transform duration-300"
+                        priority={priority}
+                        loading={priority ? undefined : 'lazy'}
                     />
                 </div>
             )}

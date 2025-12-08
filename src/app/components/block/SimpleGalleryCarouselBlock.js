@@ -1,68 +1,54 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import Image from "next/image";
-import { GetPageWithSimpleGalleryCarousel } from '../../lib/block';
+import { useSimpleGalleryCarousel } from '../../hooks/useBlockQueries';
 import Skeleton from '../ui/Skeleton';
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 export default function SimpleGalleryCarouselBlock(props) {
-    const [galleryData, setGalleryData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [current, setCurrent] = useState(1);
     const blockIndexRef = useRef(null);
     
-    useEffect(() => {
-        async function fetchGalleryData() {
-            try {
-                const currentPath = window.location.pathname;
-                const slug = currentPath === '/' ? 'home' : currentPath.replace(/^\//, '').replace(/\/$/, '');
-                
-                const data = await GetPageWithSimpleGalleryCarousel(slug);
-                if (data && data.simpleGalleryCarousels && data.simpleGalleryCarousels.length > 0) {
-                    // Group galleries by block index
-                    const blocks = {};
-                    data.simpleGalleryCarousels.forEach(gallery => {
-                        if (!blocks[gallery.blockIndex]) {
-                            blocks[gallery.blockIndex] = [];
-                        }
-                        blocks[gallery.blockIndex].push(gallery);
-                    });
-                    
-                    const blockIndices = Object.keys(blocks).map(Number).sort((a, b) => a - b);
-                    
-                    if (blockIndexRef.current === null) {
-                        // Use simple counter for block assignment
-                        if (!window.simpleGalleryBlockCount) {
-                            window.simpleGalleryBlockCount = 0;
-                        }
-                        blockIndexRef.current = window.simpleGalleryBlockCount++;
-                    }
-                    
-                    const blockIndex = blockIndices[blockIndexRef.current % blockIndices.length];
-                    const blockGalleries = blocks[blockIndex] || [];
-                    
-                    setGalleryData({
-                        simpleGalleryCarousels: blockGalleries
-                    });
-                } else {
-                    setGalleryData(data);
-                }
-                
-            } catch (error) {
-                setError(error);
-                console.error('Error fetching simple gallery carousel data:', error);
-            } finally {
-                setLoading(false);
-            }
+    // Use React Query hook - automatically caches and deduplicates requests
+    const { data, isLoading: loading, error } = useSimpleGalleryCarousel();
+    
+    // Process gallery data to handle multiple blocks on same page
+    const galleryData = useMemo(() => {
+        if (!data || !data.simpleGalleryCarousels || data.simpleGalleryCarousels.length === 0) {
+            return data;
         }
-        fetchGalleryData();
-    }, []);
+        
+        // Group galleries by block index
+        const blocks = {};
+        data.simpleGalleryCarousels.forEach(gallery => {
+            if (!blocks[gallery.blockIndex]) {
+                blocks[gallery.blockIndex] = [];
+            }
+            blocks[gallery.blockIndex].push(gallery);
+        });
+        
+        const blockIndices = Object.keys(blocks).map(Number).sort((a, b) => a - b);
+        
+        if (blockIndexRef.current === null) {
+            // Use simple counter for block assignment
+            if (!window.simpleGalleryBlockCount) {
+                window.simpleGalleryBlockCount = 0;
+            }
+            blockIndexRef.current = window.simpleGalleryBlockCount++;
+        }
+        
+        const blockIndex = blockIndices[blockIndexRef.current % blockIndices.length];
+        const blockGalleries = blocks[blockIndex] || [];
+        
+        return {
+            simpleGalleryCarousels: blockGalleries
+        };
+    }, [data]);
 
     if (loading) {
         return (

@@ -1,43 +1,12 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { GetPageWithPhotoGallery } from '../../lib/block';
+import { usePhotoGallery } from '../../hooks/useBlockQueries';
 import Skeleton from '../ui/Skeleton';
 import GallerySwiper from '../GallerySwiper';
 
 export default function PhotoGalleryBlock(props) {
-    const [galleryData, setGalleryData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    
-    useEffect(() => {
-        async function fetchGalleryData() {
-            try {
-                // const currentPath = window.location.pathname;
-                // const slug = currentPath === '/' ? 'home' : currentPath.replace(/^\//, '').replace(/\/$/, '');
-                // const galleryData = await GetPageWithPhotoGallery(slug);
-
-
-                const path = window.location.pathname.replace(/^\/|\/$/g, "");
-                const parts = path.split("/").filter(Boolean);
-                const hasLangPrefix = parts[0] === "th";
-                const isTH = hasLangPrefix;
-                const slug = hasLangPrefix ? (parts.slice(1).join("/") || "home") : (path || "home");
-                const galleryData = await GetPageWithPhotoGallery(slug, isTH);
-
-
-
-
-                setGalleryData(galleryData);
-                
-            } catch (error) {
-                setError(error);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchGalleryData();
-    }, []);
+    // Use React Query hook - automatically caches and deduplicates requests
+    const { data: galleryData, isLoading: loading, error } = usePhotoGallery();
 
     if (loading) {
         return (

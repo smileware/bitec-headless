@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import EventCard from '../ui/EventCard';
 import Skeleton from '../ui/Skeleton';
-import { getFilteredEvents, getAllEventCategories, getAllEventYears } from '../../lib/event';
+import { getFilteredEvents } from '../../lib/event';
+import { useFilteredEvents, useEventCategories, useEventYears } from '../../hooks/useBlockQueries';
 import { usePathname } from 'next/navigation';
 
 export default function WhatsOnBlock(props) {
     const [events, setEvents] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [categories, setCategories] = useState([]);
     const [availableYears, setAvailableYears] = useState([]);
@@ -85,47 +85,57 @@ export default function WhatsOnBlock(props) {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    // Use React Query hooks - automatically caches and deduplicates requests
+    const { data: categoriesData = [] } = useEventCategories();
+    const { data: yearsData = [] } = useEventYears();
+    
+    const perPage = isMobile ? 6 : 12; // 6 for mobile, 12 for desktop
+    
+    // Memoize filters to prevent unnecessary re-renders
+    const queryFilters = useMemo(() => ({
+        ...filters,
+        page: 1,
+        perPage: perPage
+    }), [filters.categoryId, filters.eventType, filters.month, filters.year, perPage]);
+    
+    const { data: eventsResult, isLoading: eventsLoading, error: eventsError } = useFilteredEvents(queryFilters, true);
+    
+    // Use refs to track if we've initialized to prevent infinite loops
+    const categoriesInitialized = useRef(false);
+    const yearsInitialized = useRef(false);
+    const lastEventsLength = useRef(0);
+    
+    // Set categories and years when data loads (only once)
     useEffect(() => {
-        async function fetchInitialData() {
-            try {
-                const [categoriesData, yearsData] = await Promise.all([
-                    getAllEventCategories(),
-                    getAllEventYears()
-                ]);
-                setCategories(categoriesData);
-                setAvailableYears(yearsData);
-                
-            } catch (error) {
-                console.error('Error fetching initial data:', error);
-            }
+        if (categoriesData.length > 0 && !categoriesInitialized.current) {
+            setCategories(categoriesData);
+            categoriesInitialized.current = true;
         }
-
-        fetchInitialData();
-    }, []);
-
+    }, [categoriesData.length]);
+    
     useEffect(() => {
-        async function fetchEvents() {
-            setLoading(true);
-            try {
-                const perPage = isMobile ? 6 : 12; // 6 for mobile, 12 for desktop
-                const result = await getFilteredEvents({
-                    ...filters,
-                    page: 1,
-                    perPage: perPage
-                });
-                setEvents(result.events);
-                setHasMore(result.hasMore);
-                setTotalEvents(result.total);
+        if (yearsData.length > 0 && !yearsInitialized.current) {
+            setAvailableYears(yearsData);
+            yearsInitialized.current = true;
+        }
+    }, [yearsData.length]);
+
+    // Update events when result changes - only if length actually changed
+    useEffect(() => {
+        if (eventsResult && eventsResult.events) {
+            const currentLength = eventsResult.events.length;
+            // Only update if the events array length changed (new data arrived)
+            if (currentLength !== lastEventsLength.current) {
+                setEvents(eventsResult.events);
+                setHasMore(eventsResult.hasMore || false);
+                setTotalEvents(eventsResult.total || 0);
                 setPage(1);
-            } catch (error) {
-                console.error('Error fetching events:', error);
-            } finally {
-                setLoading(false);
+                lastEventsLength.current = currentLength;
             }
         }
+    }, [eventsResult?.events?.length, eventsResult?.hasMore, eventsResult?.total]);
 
-        fetchEvents();
-    }, [filters, isMobile]);
+    const loading = eventsLoading;
 
     const loadMore = async () => {
         if (!hasMore || loadingMore) return;

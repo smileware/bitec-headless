@@ -1,43 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import Skeleton from "../ui/Skeleton";
-import { GetPageWithBitecLiveFacilities } from "../../lib/block";
+import { useBitecLiveFacilities } from "../../hooks/useBlockQueries";
 // Import Swiper styles
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 export default function BitecLiveFacilitiesBlock(props) {
-    const [facilities, setFacilities] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        async function fetchFacilities() {
-            try {
-
-                const path = window.location.pathname.replace(/^\/|\/$/g, "");
-                const parts = path.split("/").filter(Boolean);
-                const hasLangPrefix = parts[0] === "th";
-                const isTH = hasLangPrefix;
-                const slug = hasLangPrefix ? (parts.slice(1).join("/") || "home") : (path || "home");
-                const facilitiesData = await GetPageWithBitecLiveFacilities(slug, isTH);
-                // const facilitiesData = await GetPageWithBitecLiveFacilities("bitec-live");
-
-                setFacilities(facilitiesData);
-            } catch (error) {
-                setError(error);
-                console.error("Error fetching facilities:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchFacilities();
-    }, []);
+    // Use React Query hook - automatically caches and deduplicates requests
+    const { data: facilities = [], isLoading: loading, error } = useBitecLiveFacilities();
 
     if (loading) {
         return (

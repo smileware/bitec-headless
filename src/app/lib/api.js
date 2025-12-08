@@ -22,8 +22,18 @@ function createCacheKey(query, variables) {
   }
 }
 
+// Check if we're running on the client side
+function isClientSide() {
+  return typeof window !== 'undefined';
+}
+
 async function cachedGraphQLRequest(query, variables = {}, requestHeaders) {
   const execute = () => rawGraphQLRequest(query, variables, requestHeaders);
+  
+  // Skip caching on client side - unstable_cache only works on server
+  if (isClientSide()) {
+    return execute();
+  }
   
   if (process.env.SKIP_GRAPHQL_CACHE === 'true' || !supportsCache) {
     return execute();
@@ -42,9 +52,8 @@ async function cachedGraphQLRequest(query, variables = {}, requestHeaders) {
     );
     return await cachedFn();
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('GraphQL cache disabled, falling back to direct requests.', error);
-    }
+    // Silently fall back to direct request if cache fails
+    // This can happen in edge cases or during development
     return execute();
   }
 }

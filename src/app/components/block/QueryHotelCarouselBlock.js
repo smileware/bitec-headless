@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
 import HotelCard from '../ui/HotelCard';
 import Skeleton from '../ui/Skeleton';
-import { GetHotels } from '../../lib/block';
+import { useHotels } from '../../hooks/useBlockQueries';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -13,25 +12,8 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 export default function QueryHotelCarouselBlock(props) {
-    const [hotels, setHotels] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        async function fetchHotels() {
-            try {
-                const hotelData = await GetHotels(8);
-                setHotels(hotelData);
-            } catch (error) {
-                setError(error);
-                console.error('Error fetching hotels:', error);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchHotels();
-    }, []);
+    // Use React Query hook - automatically caches and deduplicates requests
+    const { data: hotels = [], isLoading: loading, error } = useHotels(8);
 
     if (loading) {
         return (

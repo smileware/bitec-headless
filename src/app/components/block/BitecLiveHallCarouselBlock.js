@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
-import { GetPageWithBitecLiveHallCarousel } from '../../lib/block';
+import { useBitecLiveHallCarousel } from '../../hooks/useBlockQueries';
 import Skeleton from '../ui/Skeleton';
 
 // Import Swiper styles
@@ -12,32 +11,8 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 export default function BitecLiveHallCarouselBlock(props) {
-    const [bitecLiveHallData, setBitecLiveHallData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    
-    useEffect(() => {
-        async function fetchBitecLiveHallData() {
-            try {
-
-                const path = window.location.pathname.replace(/^\/|\/$/g, "");
-                const parts = path.split("/").filter(Boolean);
-                const hasLangPrefix = parts[0] === "th";
-                const isTH = hasLangPrefix;
-                const slug = hasLangPrefix ? (parts.slice(1).join("/") || "home") : (path || "home");
-                const data = await GetPageWithBitecLiveHallCarousel(slug, isTH);
-
-                // const data = await GetPageWithBitecLiveHallCarousel('plan-and-event/exhibition');
-                setBitecLiveHallData(data);
-            } catch (error) {
-                setError(error);
-                console.error('Error fetching BitecLive hall data:', error);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchBitecLiveHallData();
-    }, []);
+    // Use React Query hook - automatically caches and deduplicates requests
+    const { data: bitecLiveHallData, isLoading: loading, error } = useBitecLiveHallCarousel();
 
     if (loading) {
         return (

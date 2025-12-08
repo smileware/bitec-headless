@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { GetPageWithDisplayGalleryByType, GetGalleriesByTypes } from '../../lib/block';
+import { useState, useEffect, useMemo } from 'react';
+import { useDisplayGalleryByType, useGalleriesByTypes } from '../../hooks/useBlockQueries';
 import GalleryCard from '../ui/GalleryCard';
 
 // Custom hook to detect screen size
@@ -20,55 +20,61 @@ function useScreenSize() {
 
 export default function GalleryBlock(props) {
     const isMobile = useScreenSize();
-    const [allGalleries, setAllGalleries] = useState([]);
-    const [displayedGalleries, setDisplayedGalleries] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(0);
 
     const PAGE_SIZE = isMobile ? 6 : 12;
 
+    // Use React Query hooks - automatically caches and deduplicates requests
+    const { data: galleryConfig, isLoading: configLoading, error: configError } = useDisplayGalleryByType();
+    
+    // Extract type slugs from config (can be array or null)
+    // Memoize to ensure stable reference for React Query
+    const typeSlugs = useMemo(() => {
+        return galleryConfig?.displayGalleryByType || null;
+    }, [galleryConfig?.displayGalleryByType]);
+    
+    // Enable query once config is loaded (even if typeSlugs is null, GetGalleriesByTypes will fetch all)
+    const shouldFetchGalleries = !configLoading && galleryConfig !== undefined;
+    
+    const { data: allGalleries = [], isLoading: galleriesLoading, error: galleriesError } = useGalleriesByTypes(
+        typeSlugs,
+        1000,
+        shouldFetchGalleries
+    );
+    
+    // Debug logging (remove in production)
     useEffect(() => {
-        async function fetchGalleryData() {
-            try {
-                // Get current path and language
-                const path = window.location.pathname.replace(/^\/|\/$/g, "");
-                const parts = path.split("/").filter(Boolean);
-                const hasLangPrefix = parts[0] === "th";
-                const isTH = hasLangPrefix;
-                const slug = hasLangPrefix ? (parts.slice(1).join("/") || "home") : (path || "home");
-                
-                // Get the block configuration (selected gallery types)
-                const data = await GetPageWithDisplayGalleryByType(slug, isTH);
-                
-                // Fetch galleries by selected types (or all if none selected)
-                const items = await GetGalleriesByTypes(data?.displayGalleryByType, 1000);
-                setAllGalleries(items);
-                
-                // Calculate total pages
-                const pages = Math.ceil(items.length / PAGE_SIZE);
-                setTotalPages(pages);
-                
-                // Set first page
-                setDisplayedGalleries(items.slice(0, PAGE_SIZE));
-                setCurrentPage(1);
-
-            } catch (error) {
-                setError(error);
-                console.error('Error fetching gallery data:', error);
-            } finally {
-                setLoading(false);
-            }
+        if (galleryConfig !== undefined) {
+            console.log('GalleryBlock - Config loaded:', {
+                displayGalleryByType: galleryConfig?.displayGalleryByType,
+                typeSlugs,
+                shouldFetchGalleries,
+                allGalleriesCount: allGalleries.length
+            });
         }
-        fetchGalleryData();
+    }, [galleryConfig, typeSlugs, shouldFetchGalleries, allGalleries.length]);
+
+    const loading = configLoading || galleriesLoading;
+    const error = configError || galleriesError;
+
+    // Calculate pagination
+    const totalPages = useMemo(() => {
+        return Math.ceil(allGalleries.length / PAGE_SIZE);
+    }, [allGalleries.length, PAGE_SIZE]);
+
+    const displayedGalleries = useMemo(() => {
+        const startIndex = (currentPage - 1) * PAGE_SIZE;
+        const endIndex = startIndex + PAGE_SIZE;
+        return allGalleries.slice(startIndex, endIndex);
+    }, [allGalleries, currentPage, PAGE_SIZE]);
+
+    // Reset to page 1 when PAGE_SIZE changes
+    useEffect(() => {
+        setCurrentPage(1);
     }, [PAGE_SIZE]);
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
-        const startIndex = (page - 1) * PAGE_SIZE;
-        const endIndex = startIndex + PAGE_SIZE;
-        setDisplayedGalleries(allGalleries.slice(startIndex, endIndex));
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 

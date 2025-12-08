@@ -1,16 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { GetAllHotels, GetAllCategories } from '@/app/lib/block';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useAllHotels, useAllCategories } from '../../hooks/useBlockQueries';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export default function HotelMapBlock(props) {
     const pathname = usePathname();
-    const [hotels, setHotels] = useState([]);
     const [selectedHotel, setSelectedHotel] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [mapLoaded, setMapLoaded] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategories, setSelectedCategories] = useState([]);
@@ -62,44 +60,42 @@ export default function HotelMapBlock(props) {
         </svg>
     );
 
+    // Use React Query hooks - automatically caches and deduplicates requests
+    const { data: hotelsData = [], isLoading: hotelsLoading, error: hotelsError } = useAllHotels();
+    const { data: cats = [], isLoading: categoriesLoading, error: categoriesError } = useAllCategories();
+    
+    const loading = hotelsLoading || categoriesLoading;
+    const error = hotelsError || categoriesError;
+
+    // Filter hotels that have coordinates (ACF fields are strings)
+    const hotels = useMemo(() => {
+        return hotelsData.filter(hotel => 
+            hotel.hotelDetail?.latitude && 
+            hotel.hotelDetail?.longitude && 
+            hotel.hotelDetail.latitude !== '' && 
+            hotel.hotelDetail.longitude !== ''
+        );
+    }, [hotelsData]);
+
+    // Set categories (only once when they first arrive)
     useEffect(() => {
-        const fetchHotels = async () => {
-            try {
-                setLoading(true);
-                const isTH = (pathname.split('/').filter(Boolean)[0] === 'th');
-                
-                const hotelsData = await GetAllHotels(isTH);
-                const cats = await GetAllCategories(isTH);
-                setCategories(cats);
+        if (cats.length > 0 && categories.length === 0) {
+            setCategories(cats);
+        }
+    }, [cats.length, categories.length]); // Only update when length changes and categories is empty
 
-                // Filter hotels that have coordinates (ACF fields are strings)
-                const hotelsWithCoords = hotelsData.filter(hotel => 
-                    hotel.hotelDetail?.latitude && 
-                    hotel.hotelDetail?.longitude && 
-                    hotel.hotelDetail.latitude !== '' && 
-                    hotel.hotelDetail.longitude !== ''
-                );
-                
-                setHotels(hotelsWithCoords);
-                
-                if (hotelsWithCoords.length > 0) {
-                    setSelectedHotel(hotelsWithCoords[0]);
-                }
-            } catch (error) {
-                console.error('Error fetching hotels:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchHotels();
-    }, []);
+    // Set selected hotel when hotels load (only once)
+    useEffect(() => {
+        if (hotels.length > 0 && !selectedHotel) {
+            setSelectedHotel(hotels[0]);
+        }
+    }, [hotels.length]); // Only depend on hotels.length, not the full hotels array or selectedHotel
 
     useEffect(() => {
         if (hotels.length > 0 && !isMobile) {
             loadGoogleMapsAPI();
         }
-    }, [hotels, isMobile]);
+    }, [hotels.length, isMobile]); // Only depend on hotels.length to prevent loops
 
     // Update map markers when filters change
     useEffect(() => {

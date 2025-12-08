@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { GetPageWithQueryGalleryByType, GetGalleryByTaxonomyType } from '../../lib/block';
+import { useState, useEffect } from 'react';
+import { useQueryGalleryByType, useGalleryByTaxonomyType } from '../../hooks/useBlockQueries';
 import Skeleton from '../ui/Skeleton';
 import GalleryCard from '../ui/GalleryCard';
 
@@ -25,47 +25,16 @@ function useScreenSize() {
 }
 
 export default function QueryGalleryByTypeBlock(props) {
-    const [galleryData, setGalleryData] = useState(null);
-    const [galleryItems, setGalleryItems] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const isMobile = useScreenSize();
-
-
-
-    useEffect(() => {
-        async function fetchGalleryData() {
-            try {
-
-                // const currentPath = window.location.pathname;
-                // const slug = currentPath === '/' ? 'home' : currentPath.replace(/^\//, '').replace(/\/$/, '');
-                const path = window.location.pathname.replace(/^\/|\/$/g, "");
-                const parts = path.split("/").filter(Boolean);
-                const hasLangPrefix = parts[0] === "th";
-                const isTH = hasLangPrefix;
-                const slug = hasLangPrefix ? (parts.slice(1).join("/") || "home") : (path || "home");
-                const data = await GetPageWithQueryGalleryByType(slug, isTH);
-
-                // const data = await GetPageWithQueryGalleryByType(slug);
-                setGalleryData(data);
-                // If we have a taxonomy ID, fetch the gallery items
-                if (data?.queryGalleryByType) {
-                    const limit = isMobile ? 3 : 5;
-                    const items = await GetGalleryByTaxonomyType(data.queryGalleryByType, limit);
-                    setGalleryItems(items);
-                } else {
-                    console.log('No taxonomy ID found in gallery data:', data);
-                }
-
-            } catch (error) {
-                setError(error);
-                console.error('Error fetching events:', error);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchGalleryData();
-    }, [isMobile]);
+    
+    // Use React Query hooks - automatically caches and deduplicates requests
+    const { data: galleryData, isLoading: loading, error } = useQueryGalleryByType();
+    const limit = isMobile ? 3 : 5;
+    const { data: galleryItems = [] } = useGalleryByTaxonomyType(
+        galleryData?.queryGalleryByType,
+        limit,
+        !!galleryData?.queryGalleryByType // Only fetch if we have a taxonomy
+    );
 
 
     if (loading) {

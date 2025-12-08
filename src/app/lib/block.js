@@ -362,7 +362,6 @@ export async function GetPageWithDisplayGalleryByType(slug, preferTranslation = 
     
     try {
         const data = await graphQLClient.request(query, variables);
-        console.log(data,' datafuck');
         const baseBlocks = data?.pageBy?.editorBlocks || [];
         const transBlocks = data?.pageBy?.translations?.[0]?.editorBlocks || [];
         const blocks = (preferTranslation && transBlocks?.length) ? transBlocks : baseBlocks;
@@ -556,6 +555,7 @@ export async function GetPageWithEventHallCarousel(slug, preferTranslation = fal
                     editorBlocks {
                         ... on AcfEventHallCarousel {
                             blockEventHallCarousel {
+                                blockIdentifierId
                                 eventHallCarousel {
                                     eventHallImage {
                                         node {
@@ -605,6 +605,7 @@ export async function GetPageWithEventHallCarousel(slug, preferTranslation = fal
                 editorBlocks {
                     ... on AcfEventHallCarousel {
                         blockEventHallCarousel {
+                            blockIdentifierId
                             eventHallCarousel {
                                 eventHallImage {
                                     node {
@@ -677,13 +678,16 @@ export async function GetPageWithEventHallCarousel(slug, preferTranslation = fal
     }
 
     // Process all blocks and return them as separate items
+    // IMPORTANT: Preserve the order - blockIndex 0 = first block, blockIndex 1 = second block, etc.
     const allEventHalls = eventHallBlocks.map((block, blockIndex) => {
         const blockData = block.blockEventHallCarousel;
+        const blockIdentifierId = blockData.blockIdentifierId || null;
         
         const eventHalls = (blockData.eventHallCarousel || []).map((eventHall, hallIndex) => {
             return {
                 id: `event-hall-${blockIndex}-${hallIndex}`,
                 blockIndex: blockIndex,
+                blockIdentifierId: blockIdentifierId, // Include the identifier
                 image: eventHall.eventHallImage?.node?.sourceUrl || null,
                 altText:
                     eventHall.eventHallImage?.node?.altText ||
@@ -702,12 +706,23 @@ export async function GetPageWithEventHallCarousel(slug, preferTranslation = fal
         
         return eventHalls;
     });
+    
+    // Create a mapping of blockIndex to blockIdentifierId in order
+    // This preserves the relationship: blockIndex 0 → first identifier, blockIndex 1 → second identifier
+    const blockIndexToIdentifier = {};
+    eventHallBlocks.forEach((block, index) => {
+        const blockIdentifierId = block.blockEventHallCarousel?.blockIdentifierId;
+        if (blockIdentifierId) {
+            blockIndexToIdentifier[index] = blockIdentifierId;
+        }
+    });
 
     // Flatten the array to get all event halls from all blocks
     const eventHalls = allEventHalls.flat();
 
     return {
         eventHalls: eventHalls,
+        blockIndexToIdentifier: blockIndexToIdentifier, // Include the mapping
     };
 }
 

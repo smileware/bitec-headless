@@ -40,8 +40,20 @@ export default function Header({ headerData = null, isServerSide = false }) {
         return currentLang === 'en' ? '/' : `/${currentLang}`;
     }, [currentLang]);
 
-    // Fetch data when language changes
+    // Use server-side data if provided, otherwise fetch client-side
     useEffect(() => {
+        // If server-side data is provided, use it (cached, loads only once)
+        if (isServerSide && headerData && headerData[currentLang]) {
+            const data = headerData[currentLang];
+            setMenuItems(data.primaryMenu?.menuItems || []);
+            setMenuTopItems(data.topMenu?.menuTopItems || []);
+            setMenuMobileItems(data.mobileMenu?.menuMobileItems || []);
+            setCtaData(data.cta);
+            setIsLoading(false);
+            return; // Don't fetch client-side if server data exists
+        }
+        
+        // Only fetch client-side if no server data provided
         async function fetchMenuData() {
             setIsLoading(true);
             setIsMenuRefreshing(true);
@@ -61,7 +73,7 @@ export default function Header({ headerData = null, isServerSide = false }) {
             }
         }
         fetchMenuData();
-    }, [currentLang]);
+    }, [currentLang, isServerSide, headerData]);
 
     // Hydration fix - only set client state after component mounts
     useEffect(() => {
