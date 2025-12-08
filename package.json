@@ -15,9 +15,9 @@
     "axios": "^1.10.0",
     "graphql-request": "^7.2.0",
     "html-react-parser": "^5.2.5",
-    "next": "15.3.4",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "next": "^16.0.7",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "sass": "^1.89.2",
     "swiper": "^11.2.10",
     "tailwindcss-animate": "^1.0.7"
@@ -27,7 +27,7 @@
     "@next/bundle-analyzer": "^15.4.6",
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
-    "eslint-config-next": "15.3.4",
+    "eslint-config-next": "^16.0.7",
     "tailwindcss": "^4"
   }
 }
