@@ -123,8 +123,8 @@ export default function RecommendedHotelCarouselBlock(props) {
                         },
                     }}
                     navigation={{
-                        nextEl: '.swiper-button-next',
-                        prevEl: '.swiper-button-prev',
+                        nextEl: '.swiper-button-next-recommended',
+                        prevEl: '.swiper-button-prev-recommended',
                     }}
                     onSlideChange={(swiper) => setCurrentSlide(swiper.activeIndex + 1)}
                     className="swiper"
@@ -184,12 +184,12 @@ export default function RecommendedHotelCarouselBlock(props) {
                 </div>
                 {/* Navigation Arrows - Right Side */}
                 <div className="absolute lg:bottom-[50px] bottom-[40px] z-10 flex flex-col right-4 lg:right-auto recommended-nav-arrows">
-                    <div className="swiper-button-prev swiper-button-prev-custom">
+                    <div className="swiper-button-prev swiper-button-prev-recommended swiper-button-prev-custom">
                         <svg width="14" height="15" viewBox="0 0 14 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path d="M13.6666 6.66671H3.52492L8.18325 2.00837L6.99992 0.833374L0.333252 7.50004L6.99992 14.1667L8.17492 12.9917L3.52492 8.33337H13.6666V6.66671Z"/>
                         </svg>
                     </div>
-                    <div className="swiper-button-next swiper-button-next-custom">
+                    <div className="swiper-button-next swiper-button-next-recommended swiper-button-next-custom">
                         <svg width="14" height="15" viewBox="0 0 14 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path d="M6.99992 0.833374L5.82492 2.00837L10.4749 6.66671H0.333252V8.33337H10.4749L5.82492 12.9917L6.99992 14.1667L13.6666 7.50004L6.99992 0.833374Z"/>
                         </svg>
