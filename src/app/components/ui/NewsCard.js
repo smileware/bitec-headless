@@ -92,7 +92,7 @@ export default function NewsCard({ news }) {
             </div>
             <div className="info">
                 <div className="entry-meta">
-                    {news.categories?.nodes?.length > 0 && (
+                    {/* {news.categories?.nodes?.length > 0 && (
                         <div className="news-categories">
                             {news.categories.nodes.map((cat) => (
                                 <div key={cat.id} className="news-category uppercase">
@@ -100,7 +100,7 @@ export default function NewsCard({ news }) {
                                 </div>
                             ))}
                         </div>
-                    )}
+                    )} */}
 
                     {/* Display published date */}
                     {news.date && (
