@@ -358,10 +358,12 @@ export default function HotelMapBlock(props) {
         });
       
         // sort by category order, then by date DESC
+        // Change to sort by category order, then random. Jan 2026 Changed
         return filtered.sort((a, b) => {
           const ra = rankOf(a), rb = rankOf(b);
           if (ra !== rb) return ra - rb;
-          return new Date(b.date) - new Date(a.date);
+        //   return new Date(b.date) - new Date(a.date);
+          return Math.random() - 0.5;
         });
     };
 

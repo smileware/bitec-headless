@@ -14,7 +14,7 @@ export default function GallerySwiper({ images }) {
         <div className="relative swiper-gallery">
             <Swiper
                 modules={[Navigation]}
-                slidesPerView={1.5}
+                slidesPerView={2.5}
                 centeredSlides={true}
                 loop={true}
                 watchOverflow={false}
@@ -31,11 +31,11 @@ export default function GallerySwiper({ images }) {
                         spaceBetween: 20,
                     },
                     768: {
-                        slidesPerView: 1.5,
+                        slidesPerView: 2.5,
                         spaceBetween: 30,
                     },
                     1024: {
-                        slidesPerView: 1.5,
+                        slidesPerView: 2.5,
                         spaceBetween: 30,
                     },
                 }}
@@ -46,16 +46,19 @@ export default function GallerySwiper({ images }) {
             >
                 {images.map((img, idx) => (
                     <SwiperSlide key={idx}>
-                        <div className="relative h-[400px]">
+                        <div className="relative w-full">
                             {(img.url || img.sourceUrl) && (img.url || img.sourceUrl).trim() !== '' ? (
                                 <Image
                                     src={img.url || img.sourceUrl}
                                     alt={img.alt || img.altText || `Gallery image ${idx + 1}`}
-                                    fill
-                                    className="w-full h-auto object-cover"
+                                    width={0}
+                                    height={0}
+                                    sizes="100vw"
+                                    style={{ width: '100%', height: 'auto' }}
+                                    className="object-cover"
                                 />
                             ) : (
-                                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                <div className="w-full h-[300px] bg-gray-200 flex items-center justify-center">
                                     <span className="text-gray-500">No image available</span>
                                 </div>
                             )}
