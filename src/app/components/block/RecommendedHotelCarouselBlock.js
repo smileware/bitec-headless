@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination } from 'swiper/modules';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { GetRecommendedHotels } from '@/app/lib/block';
 import Skeleton from '@/app/components/ui/Skeleton';
 import Image from 'next/image';
@@ -96,15 +96,18 @@ export default function RecommendedHotelCarouselBlock(props) {
         <div {...props} className="swiper-hotel-carousel swiper-hotel-carousel-recommended">
             <div className="">
                 <Swiper
-                    modules={[Navigation, Pagination]}
+                    modules={[Navigation, Pagination, Autoplay]}
                     slidesPerView={1}
                     speed={400}
-                    loop={false}
+                    loop={true}
                     autoHeight={false}
                     grabCursor={false}
                     freeMode={false}
                     centeredSlides={true}
-                    autoplay={false}
+                    autoplay={{
+                        delay: 4000,
+                        disableOnInteraction: false,
+                    }}
                     breakpoints={{
                         // Mobile (xs)
                         320: {
@@ -126,7 +129,7 @@ export default function RecommendedHotelCarouselBlock(props) {
                         nextEl: '.swiper-button-next-recommended',
                         prevEl: '.swiper-button-prev-recommended',
                     }}
-                    onSlideChange={(swiper) => setCurrentSlide(swiper.activeIndex + 1)}
+                    onSlideChange={(swiper) => setCurrentSlide(swiper.realIndex + 1)}
                     className="swiper"
                 >
                     {hotels.map((hotel) => (
