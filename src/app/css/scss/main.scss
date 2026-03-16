@@ -371,7 +371,7 @@ body {
         margin-bottom: 5px;
       }
       .ff-el-input--content {
-        input, textarea { 
+        input, textarea, select { 
           padding: 8px 15px;
           width: 100%;
           background-color: #fff;
@@ -379,6 +379,10 @@ body {
           border: 0;
           font-size: 22px;
           font-weight: 400;
+          min-height: 52px;
+        }
+        select:has(option[value=""]:checked) {
+          color: #919191;
         }
         .ff-field-error { 
           color: #FAE7EA;
