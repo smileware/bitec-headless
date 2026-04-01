@@ -94,7 +94,6 @@ export async function getGlobalStyle() {
 
 
 export async function getPageBySlug(slug, language = null) {
-  // Get everything from GraphQL
   const query = gql`
     query($uri: String!) {
       pageBy(uri: $uri) {
@@ -110,6 +109,9 @@ export async function getPageBySlug(slug, language = null) {
           postTemplate: false
         )
         greenshiftInlineCss
+        enqueuedStylesheets(first: 50) {
+          edges { node { handle, after } }
+        }
         featuredImage {
           node {
             sourceUrl
@@ -131,6 +133,9 @@ export async function getPageBySlug(slug, language = null) {
           title
           content
           greenshiftInlineCss
+          enqueuedStylesheets(first: 50) {
+            edges { node { handle, after } }
+          }
           blocks(
             attributes: false
             dynamicContent: false
@@ -145,11 +150,20 @@ export async function getPageBySlug(slug, language = null) {
   
   const variables = { uri: slug };
   const data = await graphQLClient.request(query, variables);
-  const page = data.pageBy;
+  const page = data?.pageBy;
 
   if (!page) return null;
   
   const greenshiftScripts = getGreenshiftScripts(page.enqueuedScripts?.edges || []);
+  
+  // Resolve CSS: prefer greenshiftInlineCss, fall back to enqueued greenshift-post-css
+  page.greenshiftInlineCss = extractGreenshiftCss(page);
+  if (page.translations) {
+    page.translations = page.translations.map(t => ({
+      ...t,
+      greenshiftInlineCss: extractGreenshiftCss(t),
+    }));
+  }
   
   return {
     ...page,
@@ -171,6 +185,33 @@ export function getGreenshiftScripts(edges) {
   
   return scripts;
 }
+
+// GreenShift v12.9+ moved page CSS from greenshiftInlineCss to enqueuedStylesheets.
+// This extracts it from the 'greenshift-post-css' handle.
+export function extractGreenshiftCss(item) {
+  if (item?.greenshiftInlineCss) return item.greenshiftInlineCss;
+  
+  const edges = item?.enqueuedStylesheets?.edges;
+  if (!edges) return '';
+  
+  const gsNode = edges.find(e => e.node?.handle === 'greenshift-post-css');
+  if (!gsNode?.node?.after) return '';
+  
+  const after = gsNode.node.after;
+  return Array.isArray(after) ? after.join('') : after;
+}
+
+// GraphQL fragment for enqueued stylesheets
+export const ENQUEUED_STYLESHEETS_FRAGMENT = `
+  enqueuedStylesheets(first: 50) {
+    edges {
+      node {
+        handle
+        after
+      }
+    }
+  }
+`;
 
 
 // DEPRECATED** NO LONGER USED. Use 100% GraphQL instead.

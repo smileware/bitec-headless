@@ -51,8 +51,8 @@ export default async function EventPage({ params }) {
 
     return (
         <div>
-            {event.greenshiftInlineCss && (
-                <style dangerouslySetInnerHTML={{ __html: event.greenshiftInlineCss }} />
+            {(event.translations?.[0]?.greenshiftInlineCss || event.greenshiftInlineCss) && (
+                <style dangerouslySetInnerHTML={{ __html: event.translations?.[0]?.greenshiftInlineCss || event.greenshiftInlineCss }} />
             )}
             <article>
                 <header className="bg-[#161616] lg:py-[100px] lg:py-[40px] py-[20px]">

@@ -50,8 +50,8 @@ export default async function HotelPage({ params }) {
 
     return (
         <div>
-            {hotel.greenshiftInlineCss && (
-                <style dangerouslySetInnerHTML={{ __html: hotel.greenshiftInlineCss }} />
+            {(hotel.translations?.[0]?.greenshiftInlineCss || hotel.greenshiftInlineCss) && (
+                <style dangerouslySetInnerHTML={{ __html: hotel.translations?.[0]?.greenshiftInlineCss || hotel.greenshiftInlineCss }} />
             )}
             <article className="content-hotel">
                 <header className="bg-[#161616] lg:py-[100px] py-[40px]">

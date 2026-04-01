@@ -1,5 +1,5 @@
 import { gql } from 'graphql-request';
-import { graphQLClient, getGreenshiftScripts } from './api';
+import { graphQLClient, getGreenshiftScripts, extractGreenshiftCss } from './api';
 
 export async function getEventBySlug(slug) {
     const query = gql`
@@ -10,9 +10,16 @@ export async function getEventBySlug(slug) {
                 title
                 content
                 greenshiftInlineCss
+                enqueuedStylesheets(first: 50) {
+                    edges { node { handle, after } }
+                }
                 translations {
                     content
                     title
+                    greenshiftInlineCss
+                    enqueuedStylesheets(first: 50) {
+                        edges { node { handle, after } }
+                    }
                 }
                 enqueuedScripts(first: 100) {
                     edges {
@@ -59,6 +66,13 @@ export async function getEventBySlug(slug) {
     
     if (!event) return null;
     const greenshiftScripts = getGreenshiftScripts(event.enqueuedScripts?.edges || []);
+    event.greenshiftInlineCss = extractGreenshiftCss(event);
+    if (event.translations) {
+        event.translations = event.translations.map(t => ({
+            ...t,
+            greenshiftInlineCss: extractGreenshiftCss(t),
+        }));
+    }
     return {
         ...event,
         greenshiftScripts

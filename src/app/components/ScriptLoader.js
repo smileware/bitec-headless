@@ -1,104 +1,128 @@
 'use client';
 import { useEffect, useRef } from 'react';
 
+// ── Global state (persists across navigations) ────────────────────────
+const loadedScripts = new Set();
+
 const persistentScriptPatterns = [/\/aoslight\.js/i, /\/aoslightclip\.js/i];
 const persistentScripts = new Set();
 
-const BASE_AOS_SELECTOR = '[data-aos]:not([data-aos="clip-down"]):not([data-aos="clip-up"]):not([data-aos="clip-left"]):not([data-aos="clip-right"]):not([data-aos="display-in"]):not([data-aos="display-in-slide"]):not([data-aos="display-in-zoom"]):not([data-aos="custom"]):not([data-aos="slide-left"]):not([data-aos="slide-right"]):not([data-aos="slide-top"]):not([data-aos="slide-bottom"])';
-const BASE_CLIP_SELECTOR = '[data-aos="clip-down"], [data-aos="clip-up"], [data-aos="clip-left"], [data-aos="clip-right"], [data-aos="display-in"], [data-aos="display-in-slide"], [data-aos="display-in-zoom"], [data-aos="custom"], [data-aos="slide-left"], [data-aos="slide-right"], [data-aos="slide-top"], [data-aos="slide-bottom"]';
+const BASE_AOS_SELECTOR =
+    '[data-aos]:not([data-aos="clip-down"]):not([data-aos="clip-up"]):not([data-aos="clip-left"]):not([data-aos="clip-right"]):not([data-aos="display-in"]):not([data-aos="display-in-slide"]):not([data-aos="display-in-zoom"]):not([data-aos="custom"]):not([data-aos="slide-left"]):not([data-aos="slide-right"]):not([data-aos="slide-top"]):not([data-aos="slide-bottom"])';
+const BASE_CLIP_SELECTOR =
+    '[data-aos="clip-down"], [data-aos="clip-up"], [data-aos="clip-left"], [data-aos="clip-right"], [data-aos="display-in"], [data-aos="display-in-slide"], [data-aos="display-in-zoom"], [data-aos="custom"], [data-aos="slide-left"], [data-aos="slide-right"], [data-aos="slide-top"], [data-aos="slide-bottom"]';
 
 const aosObserverState = { observer: null };
 const clipState = { elements: new Set(), handler: null, throttled: null };
 
+// ── Helpers ────────────────────────────────────────────────────────────
+
 function isPersistentScript(src = '') {
-    return persistentScriptPatterns.some((pattern) => pattern.test(src));
+    return persistentScriptPatterns.some((p) => p.test(src));
 }
 
-function handleCounters(hasLoadedCounter) {
-    if (typeof document === 'undefined' || hasLoadedCounter.current) {
-        return; // Already processed or not in browser
-    }
-    
-    const counterElements = document.querySelectorAll('.gs-counter');
-    
-    // If no counter elements found, try again after a delay (for production timing issues)
-    if (counterElements.length === 0) {
-        setTimeout(() => {
-            if (!hasLoadedCounter.current) {
-                handleCounters(hasLoadedCounter);
-            }
-        }, 300);
+function proxyUrl(src) {
+    return `/api/gs-proxy?url=${encodeURIComponent(src)}`;
+}
+
+function loadScriptTag(src) {
+    return new Promise((resolve, reject) => {
+        const el = document.createElement('script');
+        el.src = src;
+        el.onload = resolve;
+        el.onerror = () => reject(new Error(`Failed to load: ${src}`));
+        document.body.appendChild(el);
+    });
+}
+
+// ── GreenShift re-initialisation ───────────────────────────────────────
+
+function reinitializeGreenShiftComponents() {
+    if (typeof document === 'undefined') return;
+
+    // Video: .gs-video-element divs → <video>
+    document.querySelectorAll('.gs-video-element').forEach((el) => {
+        if (el.querySelector('video')) return;
+        const src = el.dataset.src;
+        if (!src || el.dataset.provider !== 'video') return;
+
+        const v = document.createElement('video');
+        v.src = src;
+        if (el.dataset.autoplay === 'true') v.autoplay = true;
+        if (el.dataset.playsinline === 'true') v.playsInline = true;
+        if (el.dataset.controls === 'true') v.controls = true;
+        if (el.dataset.loop === 'true') v.loop = true;
+        if (el.dataset.mute === 'true') v.muted = true;
+        if (el.dataset.poster) v.poster = el.dataset.poster;
+        v.style.cssText = 'width:100%;height:100%;object-fit:cover';
+        el.appendChild(v);
+        v.play().catch(() => {});
+    });
+
+    // Replay paused autoplay videos
+    document.querySelectorAll('video[autoplay], .gs-video-element video').forEach((v) => {
+        if (v.paused) {
+            v.muted = true;
+            v.play().catch(() => {});
+        }
+    });
+
+    // Call any GreenShift global init hooks
+    ['gspb_init', 'gspbInit', 'greenshiftInit'].forEach((fn) => {
+        if (typeof window[fn] === 'function') window[fn]();
+    });
+}
+
+// ── Counter handling ───────────────────────────────────────────────────
+
+function handleCounters(guard) {
+    if (typeof document === 'undefined' || guard.current) return;
+
+    const els = document.querySelectorAll('.gs-counter');
+    if (els.length === 0) {
+        setTimeout(() => { if (!guard.current) handleCounters(guard); }, 300);
         return;
     }
-    
-    // Mark as processed to prevent multiple calls
-    hasLoadedCounter.current = true;
-    
-    // Check if WordPress script already initialized counters
-    counterElements.forEach((element) => {
-        const endValue = element.getAttribute('data-end');
-        if (!endValue) return;
-        
-        // If WordPress script didn't initialize (no countfinished class), set fallback
-        if (!element.classList.contains('countfinished')) {
-            // Try WordPress counter function first (if available)
-            if (typeof window !== 'undefined' && (window.gsCounterInit || window.greenshiftCounterInit)) {
-                // WordPress script exists, let it handle initialization
-                return;
-            }
-            
-            // Fallback: Set final value directly (for production when script fails)
-            element.textContent = endValue;
-            element.classList.add('countfinished');
+    guard.current = true;
+    els.forEach((el) => {
+        const end = el.getAttribute('data-end');
+        if (!end) return;
+        if (!el.classList.contains('countfinished')) {
+            if (window.gsCounterInit || window.greenshiftCounterInit) return;
+            el.textContent = end;
+            el.classList.add('countfinished');
         }
     });
 }
 
-function refreshPersistentAnimations(scope) {
-    if (typeof window === 'undefined' || !scope) {
-        return;
-    }
-    refreshAOSAnimations(scope);
-    refreshClipAnimations(scope);
+// ── AOS / Clip animation refresh ───────────────────────────────────────
+
+function refreshPersistentAnimations() {
+    if (typeof window === 'undefined') return;
+    refreshAOS();
+    refreshClip();
 }
 
-function refreshAOSAnimations(scope) {
-    const observer = getAOSObserver();
-    if (!observer || !scope.querySelectorAll) {
-        return;
-    }
-    const selector = buildAOSSelector();
-    const elements = scope.querySelectorAll(selector);
-    elements.forEach((element) => {
-        observer.observe(element);
-    });
+function refreshAOS() {
+    const obs = getAOSObserver();
+    if (!obs) return;
+    const sel = buildSelector(BASE_AOS_SELECTOR, window.animationClasses);
+    document.querySelectorAll(sel).forEach((el) => obs.observe(el));
 }
 
 function getAOSObserver() {
-    if (typeof window === 'undefined') {
-        return null;
-    }
-    if (aosObserverState.observer) {
-        return aosObserverState.observer;
-    }
+    if (typeof window === 'undefined') return null;
+    if (aosObserverState.observer) return aosObserverState.observer;
     aosObserverState.observer = new IntersectionObserver(
         (entries) => {
             entries.forEach((entry) => {
-                const target = entry.target;
-                const once = target.getAttribute('data-aos-once');
+                const t = entry.target;
+                const once = t.getAttribute('data-aos-once');
                 if (entry.isIntersecting) {
-                    setTimeout(() => {
-                        target.classList.add('aos-animate');
-                    }, 10);
-                    if (once) {
-                        aosObserverState.observer?.unobserve(target);
-                    }
-                } else if (
-                    !once &&
-                    target.classList.contains('aos-animate') &&
-                    !target.classList.contains('aos-init')
-                ) {
-                    target.classList.remove('aos-animate');
+                    setTimeout(() => t.classList.add('aos-animate'), 10);
+                    if (once) aosObserverState.observer?.unobserve(t);
+                } else if (!once && t.classList.contains('aos-animate') && !t.classList.contains('aos-init')) {
+                    t.classList.remove('aos-animate');
                 }
             });
         },
@@ -107,55 +131,26 @@ function getAOSObserver() {
     return aosObserverState.observer;
 }
 
-function buildAOSSelector() {
-    if (typeof window === 'undefined') {
-        return BASE_AOS_SELECTOR;
-    }
-    const extra = Array.isArray(window.animationClasses) ? window.animationClasses : [];
-    if (!extra.length) {
-        return BASE_AOS_SELECTOR;
-    }
-    const extraSelector = extra.map((cls) => `.${cls}`).join(', ');
-    return `${BASE_AOS_SELECTOR}, ${extraSelector}`;
-}
-
-function refreshClipAnimations(scope) {
-    if (typeof window === 'undefined' || !scope.querySelectorAll) {
-        return;
-    }
-    const selector = buildClipSelector();
-    const elements = scope.querySelectorAll(selector);
-    elements.forEach((element) => {
-        clipState.elements.add(element);
-    });
+function refreshClip() {
+    if (typeof window === 'undefined') return;
+    const sel = buildSelector(BASE_CLIP_SELECTOR, window.clipClasses);
+    document.querySelectorAll(sel).forEach((el) => clipState.elements.add(el));
     ensureClipHandler();
-    runClipUpdate();
+    clipState.handler?.();
 }
 
 function ensureClipHandler() {
-    if (typeof window === 'undefined') {
-        return;
-    }
-    if (clipState.handler) {
-        return;
-    }
+    if (typeof window === 'undefined' || clipState.handler) return;
     const handler = () => {
-        clipState.elements.forEach((element) => {
-            if (!element.isConnected) {
-                clipState.elements.delete(element);
-                return;
-            }
-            const once = element.getAttribute('data-aos-once');
-            if (isElementInViewport(element)) {
-                setTimeout(() => {
-                    element.classList.add('aos-animate');
-                }, 10);
-            } else if (
-                !once &&
-                element.classList.contains('aos-animate') &&
-                !element.classList.contains('aos-init')
-            ) {
-                element.classList.remove('aos-animate');
+        clipState.elements.forEach((el) => {
+            if (!el.isConnected) { clipState.elements.delete(el); return; }
+            const once = el.getAttribute('data-aos-once');
+            const rect = el.getBoundingClientRect();
+            const inView = rect.top <= (window.innerHeight || document.documentElement.clientHeight) && rect.bottom >= 0;
+            if (inView) {
+                setTimeout(() => el.classList.add('aos-animate'), 10);
+            } else if (!once && el.classList.contains('aos-animate') && !el.classList.contains('aos-init')) {
+                el.classList.remove('aos-animate');
             }
         });
     };
@@ -165,28 +160,10 @@ function ensureClipHandler() {
     window.addEventListener('resize', clipState.throttled);
 }
 
-function runClipUpdate() {
-    if (clipState.handler) {
-        clipState.handler();
-    }
-}
-
-function buildClipSelector() {
-    if (typeof window === 'undefined') {
-        return BASE_CLIP_SELECTOR;
-    }
-    const extra = Array.isArray(window.clipClasses) ? window.clipClasses : [];
-    if (!extra.length) {
-        return BASE_CLIP_SELECTOR;
-    }
-    const extraSelector = extra.map((cls) => `.${cls}`).join(', ');
-    return `${BASE_CLIP_SELECTOR}, ${extraSelector}`;
-}
-
-function isElementInViewport(element) {
-    const rect = element.getBoundingClientRect();
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-    return rect.top <= viewportHeight && rect.bottom >= 0;
+function buildSelector(base, extraArr) {
+    const extra = Array.isArray(extraArr) ? extraArr : [];
+    if (!extra.length) return base;
+    return `${base}, ${extra.map((c) => `.${c}`).join(', ')}`;
 }
 
 function throttle(fn, limit) {
@@ -195,103 +172,80 @@ function throttle(fn, limit) {
         if (!waiting) {
             fn(...args);
             waiting = true;
-            setTimeout(() => {
-                waiting = false;
-            }, limit);
+            setTimeout(() => { waiting = false; }, limit);
         }
     };
 }
 
+// ── Component ──────────────────────────────────────────────────────────
+
 export default function ScriptLoader({ scripts }) {
-    const scriptRefs = useRef([]);
     const isLoading = useRef(false);
     const hasLoadedCounter = useRef(false);
 
     useEffect(() => {
         if (isLoading.current) return;
-
-        scriptRefs.current.forEach((script) => {
-            if (script.parentNode) {
-                script.parentNode.removeChild(script);
-            }
-        });
-        scriptRefs.current = [];
-
-        const scope = typeof document !== 'undefined' ? document : null;
-
         if (!scripts || scripts.length === 0) {
-            refreshPersistentAnimations(scope);
+            refreshPersistentAnimations();
+            setTimeout(reinitializeGreenShiftComponents, 150);
             return;
         }
 
         let cancelled = false;
 
-        async function loadScriptsSequentially() {
+        (async () => {
             isLoading.current = true;
 
             for (const src of scripts) {
-                if (!src || cancelled) {
+                if (!src || cancelled) continue;
+
+                // Persistent AOS scripts: load once, never re-execute
+                if (isPersistentScript(src)) {
+                    if (persistentScripts.has(src)) continue;
+                    try {
+                        await loadScriptTag(src);
+                        persistentScripts.add(src);
+                        loadedScripts.add(src);
+                    } catch (e) {
+                        console.warn('[ScriptLoader] persistent script failed:', src, e);
+                    }
                     continue;
                 }
 
-                const persistent = isPersistentScript(src);
-                if (persistent && persistentScripts.has(src)) {
+                // First visit: load normally via <script> tag
+                if (!loadedScripts.has(src)) {
+                    try {
+                        await loadScriptTag(src);
+                        loadedScripts.add(src);
+                        if (src.includes('counter')) {
+                            setTimeout(() => handleCounters(hasLoadedCounter), 200);
+                        }
+                    } catch (e) {
+                        console.warn('[ScriptLoader] script failed:', src, e);
+                    }
                     continue;
                 }
 
+                // Re-navigation: load IIFE-wrapped version via proxy
                 try {
-                    await new Promise((resolve, reject) => {
-                        const script = document.createElement('script');
-                        script.src = src;
-                        script.onload = () => {
-                            if (persistent) {
-                                persistentScripts.add(src);
-                            }
-                            if (src.includes('counter')) {
-                                // Wait a bit for WordPress script to initialize counters
-                                setTimeout(() => {
-                                    handleCounters(hasLoadedCounter);
-                                }, 200);
-                            }
-                            resolve();
-                        };
-                        script.onerror = () => {
-                            // If counter script fails to load, still try to initialize counters
-                            if (src.includes('counter')) {
-                                setTimeout(() => {
-                                    handleCounters(hasLoadedCounter);
-                                }, 300);
-                            }
-                            reject(new Error(`Failed to load script: ${src}`));
-                        };
-                        document.body.appendChild(script);
-                        scriptRefs.current.push(script);
-                    });
-                } catch (error) {
-                    console.error('ScriptLoader: Failed to load script:', src, error);
+                    await loadScriptTag(proxyUrl(src));
+                    if (src.includes('counter')) {
+                        setTimeout(() => handleCounters(hasLoadedCounter), 200);
+                    }
+                } catch (e) {
+                    console.warn('[ScriptLoader] proxy re-exec failed:', src, e);
                 }
             }
 
             isLoading.current = false;
             if (!cancelled) {
-                refreshPersistentAnimations(scope);
+                refreshPersistentAnimations();
+                setTimeout(reinitializeGreenShiftComponents, 150);
             }
-        }
+        })();
 
-        loadScriptsSequentially();
-
-        return () => {
-            cancelled = true;
-            scriptRefs.current.forEach((script) => {
-                if (script.parentNode) {
-                    script.parentNode.removeChild(script);
-                }
-            });
-            scriptRefs.current = [];
-            isLoading.current = false;
-        };
+        return () => { cancelled = true; isLoading.current = false; };
     }, [scripts]);
 
     return null;
 }
-

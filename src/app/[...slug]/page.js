@@ -90,9 +90,11 @@ export default async function DynamicPage({ params }) {
 
     // Select content and CSS based on language
     let displayBlocks = page.content;
-    let displayCss = page.greenshiftInlineCss; // Always use main page CSS
+    let displayCss = page.greenshiftInlineCss;
     if (language === 'th' && page.translations && page.translations.length > 0) {
-        displayBlocks = page.translations[0].content || page.content;
+        const translation = page.translations[0];
+        displayBlocks = translation.content || page.content;
+        displayCss = translation.greenshiftInlineCss || page.greenshiftInlineCss;
     }
 
     return (

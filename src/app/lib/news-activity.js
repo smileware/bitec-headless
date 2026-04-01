@@ -1,5 +1,5 @@
 import { gql } from 'graphql-request';
-import { graphQLClient, getGreenshiftScripts } from './api';
+import { graphQLClient, getGreenshiftScripts, extractGreenshiftCss } from './api';
 
 export async function getNewsActivityContent(page = 1, perPage = 9, language = 'en') {
     const query = gql`
@@ -92,8 +92,15 @@ export async function getPostBySlug(slug, language = 'en') {
                     title
                     excerpt
                     content
+                    greenshiftInlineCss
+                    enqueuedStylesheets(first: 50) {
+                        edges { node { handle, after } }
+                    }
                 }
                 greenshiftInlineCss
+                enqueuedStylesheets(first: 50) {
+                    edges { node { handle, after } }
+                }
                 enqueuedScripts(first: 100) {
                     edges {
                         node {
@@ -113,7 +120,15 @@ export async function getPostBySlug(slug, language = 'en') {
 
         if (!post) return null;
 
-        // Handle translations based on language
+        // Resolve CSS from enqueued stylesheets (GreenShift v12.9+)
+        post.greenshiftInlineCss = extractGreenshiftCss(post);
+        if (post.translations) {
+            post.translations = post.translations.map(t => ({
+                ...t,
+                greenshiftInlineCss: extractGreenshiftCss(t),
+            }));
+        }
+
         if (language === 'th' && post.translations && post.translations.length > 0) {
             const thaiTranslation = post.translations[0];
             return {
@@ -122,6 +137,7 @@ export async function getPostBySlug(slug, language = 'en') {
                 excerpt: thaiTranslation.excerpt || post.excerpt,
                 content: thaiTranslation.content || post.content,
                 slug: thaiTranslation.slug || post.slug,
+                greenshiftInlineCss: thaiTranslation.greenshiftInlineCss || post.greenshiftInlineCss,
                 greenshiftScripts: getGreenshiftScripts(post.enqueuedScripts?.edges || [])
             };
         }

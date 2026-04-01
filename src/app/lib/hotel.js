@@ -1,5 +1,5 @@
 import { gql } from "graphql-request";
-import { graphQLClient, getGreenshiftScripts } from "./api";
+import { graphQLClient, getGreenshiftScripts, extractGreenshiftCss } from "./api";
 
 export async function getHotelBySlug(slug) {
     console.log(slug);
@@ -10,8 +10,15 @@ export async function getHotelBySlug(slug) {
                 slug
                 title
                 greenshiftInlineCss
+                enqueuedStylesheets(first: 50) {
+                    edges { node { handle, after } }
+                }
                 translations {
                     title
+                    greenshiftInlineCss
+                    enqueuedStylesheets(first: 50) {
+                        edges { node { handle, after } }
+                    }
                 }
                 enqueuedScripts(first: 100) {
                     edges {
@@ -73,6 +80,13 @@ export async function getHotelBySlug(slug) {
     const greenshiftScripts = getGreenshiftScripts(
         hotel.enqueuedScripts?.edges || []
     );
+    hotel.greenshiftInlineCss = extractGreenshiftCss(hotel);
+    if (hotel.translations) {
+        hotel.translations = hotel.translations.map(t => ({
+            ...t,
+            greenshiftInlineCss: extractGreenshiftCss(t),
+        }));
+    }
     return {
         ...hotel,
         greenshiftScripts,
