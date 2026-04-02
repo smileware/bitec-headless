@@ -1,8 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTabAccordion } from '../../hooks/useBlockQueries';
 import Skeleton from '../ui/Skeleton';
+
+function openGSPopup(triggerClass) {
+    if (!triggerClass) return;
+    const selector = `.${triggerClass}`;
+    const panel = document.querySelector(`.gspb_slidingPanel[data-clickselector="${selector}"]`);
+    if (panel) {
+        panel.classList.add('active');
+        return;
+    }
+    const trigger = document.querySelector(selector);
+    if (trigger) trigger.click();
+}
 
 export default function TabAccordionBlock(props) {
     const [activeTab, setActiveTab] = useState(0);
@@ -10,6 +22,11 @@ export default function TabAccordionBlock(props) {
     
     // Use React Query hook - automatically caches and deduplicates requests
     const { data: tabData, isLoading: loading, error } = useTabAccordion('plan-and-event');
+
+    const handleTabClick = useCallback((index, popupTrigger) => {
+        setActiveTab(index);
+        openGSPopup(popupTrigger);
+    }, []);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -88,8 +105,11 @@ export default function TabAccordionBlock(props) {
                     {tabData.tabs.map((tab, index) => (
                         <div key={index} className="border-b border-[#DE5E72] overflow-hidden mb-0">
                             <button
-                                onClick={() => setActiveTab(activeTab === index ? -1 : index)}
-                                className="w-full py-[20px] text-left flex items-center justify-between"
+                                onClick={() => {
+                                    setActiveTab(activeTab === index ? -1 : index);
+                                    openGSPopup(tab.tabPopupTrigger);
+                                }}
+                                className={`w-full py-[20px] text-left flex items-center justify-between${tab.tabPopupTrigger ? ` ${tab.tabPopupTrigger}` : ''}`}
                             >
                                 <span className="font-medium text-white text-[24px] leading-[1]">{tab.tabButton}</span>
                                 {activeTab === index ? (
@@ -132,12 +152,12 @@ export default function TabAccordionBlock(props) {
                             {tabData.tabs.map((tab, index) => (
                                 <button
                                     key={index}
-                                    onClick={() => setActiveTab(index)}
+                                    onClick={() => handleTabClick(index, tab.tabPopupTrigger)}
                                     className={`w-full text-left px-[20px] py-[3px] text-[30px] font-normal transition-all duration-200 flex items-center justify-between text-white rounded-[5px] cursor-pointer ${
                                         activeTab === index
                                             ? 'bg-[#BB0D29]'
                                             : 'hover:bg-[#BB0D29]'
-                                    }`}
+                                    }${tab.tabPopupTrigger ? ` ${tab.tabPopupTrigger}` : ''}`}
                                 >
                                     {tab.tabButton}
 

@@ -18,7 +18,7 @@ export async function GET(request) {
             scriptCache.set(url, text);
         }
 
-        const wrapped = `(function(){\n${text}\n})();`;
+        const wrapped = `(function(){try{\n${text}\n}catch(e){console.warn("[gs-proxy] re-init error:",e.message)}})();`;
 
         return new Response(wrapped, {
             headers: {

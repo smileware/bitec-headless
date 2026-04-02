@@ -497,6 +497,7 @@ export async function GetPageWithTabToAccordion(slug) {
                             tabToAccordionTitle
                             tabToAccordion {
                                 tabButton
+                                tabPopupTrigger
                                 tabImageContent {
                                     node {
                                         id
@@ -535,6 +536,7 @@ export async function GetPageWithTabToAccordion(slug) {
     const tabs = (blockData.tabToAccordion || []).map((tab) => {
         return {
             tabButton: tab.tabButton || "",
+            tabPopupTrigger: tab.tabPopupTrigger || null,
             tabImage: tab.tabImageContent?.node?.sourceUrl || null,
             altText: tab.tabImageContent?.node?.altText || tab.tabButton || "",
             imageDetails: tab.tabImageContent?.node?.mediaDetails || null,
@@ -570,6 +572,9 @@ export async function GetPageWithEventHallCarousel(slug, preferTranslation = fal
                                     eventHallTitle
                                     eventHallDescription
                                     eventHallSize
+                                    eventHallBoothSize
+                                    eventHallTheaterCapacity
+                                    eventHallClassroomCapacity
                                     eventHallTags {
                                         tagName
                                     }
@@ -620,6 +625,9 @@ export async function GetPageWithEventHallCarousel(slug, preferTranslation = fal
                                 eventHallTitle
                                 eventHallDescription
                                 eventHallSize
+                                eventHallBoothSize
+                                eventHallTheaterCapacity
+                                eventHallClassroomCapacity
                                 eventHallTags {
                                     tagName
                                 }
@@ -695,6 +703,9 @@ export async function GetPageWithEventHallCarousel(slug, preferTranslation = fal
                     "",
                 title: eventHall.eventHallTitle || "",
                 size: eventHall.eventHallSize || "",
+                boothSize: eventHall.eventHallBoothSize || "",
+                theaterCapacity: eventHall.eventHallTheaterCapacity || "",
+                classroomCapacity: eventHall.eventHallClassroomCapacity || "",
                 tags: (eventHall.eventHallTags || []).map(
                     (tag) => tag.tagName || ""
                 ),
