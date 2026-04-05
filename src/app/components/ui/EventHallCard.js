@@ -104,7 +104,7 @@ export default function EventHallCard({ eventHall, priority = false }) {
                     <InfoRow icon={<SizeIcon />} text={eventHall.size} />
                 )}
                 {hasCapacityInfo ? (
-                    <div className="flex flex-wrap">
+                    <div className="flex flex-wrap flex-col">
                         {eventHall.boothSize && (
                             <InfoRow icon={<BoothIcon />} text={eventHall.boothSize} />
                         )}
