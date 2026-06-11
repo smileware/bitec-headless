@@ -32,7 +32,7 @@ const BLOCK_MAP = [
     { id: 'block-news-activity-sustainability', component: NewsActivitySustainabilityBlock },
     { id: 'block-tab-accordion', component: TabAccordionBlock },
     { id: 'block-event-hall-carousel', component: EventHallCarouselBlock, startsWith: true },
-    { id: 'block-bitec-live-hall-carousel', component: BitecLiveHallCarouselBlock },
+    { id: 'block-bitec-live-hall-carousel', component: BitecLiveHallCarouselBlock, startsWith: true },
     { id: 'block-photo-gallery', component: PhotoGalleryBlock },
     { id: 'block-query-hotel-carousel', component: QueryHotelCarouselBlock },
     { id: 'block-recommended-hotel-carousel', component: RecommendedHotelCarouselBlock },

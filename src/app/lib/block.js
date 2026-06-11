@@ -804,37 +804,35 @@ export async function GetPageWithBitecLiveHallCarousel(slug, preferTranslation =
     const transBlocks = data?.pageBy?.translations?.[0]?.editorBlocks || [];
     const blocks = (preferTranslation && transBlocks?.length) ? transBlocks : baseBlocks;
 
-    const bitecLiveHallBlock = blocks.find(
+    const bitecLiveHallBlocks = blocks.filter(
         (block) => block?.blockBitecLiveHallCarousel
     );
     
-    if (!bitecLiveHallBlock) {
+    if (!bitecLiveHallBlocks.length) {
         console.log("No BitecLive hall carousel block found");
         return null;
     }
     
-    const blockData = bitecLiveHallBlock.blockBitecLiveHallCarousel;
+    const bitecLiveHalls = bitecLiveHallBlocks.map((block, blockIndex) => {
+        const blockData = block.blockBitecLiveHallCarousel;
+        const gallery = (blockData.bitecLiveHallGallery?.nodes || []).map((node) => ({
+            url: node.mediaItemUrl,
+            alt: node.altText || "",
+            caption: node.caption || "",
+        }));
+        return {
+            blockIndex,
+            gallery,
+            title: blockData.bitecLiveHallTitle || "",
+            size: blockData.bitecLiveHallSize || "",
+            capacity: blockData.bitecLiveHallCapacity || "",
+            link: blockData.bitecLiveHallLink?.url || "",
+            linkTitle: blockData.bitecLiveHallLink?.title || "",
+            linkTarget: blockData.bitecLiveHallLink?.target || "",
+        };
+    });
     
-    // Since the structure is now direct (no bitecLiveHallCarousel wrapper)
-    const gallery = (blockData.bitecLiveHallGallery?.nodes || []).map((node) => ({
-        url: node.mediaItemUrl,
-        alt: node.altText || "",
-        caption: node.caption || "",
-    }));
-    
-    const bitecLiveHall = {
-        gallery: gallery,
-        title: blockData.bitecLiveHallTitle || "",
-        size: blockData.bitecLiveHallSize || "",
-        capacity: blockData.bitecLiveHallCapacity || "",
-        link: blockData.bitecLiveHallLink?.url || "",
-        linkTitle: blockData.bitecLiveHallLink?.title || "",
-        linkTarget: blockData.bitecLiveHallLink?.target || "",
-    };
-    
-    return {
-        bitecLiveHalls: [bitecLiveHall], // Return as array to maintain compatibility
-    };
+    return { bitecLiveHalls };
 }
 
 export async function GetPageWithPhotoGallery(slug, preferTranslation = false) {
