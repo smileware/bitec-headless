@@ -545,13 +545,13 @@ body {
         color: var(--s-accent);
       }
       .event-hall { 
-        font-size: 16px;
+        font-size: 22px;
       }
       .entry-location { 
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-top: 10px;
+        // margin-top: 10px;
         .event-locations { 
           gap: 10px;
           font-size: 18px;

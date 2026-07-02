@@ -1,7 +1,12 @@
 import { gql } from 'graphql-request';
 import { graphQLClient, getGreenshiftScripts, extractGreenshiftCss } from './api';
 
-export async function getNewsActivityContent(page = 1, perPage = 9, language = 'en') {
+const NEWS_ACTIVITY_CATEGORY_IDS = {
+    news: ['27', '28', '51', '53'],
+    blog: ['54'],
+};
+
+export async function getNewsActivityContent(page = 1, perPage = 9, language = 'en', filter = 'news') {
     const query = gql`
       query GetNewsActivityContent($size: Int!, $offset: Int!, $categoryIds: [ID]) {
         posts(
@@ -44,11 +49,7 @@ export async function getNewsActivityContent(page = 1, perPage = 9, language = '
       }
     `;
   
-    // Category IDs for news and activity - different IDs for English and Thai
-    const categoryIds =
-      language === "th"
-        ? ["29", "30"] // Thai
-        : ["27", "28", "51", "53", "54"]; // English
+    const categoryIds = NEWS_ACTIVITY_CATEGORY_IDS[filter] || NEWS_ACTIVITY_CATEGORY_IDS.news;
   
     const offset = (page - 1) * perPage;
   

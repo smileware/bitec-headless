@@ -9,6 +9,7 @@ export default function NewsActivityBlock(props) {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const [activeFilter, setActiveFilter] = useState('news');
     const [pageInfo, setPageInfo] = useState({ hasNextPage: false, endCursor: null });
     const [totalPages, setTotalPages] = useState(0);
     const pathname = usePathname();
@@ -28,10 +29,10 @@ export default function NewsActivityBlock(props) {
 
     const currentLang = getCurrentLanguage();
 
-    const fetchNews = async (page = 1) => {
+    const fetchNews = async (page = 1, filter = activeFilter) => {
         setLoading(true);
         try {
-            const result = await getNewsActivityContent(page, 9, currentLang);
+            const result = await getNewsActivityContent(page, 9, currentLang, filter);
             setNews(result.content);
             setPageInfo(result.pageInfo);
             
@@ -53,12 +54,19 @@ export default function NewsActivityBlock(props) {
     };
 
     useEffect(() => {
-        fetchNews(1);
-    }, []);
+        setCurrentPage(1);
+        fetchNews(1, activeFilter);
+    }, [activeFilter, currentLang]);
+
+    const handleFilterChange = (filter) => {
+        if (filter === activeFilter) return;
+        setActiveFilter(filter);
+        setCurrentPage(1);
+    };
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
-        fetchNews(page);
+        fetchNews(page, activeFilter);
         // Scroll to top of the component
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -155,6 +163,33 @@ export default function NewsActivityBlock(props) {
     if (loading && news.length === 0) {
         return (
             <div {...props} className="max-w-[1340px] mx-auto">
+                <div className="flex justify-end mb-[30px]">
+                    <div className="text-[18px] font-normal text-[#919195] min-w-max">
+                        <button
+                            type="button"
+                            onClick={() => handleFilterChange('news')}
+                            className={`transition-colors duration-200 cursor-pointer ${
+                                activeFilter === 'news'
+                                    ? 'text-[var(--s-accent)]'
+                                    : 'text-[#919195] hover:text-[var(--s-accent-hover)]'
+                            }`}
+                        >
+                            News and Activities
+                        </button>
+                        <span className="mx-2 text-[#CCCCCE]">|</span>
+                        <button
+                            type="button"
+                            onClick={() => handleFilterChange('blog')}
+                            className={`transition-colors duration-200 cursor-pointer ${
+                                activeFilter === 'blog'
+                                    ? 'text-[var(--s-accent)]'
+                                    : 'text-[#919195] hover:text-[var(--s-accent-hover)]'
+                            }`}
+                        >
+                            Blog
+                        </button>
+                    </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px]">
                     {[...Array(9)].map((_, index) => (
                         <div key={index} className="content-item -card animate-pulse">
@@ -173,6 +208,34 @@ export default function NewsActivityBlock(props) {
 
     return (
         <div {...props} className="max-w-[1340px] mx-auto">
+            <div className="flex justify-end mb-[30px]">
+                <div className="text-[18px] font-normal text-[#919195] min-w-max">
+                    <button
+                        type="button"
+                        onClick={() => handleFilterChange('news')}
+                        className={`transition-colors duration-200 cursor-pointer ${
+                            activeFilter === 'news'
+                                ? 'text-[var(--s-accent)]'
+                                : 'text-[#919195] hover:text-[var(--s-accent-hover)]'
+                        }`}
+                    >
+                        News and Activities
+                    </button>
+                    <span className="mx-2 text-[#CCCCCE]">|</span>
+                    <button
+                        type="button"
+                        onClick={() => handleFilterChange('blog')}
+                        className={`transition-colors duration-200 cursor-pointer ${
+                            activeFilter === 'blog'
+                                ? 'text-[var(--s-accent)]'
+                                : 'text-[#919195] hover:text-[var(--s-accent-hover)]'
+                        }`}
+                    >
+                        Blog
+                    </button>
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:gap-x-[30px] gap-x-[20px] lg:gap-y-[40px] gap-y-[30px]">
                 {news.map((newsItem) => (
                     <NewsCard key={newsItem.id} news={newsItem} />
