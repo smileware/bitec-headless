@@ -13,6 +13,7 @@ import {
     GetPageWithBitecLiveGallery,
     GetPageWithSimpleGalleryCarousel,
     GetPageWithTabToAccordion,
+    GetPageWithRetailInformation,
     GetPageWithDisplayGalleryByType,
     GetGalleriesByTypes,
     GetAllHotels,
@@ -232,6 +233,17 @@ export function useEventYears() {
         queryFn: () => getAllEventYears(),
         staleTime: 10 * 60 * 1000, // 10 minutes (years don't change often)
         refetchOnMount: false, // Don't refetch if cached data exists
+    });
+}
+
+// Hook for Retail Information
+export function useRetailInformation() {
+    const { slug, isTH } = useSlugAndLanguage();
+    return useQuery({
+        queryKey: ['retailInformation', slug, isTH],
+        queryFn: () => GetPageWithRetailInformation(slug, isTH),
+        staleTime: 10 * 60 * 1000,
+        refetchOnMount: false,
     });
 }
 

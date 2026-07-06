@@ -19,6 +19,7 @@ import RecommendedHotelCarouselBlock from './block/RecommendedHotelCarouselBlock
 import HotelMapBlock from './block/HotelMapBlock';
 import SimpleGalleryCarouselBlock from './block/SimpleGalleryCarouselBlock';
 import GalleryBlock from './block/GalleryBlock';
+import RetailInformationBlock from './block/RetailInformationBlock';
 
 // Block mapping for efficient lookup - order preserved by array order
 const BLOCK_MAP = [
@@ -39,6 +40,7 @@ const BLOCK_MAP = [
     { id: 'block-hotel-map', component: HotelMapBlock },
     { id: 'block-simple-gallery-carousel', component: SimpleGalleryCarouselBlock, startsWith: true },
     { id: 'block-display-gallery', component: GalleryBlock },
+    { id: 'block-retail-information', component: RetailInformationBlock, startsWith: true },
 ];
 
 export default function BlockRenderer({ content }) {

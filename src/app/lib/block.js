@@ -1295,3 +1295,103 @@ export async function GetAllCategories(isTH = false) {
         return [];
     }
 }
+
+export async function GetPageWithRetailInformation(slug, preferTranslation = false) {
+    const query = gql`
+        query GetPageWithRetailInformation($uri: String!) {
+            pageBy(uri: $uri) {
+                translations {
+                    editorBlocks {
+                        ... on AcfRetailInformation {
+                            blockRetailInformation {
+                                retailInformation {
+                                    popupTriggerText
+                                    popupTriggerImage {
+                                        node {
+                                            sourceUrl
+                                            altText
+                                        }
+                                    }
+                                    popupContentTitle
+                                    popupContent
+                                    popupContentImage {
+                                        node {
+                                            sourceUrl
+                                            altText
+                                        }
+                                    }
+                                    popupContentMeta {
+                                        popupContentLocation
+                                        popupContentBusinessHour
+                                        popupContentCapacity
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                editorBlocks {
+                    ... on AcfRetailInformation {
+                        blockRetailInformation {
+                            retailInformation {
+                                popupTriggerText
+                                popupTriggerImage {
+                                    node {
+                                        sourceUrl
+                                        altText
+                                    }
+                                }
+                                popupContentTitle
+                                popupContent
+                                popupContentImage {
+                                    node {
+                                        sourceUrl
+                                        altText
+                                    }
+                                }
+                                popupContentMeta {
+                                    popupContentLocation
+                                    popupContentBusinessHour
+                                    popupContentCapacity
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    `;
+
+    const variables = { uri: slug };
+    let data;
+    try {
+        data = await graphQLClient.request(query, variables);
+    } catch (error) {
+        console.error("GraphQL fetch error for retail information:", error);
+        return [];
+    }
+
+    const baseBlocks = data?.pageBy?.editorBlocks || [];
+    const transBlocks = data?.pageBy?.translations?.[0]?.editorBlocks || [];
+    const blocks = (preferTranslation && transBlocks?.length) ? transBlocks : baseBlocks;
+
+    return blocks
+        .filter(b => b?.blockRetailInformation)
+        .map(b => {
+            const bd = b.blockRetailInformation;
+            return {
+                items: (bd.retailInformation || []).map(item => ({
+                    triggerText: item.popupTriggerText || '',
+                    triggerImage: item.popupTriggerImage?.node?.sourceUrl || null,
+                    triggerImageAlt: item.popupTriggerImage?.node?.altText || '',
+                    contentTitle: item.popupContentTitle || '',
+                    content: item.popupContent || '',
+                    contentImage: item.popupContentImage?.node?.sourceUrl || null,
+                    contentImageAlt: item.popupContentImage?.node?.altText || '',
+                    location: item.popupContentMeta?.popupContentLocation || '',
+                    businessHour: item.popupContentMeta?.popupContentBusinessHour || '',
+                    capacity: item.popupContentMeta?.popupContentCapacity || '',
+                })),
+            };
+        });
+}

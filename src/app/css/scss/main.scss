@@ -1258,3 +1258,242 @@ body {
     }
   }
 }
+
+// Retail Information Block
+.retail-information-block {
+  .retail-information-grid {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .retail-information-trigger-wrap {
+    width: 25%;
+    padding: 10px;
+    box-sizing: border-box;
+
+    &.is-skeleton {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      &.is-skeleton-mobile-only {
+        @media (min-width: 769px) {
+          display: none;
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      width: 33.33%;
+    }
+
+    @media (max-width: 480px) {
+      width: 33.33%;
+    }
+  }
+
+  .retail-information-trigger {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    width: 100%;
+    margin-bottom: 30px;
+    @media (max-width: 768px) {
+      margin-bottom: 0px;
+    }
+  }
+
+  .retail-information-trigger-image {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #e5e7eb;
+    flex-shrink: 0;
+    @media (max-width: 768px) {
+      width: 68px;
+      height: 68px;
+    }
+  }
+
+  .retail-information-trigger-placeholder {
+    background: #d1d5db;
+  }
+
+  .retail-information-trigger-title {
+    margin-top: 10px;
+    color: #000;
+    font-size: 30px;
+    line-height: 1em;
+    text-align: center;
+    font-weight: 400;
+    @media (max-width: 768px) {
+      font-size: 20px;
+    }
+  }
+}
+
+.retail-information-popover {
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  max-width: 1200px;
+  width: calc(100% - 40px);
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgb(0 0 0 / 18%);
+  background: white;
+  margin: 0;
+
+  &::backdrop {
+    background: rgb(0 0 0 / 60%);
+  }
+
+  &:popover-open {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+  }
+}
+
+.retail-information-popover-inner {
+  display: flex;
+  align-items: stretch;
+  min-height: 540px;
+}
+
+.retail-information-popover-media {
+  position: relative;
+  width: 400px;
+  min-height: 540px;
+  flex-shrink: 0;
+  align-self: stretch;
+  background: #e5e7eb;
+}
+
+.retail-information-popover-media-placeholder {
+  position: absolute;
+  inset: 0;
+  background: #d1d5db;
+}
+
+.retail-information-popover-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 800px;
+  flex: 1;
+  align-self: stretch;
+  min-height: 540px;
+  background: white;
+  padding: 50px;
+  box-sizing: border-box;
+}
+
+.retail-information-popover-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  background: #CE0E2D;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 2;
+}
+
+.retail-information-popover-title {
+  margin: 0 0 20px 0;
+  color: #161616;
+  font-weight: 500;
+  font-size: 39px;
+  line-height: 1em;
+  padding-right: 40px;
+}
+
+.retail-information-popover-content {
+  margin-bottom: 16px;
+  color: #161616;
+  font-size: 25px;
+  line-height: 1.2em;
+
+  p {
+    margin: 0 0 16px 0;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.retail-information-popover-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.retail-information-popover-meta-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  color: #161616;
+  font-size: 22px;
+  line-height: 1.2em;
+}
+
+.retail-information-popover-meta-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+}
+
+@media (max-width: 1024px) {
+  .retail-information-popover-inner {
+    position: relative;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .retail-information-popover-media,
+  .retail-information-popover-media-placeholder {
+    width: 100%;
+    min-height: 280px;
+  }
+
+  .retail-information-popover-body {
+    position: static;
+    width: 100%;
+    min-height: 0;
+    padding: 30px;
+  }
+
+  .retail-information-popover-close {
+    top: 0;
+    right: 0;
+  }
+
+  .retail-information-popover-title {
+    font-size: 28px;
+    padding-right: 0;
+  }
+
+  .retail-information-popover-content {
+    font-size: 20px;
+  }
+
+  .retail-information-popover-meta-item {
+    font-size: 18px;
+  }
+}
