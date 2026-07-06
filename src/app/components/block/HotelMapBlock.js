@@ -18,6 +18,8 @@ export default function HotelMapBlock(props) {
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markersRef = useRef([]);
+    const markerRegistryRef = useRef({});
+    const activeInfoWindowRef = useRef(null);
     const [categories, setCategories] = useState([]);
 
     // Simple language detection from URL path
@@ -52,6 +54,18 @@ export default function HotelMapBlock(props) {
     useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm, selectedCategories]);
+
+    useEffect(() => {
+        window.__closeHotelMapInfoWindow = () => {
+            if (activeInfoWindowRef.current) {
+                activeInfoWindowRef.current.close();
+                activeInfoWindowRef.current = null;
+            }
+        };
+        return () => {
+            delete window.__closeHotelMapInfoWindow;
+        };
+    }, []);
 
         // Custom pin SVG
     const CustomPinSVG = () => (
@@ -103,6 +117,11 @@ export default function HotelMapBlock(props) {
             // Clear existing markers
             markersRef.current.forEach(marker => marker.setMap(null));
             markersRef.current = [];
+            markerRegistryRef.current = {};
+            if (activeInfoWindowRef.current) {
+                activeInfoWindowRef.current.close();
+                activeInfoWindowRef.current = null;
+            }
 
             // Recreate markers with filtered hotels
             const filteredHotels = getFilteredHotels();
@@ -244,44 +263,82 @@ export default function HotelMapBlock(props) {
             ? (hotel.translations && hotel.translations[0]?.excerpt ? hotel.translations[0].excerpt : hotel.excerpt)
             : hotel.excerpt;
 
+        const hotelUrl = currentLang === 'th'
+            ? `/th/hotel/${hotel.translations && hotel.translations[0]?.slug ? hotel.translations[0].slug : hotel.slug}`
+            : `/hotel/${hotel.slug}`;
+
+        const hotelAddress = hotel.hotelDetail?.hotelShortAddress || '';
+        const moreInfoLabel = currentLang === 'th' ? 'ข้อมูลเพิ่มเติม' : 'More information';
+
         const infoWindow = new window.google.maps.InfoWindow({
             content: `
-                <a href="${currentLang === 'th' ? `/th/hotel/${hotel.translations && hotel.translations[0]?.slug ? hotel.translations[0].slug : hotel.slug}` : `/hotel/${hotel.slug}`}" style="color: #161616; text-decoration: none;">
-                    <div style="background: white; border-radius: 0px; padding-left: 5px;  overflow: hidden; max-width: 300px;">
-                        <div style="position: relative;">
-                            <img src="${hotel.featuredImage?.node?.sourceUrl || '/img/thumb.jpg'}" 
-                                alt="${hotel.featuredImage?.node?.altText || hotelTitle}" 
-                                style="width: 100%; height: 200px; object-fit: cover;" />
-                            ${hasRecommendCategory ? `
-                            <div style="position: absolute; bottom: 20px; left: 20px; background: #CE0E2D; color: white; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 400; display: flex; align-items: center; gap: 10px;">
-                                <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M8.61967 6.16683L6.99967 0.833496L5.37967 6.16683H0.333008L4.45301 9.10683L2.88634 14.1668L6.99967 11.0402L11.1197 14.1668L9.55301 9.10683L13.6663 6.16683H8.61967Z" fill="white"/>
-                                </svg>
-                                Recommend
-                            </div>
-                            ` : ''}
+                <div class="hotel-map-info-window" style="background: white; overflow: hidden; width: 300px; max-width: 300px;">
+                    <div style="position: relative; line-height: 0;">
+                        <img src="${hotel.featuredImage?.node?.sourceUrl || '/img/thumb.jpg'}" 
+                            alt="${hotel.featuredImage?.node?.altText || hotelTitle}" 
+                            style="width: 100%; height: 200px; object-fit: cover; display: block;" />
+                        <button
+                            type="button"
+                            onclick="window.__closeHotelMapInfoWindow && window.__closeHotelMapInfoWindow()"
+                            aria-label="Close"
+                            style="position: absolute; top: 0; right: 0; width: 36px; height: 36px; background: #CE0E2D; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; z-index: 2;"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1 1L13 13M13 1L1 13" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                        ${hasRecommendCategory ? `
+                        <div style="position: absolute; bottom: 20px; left: 20px; background: #CE0E2D; color: white; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 400; display: flex; align-items: center; gap: 10px; line-height: 1.2;">
+                            <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8.61967 6.16683L6.99967 0.833496L5.37967 6.16683H0.333008L4.45301 9.10683L2.88634 14.1668L6.99967 11.0402L11.1197 14.1668L9.55301 9.10683L13.6663 6.16683H8.61967Z" fill="white"/>
+                            </svg>
+                            ${currentLang === 'th' ? 'ไฮไลท์' : 'Highlight'}
                         </div>
-                        <div style="padding: 20px 0;">
-                            <h2 style="margin: 0 0 10px 0; color: #161616; font-size: 20px; font-weight: 500; line-height: 1.2;">
-                                ${hotelTitle}
-                            </h2>
-                            ${hotelExcerpt ? `
-                            <div style="color: #454545; font-size: 16px; font-weight: 400; line-height: 1.6; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                                ${hotelExcerpt.replace(/<[^>]*>/g, '')}
-                            </div>
-                            ` : ''}
-                        </div>
+                        ` : ''}
                     </div>
-                </a>
+                    <div style="padding: 20px;">
+                        <h2 style="margin: 0 0 8px 0; color: #161616; font-size: 16px; font-weight: 600; line-height: 1.2;">
+                            ${hotelTitle}
+                        </h2>
+                        ${hotelExcerpt ? `
+                        <div style="color: #454545; font-size: 14px; font-weight: 400; line-height: 1.4; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                            ${hotelExcerpt.replace(/<[^>]*>/g, '')}
+                        </div>
+                        ` : ''}
+                        ${hotelAddress ? `
+                        <div style="display: flex; gap: 8px; align-items: flex-start; color: #3D3D3F; font-size: 12px; line-height: 1.4; margin-bottom: 14px;">
+                            <svg style="flex-shrink: 0; margin-top: 2px;" width="10" height="15" viewBox="0 0 10 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4.99967 0.833496C2.41967 0.833496 0.333008 2.92016 0.333008 5.50016C0.333008 9.00016 4.99967 14.1668 4.99967 14.1668C4.99967 14.1668 9.66634 9.00016 9.66634 5.50016C9.66634 2.92016 7.57967 0.833496 4.99967 0.833496ZM4.99967 7.16683C4.07967 7.16683 3.33301 6.42016 3.33301 5.50016C3.33301 4.58016 4.07967 3.8335 4.99967 3.8335C5.91967 3.8335 6.66634 4.58016 6.66634 5.50016C6.66634 6.42016 5.91967 7.16683 4.99967 7.16683Z" fill="#CE0E2D"/>
+                            </svg>
+                            <span>${hotelAddress}</span>
+                        </div>
+                        ` : ''}
+                        <a href="${hotelUrl}" style="display: inline-flex; align-items: center; gap: 8px; background: #CE0E2D; color: white; padding: 8px 16px; font-size: 14px; font-weight: 400; line-height: 1.2; text-decoration: none;">
+                            ${moreInfoLabel}
+                            <svg width="12" height="13" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 0.707214L6.59 2.11721L12.17 7.70721H0V9.70721H12.17L6.59 15.2972L8 16.7072L16 8.70721L8 0.707214Z" fill="white"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
             `
         });
 
         marker.addListener('click', () => {
-            infoWindow.open(map, marker);
+            openHotelInfoWindow(map, marker, infoWindow);
             setSelectedHotel(hotel);
         });
 
+        markerRegistryRef.current[hotel.id] = { marker, infoWindow };
         markersRef.current.push(marker);
+    };
+
+    const openHotelInfoWindow = (map, marker, infoWindow) => {
+        if (activeInfoWindowRef.current) {
+            activeInfoWindowRef.current.close();
+        }
+        infoWindow.open(map, marker);
+        activeInfoWindowRef.current = infoWindow;
     };
 
     const createFixedBitecMarker = (map) => {
@@ -339,13 +396,18 @@ export default function HotelMapBlock(props) {
     //         return matchesSearch && matchesCategory;
     //     });
     // };
-    const getFilteredHotels = () => {
+    const filteredHotels = useMemo(() => {
+        const isHighlight = (h) =>
+            h.hotelCategories?.nodes?.some(({ name, slug }) => {
+                const n = (name || '').toLowerCase().trim();
+                const s = (slug || '').toLowerCase().trim();
+                return n === 'highlight' || n === 'ไฮไลท์' || s === 'highlight' || s === 'recommend' || s === 'recommend-th';
+            });
 
-        // category order map: lower = earlier in your taxonomy order
         const catRank = Object.fromEntries(categories.map((c, i) => [c.id, i]));
         const rankOf = (h) => {
           const ranks = h.hotelCategories?.nodes?.map(c => catRank[c.id]).filter(r => r !== undefined) || [];
-          return ranks.length ? Math.min(...ranks) : Number.POSITIVE_INFINITY; // no cat -> last
+          return ranks.length ? Math.min(...ranks) : Number.POSITIVE_INFINITY;
         };
 
         const filtered = hotels.filter(hotel => {
@@ -356,16 +418,19 @@ export default function HotelMapBlock(props) {
             hotel.hotelCategories?.nodes?.some(c => selectedCategories.includes(c.id));
           return matchesSearch && matchesCategory;
         });
-      
-        // sort by category order, then by date DESC
-        // Change to sort by category order, then random. Jan 2026 Changed
+
         return filtered.sort((a, b) => {
+          const ha = isHighlight(a), hb = isHighlight(b);
+          if (ha !== hb) return ha ? -1 : 1;
+          if (ha && hb) return a.title.localeCompare(b.title);
+
           const ra = rankOf(a), rb = rankOf(b);
           if (ra !== rb) return ra - rb;
-        //   return new Date(b.date) - new Date(a.date);
-          return Math.random() - 0.5;
+          return a.title.localeCompare(b.title);
         });
-    };
+    }, [hotels, searchTerm, selectedCategories, categories]);
+
+    const getFilteredHotels = () => filteredHotels;
 
     // Pagination functions
     const getPaginatedHotels = () => {
@@ -379,6 +444,85 @@ export default function HotelMapBlock(props) {
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
+    };
+
+    const renderMobilePagination = () => {
+        if (totalPages <= 1) return null;
+
+        const pages = [];
+
+        pages.push(
+            <button
+                key="prev"
+                onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                className={`theme-pagination -prev${currentPage === 1 ? ' disable' : ''}`}
+                disabled={currentPage === 1}
+            >
+                <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.26367 2.2625L3.53867 8L9.26367 13.7375L7.50117 15.5L0.00117141 8L7.50117 0.5L9.26367 2.2625Z" fill="#CE0E2D"/>
+                </svg>
+            </button>
+        );
+
+        pages.push(
+            <button
+                key={1}
+                onClick={() => handlePageChange(1)}
+                className={`theme-pagination${currentPage === 1 ? ' active' : ''}`}
+            >
+                1
+            </button>
+        );
+
+        const startPage = Math.max(2, currentPage - 1);
+        const endPage = Math.min(totalPages - 1, currentPage + 1);
+
+        if (startPage > 2) {
+            pages.push(<span key="start-ellipsis" className="px-1 text-[22px] leading-none">…</span>);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(
+                <button
+                    key={i}
+                    onClick={() => handlePageChange(i)}
+                    className={`theme-pagination${i === currentPage ? ' active' : ''}`}
+                >
+                    {i}
+                </button>
+            );
+        }
+
+        if (endPage < totalPages - 1) {
+            pages.push(<span key="end-ellipsis" className="px-1 text-[22px] leading-none">…</span>);
+        }
+
+        if (totalPages > 1) {
+            pages.push(
+                <button
+                    key={totalPages}
+                    onClick={() => handlePageChange(totalPages)}
+                    className={`theme-pagination${currentPage === totalPages ? ' active' : ''}`}
+                >
+                    {totalPages}
+                </button>
+            );
+        }
+
+        pages.push(
+            <button
+                key="next"
+                onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                className={`theme-pagination -next${currentPage === totalPages ? ' disable' : ''}`}
+                disabled={currentPage === totalPages}
+            >
+                <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0.738281 13.7375L6.46328 8L0.738281 2.2625L2.50078 0.5L10.0008 8L2.50078 15.5L0.738281 13.7375Z" fill="#CE0E2D"/>
+                </svg>
+            </button>
+        );
+
+        return pages;
     };
 
     const handleCategoryToggle = (categoryId) => {
@@ -411,6 +555,11 @@ export default function HotelMapBlock(props) {
             };
             mapInstanceRef.current.panTo(position);
             mapInstanceRef.current.setZoom(17);
+
+            const markerEntry = markerRegistryRef.current[hotel.id];
+            if (markerEntry) {
+                openHotelInfoWindow(mapInstanceRef.current, markerEntry.marker, markerEntry.infoWindow);
+            }
         }
     };
 
@@ -506,13 +655,12 @@ export default function HotelMapBlock(props) {
                                                 {/* Hotel Image */}
                                                 <div className="flex-shrink-0">
                                                     {hotel.featuredImage?.node?.sourceUrl ? (
-                                                        <div className="relative h-full">
+                                                        <div className="relative w-[207px] h-[207px]">
                                                             <Image
                                                                 src={hotel.featuredImage.node.sourceUrl}
                                                                 alt={hotel.featuredImage.node.altText || hotel.title}
-                                                                width={80}
-                                                                height={80}
-                                                                className="object-cover w-[207px] h-full"
+                                                                fill
+                                                                className="object-cover"
                                                             />
 
 
@@ -530,7 +678,7 @@ export default function HotelMapBlock(props) {
                                                             )}
                                                         </div>
                                                     ) : (
-                                                        <div className=" w-[207px] h-full bg-gray-200 flex items-center justify-center">
+                                                        <div className="w-[207px] h-[207px] bg-gray-200 flex items-center justify-center">
                                                             <CustomPinSVG />
                                                         </div>
                                                     )}
@@ -547,22 +695,20 @@ export default function HotelMapBlock(props) {
                                                             dangerouslySetInnerHTML={{ __html: hotel.excerpt }}
                                                         />
                                                     )}
-                                                    <div className="flex gap-[20px] mt-[15px]">
+                                                    <div className="flex flex-col gap-[6px] mt-[15px]">
                                                         {hotel.hotelDetail.hotelShortAddress?.length > 0 && (
                                                             <div className="flex gap-[8px] items-center text-[#3D3D3F] text-[16px] leading-[1.2]">
-                                                                <svg className="w-[16px] h-[16px]" width="10" height="15" viewBox="0 0 10 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <svg className="flex-shrink-0 w-[16px] h-[16px]" width="10" height="15" viewBox="0 0 10 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                     <path d="M4.99967 0.833496C2.41967 0.833496 0.333008 2.92016 0.333008 5.50016C0.333008 9.00016 4.99967 14.1668 4.99967 14.1668C4.99967 14.1668 9.66634 9.00016 9.66634 5.50016C9.66634 2.92016 7.57967 0.833496 4.99967 0.833496ZM4.99967 7.16683C4.07967 7.16683 3.33301 6.42016 3.33301 5.50016C3.33301 4.58016 4.07967 3.8335 4.99967 3.8335C5.91967 3.8335 6.66634 4.58016 6.66634 5.50016C6.66634 6.42016 5.91967 7.16683 4.99967 7.16683Z" fill="#CE0E2D"/>
                                                                 </svg>
-
                                                                 {hotel.hotelDetail.hotelShortAddress}
                                                             </div>
                                                         )}
                                                         {hotel.hotelDetail.hotelTransportation?.length > 0 && (
                                                             <div className="flex gap-[8px] items-center text-[#3D3D3F] text-[16px] leading-[1.2]">
-                                                                <svg className="w-[16px] h-[16px]" width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <svg className="flex-shrink-0 w-[16px] h-[16px]" width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                     <path d="M6.00033 0.833496C3.33366 0.833496 0.666992 1.16683 0.666992 3.50016V9.8335C0.666992 11.1202 1.71366 12.1668 3.00033 12.1668L2.00033 13.1668V13.5002H3.48699L4.82032 12.1668H7.33366L8.66699 13.5002H10.0003V13.1668L9.00033 12.1668C10.287 12.1668 11.3337 11.1202 11.3337 9.8335V3.50016C11.3337 1.16683 8.94699 0.833496 6.00033 0.833496ZM3.00033 10.8335C2.44699 10.8335 2.00033 10.3868 2.00033 9.8335C2.00033 9.28016 2.44699 8.8335 3.00033 8.8335C3.55366 8.8335 4.00033 9.28016 4.00033 9.8335C4.00033 10.3868 3.55366 10.8335 3.00033 10.8335ZM5.33366 6.16683H2.00033V3.50016H5.33366V6.16683ZM6.66699 6.16683V3.50016H10.0003V6.16683H6.66699ZM9.00033 10.8335C8.44699 10.8335 8.00033 10.3868 8.00033 9.8335C8.00033 9.28016 8.44699 8.8335 9.00033 8.8335C9.55366 8.8335 10.0003 9.28016 10.0003 9.8335C10.0003 10.3868 9.55366 10.8335 9.00033 10.8335Z" fill="#CE0E2D"/>
                                                                 </svg>
-
                                                                 {hotel.hotelDetail.hotelTransportation}
                                                             </div>
                                                         )}
@@ -649,22 +795,20 @@ export default function HotelMapBlock(props) {
                                                         )}
                                                     </div>
                                                         
-                                                    <div className="flex gap-[20px]">
+                                                    <div className="flex flex-col gap-[6px]">
                                                         {hotel.hotelDetail.hotelShortAddress?.length > 0 && (
-                                                            <div className="flex gap-[8px] items-center text-[#3D3D3F] text-[18px]">
-                                                                <svg className="w-[16px] h-[16px]" width="10" height="15" viewBox="0 0 10 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <div className="flex gap-[8px] items-center text-[#3D3D3F] text-[16px] leading-[1.2]">
+                                                                <svg className="flex-shrink-0 w-[16px] h-[16px]" width="10" height="15" viewBox="0 0 10 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                     <path d="M4.99967 0.833496C2.41967 0.833496 0.333008 2.92016 0.333008 5.50016C0.333008 9.00016 4.99967 14.1668 4.99967 14.1668C4.99967 14.1668 9.66634 9.00016 9.66634 5.50016C9.66634 2.92016 7.57967 0.833496 4.99967 0.833496ZM4.99967 7.16683C4.07967 7.16683 3.33301 6.42016 3.33301 5.50016C3.33301 4.58016 4.07967 3.8335 4.99967 3.8335C5.91967 3.8335 6.66634 4.58016 6.66634 5.50016C6.66634 6.42016 5.91967 7.16683 4.99967 7.16683Z" fill="#CE0E2D"/>
                                                                 </svg>
-
                                                                 {hotel.hotelDetail.hotelShortAddress}
                                                             </div>
                                                         )}
                                                         {hotel.hotelDetail.hotelTransportation?.length > 0 && (
-                                                            <div className="flex gap-[8px] items-center text-[#3D3D3F] text-[18px]">
-                                                                <svg className="w-[16px] h-[16px]" width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <div className="flex gap-[8px] items-center text-[#3D3D3F] text-[16px] leading-[1.2]">
+                                                                <svg className="flex-shrink-0 w-[16px] h-[16px]" width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                     <path d="M6.00033 0.833496C3.33366 0.833496 0.666992 1.16683 0.666992 3.50016V9.8335C0.666992 11.1202 1.71366 12.1668 3.00033 12.1668L2.00033 13.1668V13.5002H3.48699L4.82032 12.1668H7.33366L8.66699 13.5002H10.0003V13.1668L9.00033 12.1668C10.287 12.1668 11.3337 11.1202 11.3337 9.8335V3.50016C11.3337 1.16683 8.94699 0.833496 6.00033 0.833496ZM3.00033 10.8335C2.44699 10.8335 2.00033 10.3868 2.00033 9.8335C2.00033 9.28016 2.44699 8.8335 3.00033 8.8335C3.55366 8.8335 4.00033 9.28016 4.00033 9.8335C4.00033 10.3868 3.55366 10.8335 3.00033 10.8335ZM5.33366 6.16683H2.00033V3.50016H5.33366V6.16683ZM6.66699 6.16683V3.50016H10.0003V6.16683H6.66699ZM9.00033 10.8335C8.44699 10.8335 8.00033 10.3868 8.00033 9.8335C8.00033 9.28016 8.44699 8.8335 9.00033 8.8335C9.55366 8.8335 10.0003 9.28016 10.0003 9.8335C10.0003 10.3868 9.55366 10.8335 9.00033 10.8335Z" fill="#CE0E2D"/>
                                                                 </svg>
-
                                                                 {hotel.hotelDetail.hotelTransportation}
                                                             </div>
                                                         )}
@@ -679,39 +823,8 @@ export default function HotelMapBlock(props) {
                         
                         {/* Pagination for Mobile */}
                         {isMobile && totalPages > 1 && (
-                            <div className="flex justify-center items-center mt-8 mb-4">
-                                {/* Previous button */}
-                                <button
-                                    onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
-                                    className={`theme-pagination -prev${currentPage === 1 ? ' disable' : ''}`}
-                                    disabled={currentPage === 1}
-                                >
-                                    <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M9.26367 2.2625L3.53867 8L9.26367 13.7375L7.50117 15.5L0.00117141 8L7.50117 0.5L9.26367 2.2625Z" fill="#CE0E2D"/>
-                                    </svg>
-                                </button>
-                                
-                                {/* Page numbers */}
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                    <button
-                                        key={page}
-                                        onClick={() => handlePageChange(page)}
-                                        className={`theme-pagination${page === currentPage ? ' active' : ''}`}
-                                    >
-                                        {page}
-                                    </button>
-                                ))}
-                                
-                                {/* Next button */}
-                                <button
-                                    onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
-                                    className={`theme-pagination -next${currentPage === totalPages ? ' disable' : ''}`}
-                                    disabled={currentPage === totalPages}
-                                >
-                                    <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M0.738281 13.7375L6.46328 8L0.738281 2.2625L2.50078 0.5L10.0008 8L2.50078 15.5L0.738281 13.7375Z" fill="#CE0E2D"/>
-                                    </svg>
-                                </button>
+                            <div className="flex flex-wrap justify-center items-center mt-8 mb-4">
+                                {renderMobilePagination()}
                             </div>
                         )}
                     </div>
