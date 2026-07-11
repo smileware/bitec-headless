@@ -1,0 +1,31 @@
+---
+description: SCSS vs Tailwind styling conventions and design tokens
+globs: src/app/css/**/*.scss,src/app/globals.css,src/app/components/**/*.js,src/app/**/page.js
+alwaysApply: false
+---
+
+# Styling
+
+Dual system — both are intentional:
+
+| Use for | Where |
+|---------|--------|
+| Blocks, carousels, header/nav chrome | Nested SCSS in `src/app/css/scss/main.scss` |
+| Page layout, spacing, simple grids | Tailwind utility classes in JSX |
+| Brand colors / type scale | CSS variables in `globals.css` (`--s-accent`, `--f-h1`, `--f-h2`, …) |
+
+## Rules
+
+- New block UI styles go in `main.scss` (do not create a parallel SCSS architecture or CSS Modules unless asked)
+- Prefer `var(--s-accent)` / `var(--f-h*)` over hardcoding brand colors
+- Preserve CMS-injected GreenShift CSS (`greenshiftInlineCss`, global styles from `getGlobalStyle()`)
+- Fonts: DBHeavent (body), DinPro (`.font-brand`) — do not swap to Inter/system stacks
+- Sass include path is configured in `next.config.mjs` (`./src/app/css/scss`)
+- `_fonts.scss` exists but is not imported; fonts typically come from WP global CSS — do not “fix” by inventing new font loading without checking
+
+```scss
+// ✅ Block styles live nested in main.scss
+.retail-information-popover {
+  // ...
+}
+```

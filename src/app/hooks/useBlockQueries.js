@@ -2,6 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
+import { getSlugAndLanguageFromPathname } from '../lib/pageContext';
+import { BLOCK_QUERY_STALE_TIME, EVENTS_QUERY_STALE_TIME } from '../lib/queryDefaults';
 import {
     GetPageWithEventHallCarousel,
     GetPageWithBitecLiveHallCarousel,
@@ -17,186 +19,223 @@ import {
     GetPageWithDisplayGalleryByType,
     GetGalleriesByTypes,
     GetAllHotels,
-    GetAllCategories
+    GetAllCategories,
+    GetRecommendedHotels,
 } from '../lib/block';
-import { getFilteredEvents, getAllEventCategories, getAllEventYears } from '../lib/event';
+import {
+    getFilteredEvents,
+    getAllEventCategories,
+    getAllEventYears,
+    getRecentEvents,
+    getRecentBitecLiveEvents,
+} from '../lib/event';
+import {
+    getNewsActivityContent,
+    getNewsActivitySustainability,
+} from '../lib/news-activity';
 
-// Helper to get slug and language from pathname
 function useSlugAndLanguage() {
     const pathname = usePathname();
-    const path = pathname.replace(/^\/|\/$/g, "");
-    const parts = path.split("/").filter(Boolean);
-    const hasLangPrefix = parts[0] === "th";
-    const isTH = hasLangPrefix;
-    const slug = hasLangPrefix ? (parts.slice(1).join("/") || "home") : (path || "home");
-    return { slug, isTH };
+    return getSlugAndLanguageFromPathname(pathname);
 }
 
-// Hook for Event Hall Carousel
+export function useRecentEvents(limit = 9) {
+    return useQuery({
+        queryKey: ['recentEvents', limit],
+        queryFn: () => getRecentEvents(limit),
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
+    });
+}
+
+export function useRecentBitecLiveEvents(locationId = 'Bitec Live', limit = 9) {
+    return useQuery({
+        queryKey: ['recentBitecLiveEvents', locationId, limit],
+        queryFn: () => getRecentBitecLiveEvents(locationId, limit),
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
+    });
+}
+
+export function useRecommendedHotels(limit = 8) {
+    const { isTH } = useSlugAndLanguage();
+    return useQuery({
+        queryKey: ['recommendedHotels', limit, isTH],
+        queryFn: () => GetRecommendedHotels(limit, isTH),
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
+    });
+}
+
+export function useNewsActivity(page = 1, filter = 'news', perPage = 9) {
+    const { language } = useSlugAndLanguage();
+    return useQuery({
+        queryKey: ['newsActivity', page, language, filter, perPage],
+        queryFn: () => getNewsActivityContent(page, perPage, language, filter),
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
+    });
+}
+
+export function useNewsActivitySustainability(page = 1, perPage = 6) {
+    const { language } = useSlugAndLanguage();
+    return useQuery({
+        queryKey: ['newsActivitySustainability', page, language, perPage],
+        queryFn: () => getNewsActivitySustainability(page, perPage, language),
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
+    });
+}
+
 export function useEventHallCarousel() {
     const { slug, isTH } = useSlugAndLanguage();
-    
+
     return useQuery({
         queryKey: ['eventHallCarousel', slug, isTH],
         queryFn: () => GetPageWithEventHallCarousel(slug, isTH),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Bitec Live Hall Carousel
 export function useBitecLiveHallCarousel() {
     const { slug, isTH } = useSlugAndLanguage();
-    
+
     return useQuery({
         queryKey: ['bitecLiveHallCarousel', slug, isTH],
         queryFn: () => GetPageWithBitecLiveHallCarousel(slug, isTH),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Hotels
 export function useHotels(limit = 8) {
     return useQuery({
         queryKey: ['hotels', limit],
         queryFn: () => GetHotels(limit),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Query Gallery By Type
 export function useQueryGalleryByType() {
     const { slug, isTH } = useSlugAndLanguage();
-    
+
     return useQuery({
         queryKey: ['queryGalleryByType', slug, isTH],
         queryFn: () => GetPageWithQueryGalleryByType(slug, isTH),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Gallery Items by Taxonomy
 export function useGalleryByTaxonomyType(taxonomySlug, limit = 5, enabled = true) {
     return useQuery({
         queryKey: ['galleryByTaxonomy', taxonomySlug, limit],
         queryFn: () => GetGalleryByTaxonomyType(taxonomySlug, limit),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
-        enabled: enabled && !!taxonomySlug, // Only fetch if enabled and taxonomySlug exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
+        enabled: enabled && !!taxonomySlug,
     });
 }
 
-// Hook for Photo Gallery
 export function usePhotoGallery() {
     const { slug, isTH } = useSlugAndLanguage();
-    
+
     return useQuery({
         queryKey: ['photoGallery', slug, isTH],
         queryFn: () => GetPageWithPhotoGallery(slug, isTH),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Bitec Live Facilities
 export function useBitecLiveFacilities() {
     const { slug, isTH } = useSlugAndLanguage();
-    
+
     return useQuery({
         queryKey: ['bitecLiveFacilities', slug, isTH],
         queryFn: () => GetPageWithBitecLiveFacilities(slug, isTH),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Bitec Live Gallery
 export function useBitecLiveGallery() {
     const { slug, isTH } = useSlugAndLanguage();
-    
+
     return useQuery({
         queryKey: ['bitecLiveGallery', slug, isTH],
         queryFn: () => GetPageWithBitecLiveGallery(slug, isTH),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Simple Gallery Carousel
 export function useSimpleGalleryCarousel() {
     const { slug } = useSlugAndLanguage();
-    
+
     return useQuery({
         queryKey: ['simpleGalleryCarousel', slug],
         queryFn: () => GetPageWithSimpleGalleryCarousel(slug),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Tab Accordion
 export function useTabAccordion(slug = 'plan-and-event') {
     return useQuery({
         queryKey: ['tabAccordion', slug],
         queryFn: () => GetPageWithTabToAccordion(slug),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Display Gallery By Type
 export function useDisplayGalleryByType() {
     const { slug, isTH } = useSlugAndLanguage();
-    
+
     return useQuery({
         queryKey: ['displayGalleryByType', slug, isTH],
         queryFn: () => GetPageWithDisplayGalleryByType(slug, isTH),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Galleries By Types
 export function useGalleriesByTypes(typeSlugs, limit = 1000, enabled = true) {
     return useQuery({
         queryKey: ['galleriesByTypes', typeSlugs, limit],
         queryFn: () => GetGalleriesByTypes(typeSlugs, limit),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
-        enabled: enabled, // Allow query even if typeSlugs is null (GetGalleriesByTypes handles null by fetching all)
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
+        enabled,
     });
 }
 
-// Hook for All Hotels (for HotelMapBlock)
 export function useAllHotels() {
     const { isTH } = useSlugAndLanguage();
-    
+
     return useQuery({
         queryKey: ['allHotels', isTH],
         queryFn: () => GetAllHotels(isTH),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for All Categories (for HotelMapBlock)
 export function useAllCategories() {
     const { isTH } = useSlugAndLanguage();
-    
+
     return useQuery({
         queryKey: ['allCategories', isTH],
         queryFn: () => GetAllCategories(isTH),
-        staleTime: 10 * 60 * 1000, // 10 minutes - longer cache to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Filtered Events (for WhatsOnBlock)
 export function useFilteredEvents(filters = {}, enabled = true) {
-    // Use specific filter values in queryKey to prevent unnecessary re-fetches
     const queryKey = [
         'filteredEvents',
         filters.categoryId,
@@ -204,46 +243,42 @@ export function useFilteredEvents(filters = {}, enabled = true) {
         filters.month,
         filters.year,
         filters.page,
-        filters.perPage
+        filters.perPage,
     ];
-    
+
     return useQuery({
-        queryKey: queryKey,
+        queryKey,
         queryFn: () => getFilteredEvents(filters),
-        staleTime: 5 * 60 * 1000, // 5 minutes for events - longer to reduce server load
-        refetchOnMount: false, // Don't refetch if cached data exists
-        enabled: enabled,
+        staleTime: EVENTS_QUERY_STALE_TIME,
+        refetchOnMount: false,
+        enabled,
     });
 }
 
-// Hook for Event Categories
 export function useEventCategories() {
     return useQuery({
         queryKey: ['eventCategories'],
         queryFn: () => getAllEventCategories(),
-        staleTime: 10 * 60 * 1000, // 10 minutes (categories don't change often)
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Event Years
 export function useEventYears() {
     return useQuery({
         queryKey: ['eventYears'],
         queryFn: () => getAllEventYears(),
-        staleTime: 10 * 60 * 1000, // 10 minutes (years don't change often)
-        refetchOnMount: false, // Don't refetch if cached data exists
+        staleTime: BLOCK_QUERY_STALE_TIME,
+        refetchOnMount: false,
     });
 }
 
-// Hook for Retail Information
 export function useRetailInformation() {
     const { slug, isTH } = useSlugAndLanguage();
     return useQuery({
         queryKey: ['retailInformation', slug, isTH],
         queryFn: () => GetPageWithRetailInformation(slug, isTH),
-        staleTime: 10 * 60 * 1000,
+        staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
     });
 }
-

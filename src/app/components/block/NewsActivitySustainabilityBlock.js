@@ -1,65 +1,31 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { getNewsActivitySustainability } from '../../lib/news-activity';
+import React, { useState } from 'react';
 import NewsCard from '../ui/NewsCard';
-import { usePathname } from 'next/navigation';
+import { useNewsActivitySustainability } from '../../hooks/useBlockQueries';
 
 export default function NewsActivitySustainabilityBlock(props) {
-    const [news, setNews] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageInfo, setPageInfo] = useState({ hasNextPage: false, endCursor: null });
-    const [totalPages, setTotalPages] = useState(0);
-    const pathname = usePathname();
 
-    // Simple language detection from URL path
-    const getCurrentLanguage = () => {
-        const pathSegments = pathname.split('/').filter(Boolean);
-        
-        if (pathSegments.length > 0) {
-            const firstSegment = pathSegments[0];
-            if (['th', 'en'].includes(firstSegment)) {
-                return firstSegment;
-            }
-        }
-        return 'en';
-    };
-
-    const currentLang = getCurrentLanguage();
-
-    const fetchNews = async (page = 1) => {
-        setLoading(true);
-        try {
-            const result = await getNewsActivitySustainability(page, 6, currentLang);
-            setNews(result.content);
-            setPageInfo(result.pageInfo);
-            
-            if (page === 1) {
-                setTotalPages(result.pageInfo.hasNextPage ? 2 : 1);
-            } else {
-                setTotalPages(result.pageInfo.hasNextPage ? page + 1 : page);
-            }
-        } catch (error) {
-            console.error('Error fetching news:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchNews(1);
-    }, []);
+    const { data, isLoading, isFetching } = useNewsActivitySustainability(currentPage, 6);
+    const news = data?.content || [];
+    const pageInfo = data?.pageInfo;
+    const hasNextPage = !!pageInfo?.hasNextPage;
+    // Preserve prior pagination heuristic when offset total is absent
+    const totalPages = pageInfo?.offsetPagination?.total
+        ? Math.ceil(pageInfo.offsetPagination.total / 6)
+        : hasNextPage
+            ? currentPage + 1
+            : Math.max(currentPage, 1);
+    const loading = isLoading || (isFetching && news.length === 0);
+    const showOverlaySpinner = isFetching && news.length > 0;
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
-        fetchNews(page);
-        // Scroll to top of the component // no need to scroll
-        // window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const renderPagination = () => {
-        if (totalPages <= 1) return null;
+        if (totalPages <= 1 && !hasNextPage) return null;
 
         const pages = [];
         const maxVisiblePages = 5;
@@ -70,8 +36,6 @@ export default function NewsActivitySustainabilityBlock(props) {
             startPage = Math.max(1, endPage - maxVisiblePages + 1);
         }
 
-        // Previous button
-        // Always show Previous button, add -disable if on first page
         pages.push(
             <button
                 key="prev"
@@ -85,7 +49,6 @@ export default function NewsActivitySustainabilityBlock(props) {
             </button>
         );
 
-        // Page numbers
         for (let i = startPage; i <= endPage; i++) {
             pages.push(
                 <button
@@ -98,7 +61,6 @@ export default function NewsActivitySustainabilityBlock(props) {
             );
         }
 
-        // Always show Next button, add -disable if on last page
         pages.push(
             <button
                 key="next"
@@ -145,10 +107,10 @@ export default function NewsActivitySustainabilityBlock(props) {
                     <NewsCard key={newsItem.id} news={newsItem} />
                 ))}
             </div>
-            
+
             {renderPagination()}
-            
-            {loading && news.length > 0 && (
+
+            {showOverlaySpinner && (
                 <div className="text-center py-4">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
                 </div>

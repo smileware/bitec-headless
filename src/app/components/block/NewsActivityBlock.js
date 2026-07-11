@@ -1,62 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { getNewsActivityContent } from '../../lib/news-activity';
+import React, { useState } from 'react';
 import NewsCard from '../ui/NewsCard';
-import { usePathname } from 'next/navigation';
+import { useNewsActivity } from '../../hooks/useBlockQueries';
 
 export default function NewsActivityBlock(props) {
-    const [news, setNews] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [activeFilter, setActiveFilter] = useState('news');
-    const [pageInfo, setPageInfo] = useState({ hasNextPage: false, endCursor: null });
-    const [totalPages, setTotalPages] = useState(0);
-    const pathname = usePathname();
 
-    // Simple language detection from URL path
-    const getCurrentLanguage = () => {
-        const pathSegments = pathname.split('/').filter(Boolean);
-        
-        if (pathSegments.length > 0) {
-            const firstSegment = pathSegments[0];
-            if (['th', 'en'].includes(firstSegment)) {
-                return firstSegment;
-            }
-        }
-        return 'en';
-    };
-
-    const currentLang = getCurrentLanguage();
-
-    const fetchNews = async (page = 1, filter = activeFilter) => {
-        setLoading(true);
-        try {
-            const result = await getNewsActivityContent(page, 9, currentLang, filter);
-            setNews(result.content);
-            setPageInfo(result.pageInfo);
-            
-            
-            // if (page === 1) {
-            //     setTotalPages(result.pageInfo.hasNextPage ? 2 : 1);
-            // } else {
-            //     setTotalPages(result.pageInfo.hasNextPage ? page + 1 : page);
-            // }
-            if (result.pageInfo?.offsetPagination?.total) {
-                setTotalPages(Math.ceil(result.pageInfo.offsetPagination.total / 9));
-            }
-
-        } catch (error) {
-            console.error('Error fetching news:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        setCurrentPage(1);
-        fetchNews(1, activeFilter);
-    }, [activeFilter, currentLang]);
+    const { data, isLoading, isFetching } = useNewsActivity(currentPage, activeFilter, 9);
+    const news = data?.content || [];
+    const totalPages = data?.pageInfo?.offsetPagination?.total
+        ? Math.ceil(data.pageInfo.offsetPagination.total / 9)
+        : 0;
+    const loading = isLoading || (isFetching && news.length === 0);
+    const showOverlaySpinner = isFetching && news.length > 0;
 
     const handleFilterChange = (filter) => {
         if (filter === activeFilter) return;
@@ -66,17 +24,14 @@ export default function NewsActivityBlock(props) {
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
-        fetchNews(page, activeFilter);
-        // Scroll to top of the component
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const renderPagination = () => {
         if (totalPages <= 1) return null;
-      
+
         const pages = [];
-      
-        // Previous
+
         pages.push(
             <button
                 key="prev"
@@ -89,7 +44,6 @@ export default function NewsActivityBlock(props) {
                 </svg>
             </button>
         );
-        // Always show page 1
         pages.push(
             <button
                 key={1}
@@ -101,62 +55,56 @@ export default function NewsActivityBlock(props) {
         );
         let startPage = Math.max(2, currentPage - 2);
         let endPage = Math.min(totalPages - 1, currentPage + 2);
-      
-        // Add ellipsis after first page if needed
+
         if (startPage > 2) {
             pages.push(<span key="start-ellipsis" className="px-2">…</span>);
         }
 
-        
-        // Middle pages
         for (let i = startPage; i <= endPage; i++) {
-          pages.push(
-            <button
-              key={i}
-              onClick={() => handlePageChange(i)}
-              className={`theme-pagination${i === currentPage ? ' active' : ''}`}
-            >
-              {i}
-            </button>
-          );
+            pages.push(
+                <button
+                    key={i}
+                    onClick={() => handlePageChange(i)}
+                    className={`theme-pagination${i === currentPage ? ' active' : ''}`}
+                >
+                    {i}
+                </button>
+            );
         }
-      
-        // Add ellipsis before last page if needed
+
         if (endPage < totalPages - 1) {
-          pages.push(<span key="end-ellipsis" className="px-2">…</span>);
+            pages.push(<span key="end-ellipsis" className="px-2">…</span>);
         }
-      
-        // Always show last page (if > 1)
+
         if (totalPages > 1) {
-          pages.push(
-            <button
-              key={totalPages}
-              onClick={() => handlePageChange(totalPages)}
-              className={`theme-pagination${currentPage === totalPages ? ' active' : ''}`}
-            >
-              {totalPages}
-            </button>
-          );
+            pages.push(
+                <button
+                    key={totalPages}
+                    onClick={() => handlePageChange(totalPages)}
+                    className={`theme-pagination${currentPage === totalPages ? ' active' : ''}`}
+                >
+                    {totalPages}
+                </button>
+            );
         }
-      
-        // Next
+
         pages.push(
-          <button
-            key="next"
-            onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
-            className={`theme-pagination -next${currentPage === totalPages ? ' disable' : ''}`}
-            disabled={currentPage === totalPages}
-          >
-            <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0.738281 13.7375L6.46328 8L0.738281 2.2625L2.50078 0.5L10.0008 8L2.50078 15.5L0.738281 13.7375Z" fill="#CE0E2D"/>
-            </svg>
-          </button>
+            <button
+                key="next"
+                onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                className={`theme-pagination -next${currentPage === totalPages ? ' disable' : ''}`}
+                disabled={currentPage === totalPages}
+            >
+                <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0.738281 13.7375L6.46328 8L0.738281 2.2625L2.50078 0.5L10.0008 8L2.50078 15.5L0.738281 13.7375Z" fill="#CE0E2D"/>
+                </svg>
+            </button>
         );
-      
+
         return (
-          <div className="flex justify-center items-center mt-8 mb-4">
-            {pages}
-          </div>
+            <div className="flex justify-center items-center mt-8 mb-4">
+                {pages}
+            </div>
         );
     };
 
@@ -241,10 +189,10 @@ export default function NewsActivityBlock(props) {
                     <NewsCard key={newsItem.id} news={newsItem} />
                 ))}
             </div>
-            
+
             {renderPagination()}
-            
-            {loading && news.length > 0 && (
+
+            {showOverlaySpinner && (
                 <div className="text-center py-4">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
                 </div>

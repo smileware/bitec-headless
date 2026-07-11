@@ -1,0 +1,30 @@
+---
+description: GraphQL fetching, caching, and React Query patterns
+globs: src/app/lib/**/*.js,src/app/hooks/**/*.js,src/app/api/**/*.js,src/app/components/QueryProvider.js
+alwaysApply: false
+---
+
+# Data fetching
+
+## Two tiers
+
+1. **Server (RSC pages / layout):** call `lib/*` helpers (`getPageBySlug`, `getEventBySlug`, header/footer). Server GraphQL goes through `graphQLClient` in `api.js` (wrapped with `unstable_cache`, tag `wordpress-content`).
+2. **Client (blocks):** `'use client'` components use hooks from `useBlockQueries.js`, which call `GetPageWith*` in `block.js`.
+3. **Server block prefetch:** pages call `getDehydratedBlockState` → `HydrationBoundary` so hooks find warm cache (no skeleton on first paint).
+
+## Rules
+
+- Reuse existing lib modules by domain (`block.js`, `event.js`, `hotel.js`, `news-activity.js`, `header.js`, `footer.js`, `languages.js`) — do not invent parallel clients
+- New block data: `GetPageWith{Name}(slug, preferTranslation)` querying `pageBy` → `editorBlocks` ACF fragments; return `[]` on error
+- React Query: include `slug` and `isTH` in `queryKey`; use shared stale times from `lib/queryDefaults.js`
+- **New blocks must:** (1) add a hook in `useBlockQueries.js`, (2) register prefetch jobs in `lib/prefetchBlockQueries.js` with **identical** `queryKey` + `queryFn`, (3) add id to `lib/detectBlocks.js` / `BlockRenderer` `BLOCK_MAP`
+- Slug/language: use `lib/pageContext.js` (`getSlugAndLanguageFromPathname` / `resolvePageContext`) — never diverge from hook keys
+- Do not wrap client-side fetches in `unstable_cache`
+- Bypass server cache only via `SKIP_GRAPHQL_CACHE` or `requestGraphQL(..., { cache: false })`
+- On-demand revalidation: `src/app/api/revalidate/route.js` + `REVALIDATE_SECRET`
+- `getThaiContent()` in `api.js` is **deprecated** — do not use it
+
+## Language in queries
+
+- `preferTranslation` / `isTH` selects `translations[0]` editor blocks when true
+- Page shells pick Thai HTML from `page.translations[0]`, not from a GraphQL language arg on `getPageBySlug`

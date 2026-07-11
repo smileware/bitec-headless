@@ -1,0 +1,37 @@
+---
+description: Thai/English URL routing and WPML translation patterns
+globs: src/app/th/**/*.js,src/app/components/LanguageSwitcher.js,src/app/components/header/**/*.js,src/app/lib/languages.js,src/app/lib/header.js,src/app/**/page.js
+alwaysApply: false
+---
+
+# i18n & routing
+
+No next-intl. Language is the `/th` URL prefix (English has no prefix).
+
+| Kind | English | Thai |
+|------|---------|------|
+| WP pages | `/about` via `[...slug]` | `/th/about` via same catch-all |
+| Home | `page.js` → `/` | `/th` via `[...slug]` (slug `/`) |
+| CPT detail | `news/[slug]`, etc. | Mirror under `th/news/[slug]`, etc. |
+
+## Detection pattern (use everywhere)
+
+```js
+const parts = pathname.split('/').filter(Boolean);
+const isTH = parts[0] === 'th';
+const slug = isTH ? (parts.slice(1).join('/') || 'home') : (path || 'home');
+```
+
+## Content selection
+
+- Thai page HTML: `page.translations[0]` (title/content) when `language === 'th'`
+- Block ACF: pass `isTH` / `preferTranslation` into `GetPageWith*` so translated `editorBlocks` are used
+- Assume `translations[0]` is Thai — do not invent language-code filtering unless the API already supports it
+
+## When adding CPT routes
+
+Duplicate the English route tree under `src/app/th/{cpt}/[slug]/page.js` and pass language into the domain fetcher (e.g. `getPostBySlug(slug, 'th')`).
+
+## Header menus
+
+Menu DB IDs are hardcoded in `lib/header.js` (EN vs TH). Layout prefetches both; `Header` picks by pathname — do not re-fetch when `isServerSide={true}`.

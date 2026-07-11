@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
-import { GetRecommendedHotels } from '@/app/lib/block';
 import Skeleton from '@/app/components/ui/Skeleton';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRecommendedHotels } from '../../hooks/useBlockQueries';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -14,35 +14,8 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 export default function RecommendedHotelCarouselBlock(props) {
-    const [hotels, setHotels] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [currentSlide, setCurrentSlide] = useState(1);
-
-    useEffect(() => {
-        const fetchRecommendedHotels = async () => {
-            try {
-                setLoading(true);
-
-                const path = window.location.pathname.replace(/^\/|\/$/g, "");
-                const parts = path.split("/").filter(Boolean);
-                const hasLangPrefix = parts[0] === "th";
-                const isTH = hasLangPrefix;
-                const recommendedHotels = await GetRecommendedHotels(8, isTH);
-
-                // const recommendedHotels = await GetRecommendedHotels(8);
-
-                setHotels(recommendedHotels);
-            } catch (err) {
-                console.error('Error fetching recommended hotels:', err);
-                setError('Failed to load recommended hotels');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchRecommendedHotels();
-    }, []);
+    const { data: hotels = [], isLoading: loading, error } = useRecommendedHotels(8);
 
     if (loading) {
         return (
@@ -81,7 +54,7 @@ export default function RecommendedHotelCarouselBlock(props) {
             <div {...props} className="swiper-hotel-carousel">
                 <div className="gs-swiper-init">
                     <div className="text-center text-red-600">
-                        <p>{error}</p>
+                        <p>Failed to load recommended hotels</p>
                     </div>
                 </div>
             </div>

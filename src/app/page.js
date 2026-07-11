@@ -1,51 +1,46 @@
+import { Suspense } from 'react';
 import { getPageBySlug } from './lib/api';
-import ScriptLoader from './components/ScriptLoader';
-import BlockRenderer from './components/BlockRenderer';
+import { resolvePageContext } from './lib/pageContext';
+import PrefetchedBlockContent from './components/PrefetchedBlockContent';
+import PageContentFallback from './components/layout/PageContentFallback';
 
-export async function generateMetadata() {
+// No heavy generateMetadata on `/` — layout site metadata paints first.
+// getPageBySlug only runs inside HomeContent (behind Suspense).
+
+async function HomeContent() {
   const page = await getPageBySlug('/', null);
-  if (!page) return {};
 
-  const title = page.title || 'Home';
-  const description = ((page.content || '')
-    .replace(/<[^>]*>/g, '')
-    .trim() || '').slice(0, 160);
-  const image = page.featuredImage?.node?.sourceUrl;
+  if (!page) {
+    return <div>Page not found</div>;
+  }
 
-  return {
-    title,
-    description,
-    openGraph: {
-      type: 'website',
-      title,
-      description,
-      images: image ? [{ url: image }] : undefined,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: image ? [image] : undefined,
-    },
-  };
+  const { slug, isTH, language } = resolvePageContext({
+    actualSlug: '/',
+    language: null,
+  });
+
+  // Do NOT Suspense BlockRenderer without HydrationBoundary as a fallback —
+  // that SSR'd skeletons while the client hydrated with prefetched data.
+  return (
+    <main>
+      {page.greenshiftInlineCss && (
+        <style dangerouslySetInnerHTML={{ __html: page.greenshiftInlineCss }} />
+      )}
+      <PrefetchedBlockContent
+        content={page.content}
+        slug={slug}
+        isTH={isTH}
+        language={language}
+        scripts={page.greenshiftScripts}
+      />
+    </main>
+  );
 }
 
-export default async function Home() {
-    const page = await getPageBySlug('/', null);
-
-    if (!page) {
-        return <div>Page not found</div>;
-    }
-
-    return (
-        <main>
-            {page.greenshiftInlineCss && (
-                <style dangerouslySetInnerHTML={{ __html: page.greenshiftInlineCss }} />
-            )}
-            
-            <BlockRenderer content={page.content} />
-
-            <ScriptLoader scripts={page.greenshiftScripts} />
-        </main>
-    );
+export default function Home() {
+  return (
+    <Suspense fallback={<PageContentFallback />}>
+      <HomeContent />
+    </Suspense>
+  );
 }

@@ -1,0 +1,35 @@
+---
+description: BITEC headless architecture, stack, and core conventions
+alwaysApply: true
+---
+
+# BITEC Headless
+
+Next.js App Router frontend for BITEC. Content comes from **WordPress + WPML + GreenShift** via GraphQL. Pages are HTML with placeholder `<div id="block-*">` nodes; React hydrates those into interactive blocks.
+
+## Stack
+
+- Next.js 16 App Router under `src/app/`, React 19, **JavaScript only** (no TypeScript)
+- GraphQL: `graphql-request` in `src/app/lib/api.js`
+- Client cache: TanStack React Query via `QueryProvider.js`
+- Styles: Tailwind v4 (`globals.css`) + SCSS (`css/scss/main.scss`)
+- HTML parse: `html-react-parser` in `BlockRenderer.js`
+
+## Layout map
+
+| Area | Path |
+|------|------|
+| Pages / catch-all | `src/app/page.js`, `[...slug]/page.js` |
+| CPT routes | `news/`, `event/`, `hotel/`, `gallery/`, `gallery-type/` (+ `th/` mirrors) |
+| Blocks | `components/BlockRenderer.js`, `components/block/` |
+| GraphQL libs | `lib/api.js`, `lib/block.js`, `lib/event.js`, etc. |
+| Block hooks | `hooks/useBlockQueries.js` |
+| Styles | `globals.css`, `css/scss/main.scss` |
+
+## Hard rules
+
+- Stay in `.js` — do not introduce TypeScript, next-intl, or a `locales/` folder
+- Prefer **relative imports** matching existing files; do not mass-migrate to `@/`
+- Server pages fetch page HTML + inject GreenShift CSS/scripts; blocks are `'use client'` and fetch ACF data themselves
+- Preserve GreenShift wrapper classes and page `greenshiftInlineCss` / `ScriptLoader` behavior
+- Env names only: `API_DOMAIN`, `GRAPHQL_CACHE_TTL`, `SKIP_GRAPHQL_CACHE`, `REVALIDATE_SECRET`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`

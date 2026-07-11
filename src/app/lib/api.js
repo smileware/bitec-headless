@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { cache } from 'react';
 import { GraphQLClient, gql } from 'graphql-request';
 import { unstable_cache } from 'next/cache';
 
@@ -93,7 +94,7 @@ export async function getGlobalStyle() {
 }
 
 
-export async function getPageBySlug(slug, language = null) {
+async function fetchPageBySlug(slug, language = null) {
   const query = gql`
     query($uri: String!) {
       pageBy(uri: $uri) {
@@ -147,15 +148,15 @@ export async function getPageBySlug(slug, language = null) {
       }
     }
   `;
-  
+
   const variables = { uri: slug };
   const data = await graphQLClient.request(query, variables);
   const page = data?.pageBy;
 
   if (!page) return null;
-  
+
   const greenshiftScripts = getGreenshiftScripts(page.enqueuedScripts?.edges || []);
-  
+
   // Resolve CSS: prefer greenshiftInlineCss, fall back to enqueued greenshift-post-css
   page.greenshiftInlineCss = extractGreenshiftCss(page);
   if (page.translations) {
@@ -164,12 +165,15 @@ export async function getPageBySlug(slug, language = null) {
       greenshiftInlineCss: extractGreenshiftCss(t),
     }));
   }
-  
+
   return {
     ...page,
     greenshiftScripts
   };
 }
+
+/** Dedupes generateMetadata + page render in the same request */
+export const getPageBySlug = cache(fetchPageBySlug);
 
 // Get only greenshift plugin scripts
 export function getGreenshiftScripts(edges) {

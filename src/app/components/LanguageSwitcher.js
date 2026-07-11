@@ -1,14 +1,34 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { getWPMLLanguages } from '../lib/languages';
+import { getSlugAndLanguageFromPathname } from '../lib/pageContext';
 import { SkeletonButton } from './ui/Skeleton';
 
-export default function LanguageSwitcher() {
+const FALLBACK_LANGUAGES = [
+  {
+    id: 'en',
+    code: 'en',
+    native_name: 'English',
+    country_flag_url: '/img/us-flag.svg',
+  },
+  {
+    id: 'th',
+    code: 'th',
+    native_name: 'ไทย',
+    country_flag_url: '/img/th-flag.svg',
+  },
+];
 
-  const [languages, setLanguages] = useState([]);
-  const [currentLang, setCurrentLang] = useState('');
+function flagSrc(lang) {
+  if (lang.code === 'th') return '/img/th-flag.svg';
+  if (lang.code === 'en') return '/img/us-flag.svg';
+  return lang.country_flag_url;
+}
+
+export default function LanguageSwitcher() {
+  const [languages, setLanguages] = useState(FALLBACK_LANGUAGES);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
@@ -16,36 +36,38 @@ export default function LanguageSwitcher() {
   const pathname = usePathname();
   const dropdownRef = useRef(null);
 
+  // Flag / label follow the URL immediately — do not wait on GraphQL.
+  const currentLang = useMemo(
+    () => getSlugAndLanguageFromPathname(pathname).language,
+    [pathname]
+  );
+
+  // Fetch WPML list once (not on every pathname change).
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchLanguages() {
       try {
-
         const langs = await getWPMLLanguages();
-        setLanguages(langs);
-        
-        const pathSegments = pathname.split('/').filter(Boolean);
-        
-        if (pathSegments.length === 0) {
-
-          setCurrentLang('en');
-        } else {
-          const firstSegment = pathSegments[0];
-          const langExists = langs.find(lang => lang.code === firstSegment);
-          
-          if (langExists) {
-            setCurrentLang(firstSegment);
-          } else {
-            setCurrentLang('en');
-          }
+        if (!cancelled && langs?.length) {
+          setLanguages(langs);
         }
       } catch (error) {
         console.error('Error loading languages:', error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
     fetchLanguages();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    setIsSwitching(false);
+    setIsOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -61,46 +83,40 @@ export default function LanguageSwitcher() {
     };
   }, []);
 
-  // Function to handle language change when user selects a new language
   const handleLanguageChange = (langCode) => {
     if (langCode === currentLang) {
       setIsOpen(false);
       return;
     }
-    
+
     const pathSegments = pathname.split('/').filter(Boolean);
-    
-    const currentLangObj = languages.find(lang => lang.code === currentLang);
-    if (currentLangObj && currentLangObj.code !== 'en') {
-      if (pathSegments[0] === currentLangObj.code) {
-        pathSegments.shift();
-      }
+
+    // Strip existing lang prefix if present
+    if (pathSegments[0] === 'th' || pathSegments[0] === 'en') {
+      pathSegments.shift();
     }
-    
+
     let newUrl;
     if (langCode === 'en') {
       newUrl = '/' + pathSegments.join('/');
     } else {
       newUrl = '/' + langCode + '/' + pathSegments.join('/');
     }
-    
+
     newUrl = newUrl.replace(/\/+/g, '/');
     if (newUrl !== '/' && newUrl.endsWith('/')) {
       newUrl = newUrl.slice(0, -1);
     }
-    
+    if (!newUrl) newUrl = '/';
+
     setIsOpen(false);
     setIsSwitching(true);
     router.push(newUrl);
-
   };
 
-  useEffect(() => {
-    // When the path changes after a switch, stop showing the local spinner
-    if (isSwitching) setIsSwitching(false);
-  }, [pathname]);
-
-  if (loading) {
+  // With fallbacks we can always show the control; only skeleton on first paint
+  // before fallbacks are applied (effectively never after first render).
+  if (loading && languages.length === 0) {
     return <SkeletonButton className="language-switcher" />;
   }
 
@@ -108,23 +124,21 @@ export default function LanguageSwitcher() {
     return null;
   }
 
-  const currentLanguage = languages.find(lang => lang.code === currentLang);
+  const currentLanguage =
+    languages.find((lang) => lang.code === currentLang) ||
+    FALLBACK_LANGUAGES.find((lang) => lang.code === currentLang);
+
   return (
     <div className="language-switcher relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 px-3 py-2 focus:outline-none transition-colors text-[#002F87]"
+        aria-label="Change language"
       >
         {currentLanguage && (
           <>
             <img
-              src={
-                currentLanguage.code === 'th' 
-                  ? '/img/th-flag.svg' 
-                  : currentLanguage.code === 'en'
-                  ? '/img/us-flag.svg'
-                  : currentLanguage.country_flag_url
-              }
+              src={flagSrc(currentLanguage)}
               alt={currentLanguage.native_name}
               className="object-cover rounded-full"
             />
@@ -140,9 +154,7 @@ export default function LanguageSwitcher() {
           </>
         )}
         <svg
-          className={`w-4 h-4 transition-transform ${
-            isOpen ? 'scale-y-[-1]' : ''
-          }`}
+          className={`w-4 h-4 transition-transform ${isOpen ? 'scale-y-[-1]' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -158,30 +170,26 @@ export default function LanguageSwitcher() {
 
       {isOpen && (
         <div className="absolute top-full left-0 lg:w-[120px] w-12 bg-white shadow-lg z-50">
-          {languages.filter(lang => lang.code !== currentLang).map((lang) => (
-            <button
-              key={lang.id} 
-              onClick={() => handleLanguageChange(lang.code)}
-              className="cursor-pointer w-full flex items-center space-x-2 px-3 py-2 text-left hover:bg-[var(--s-accent-hover)] hover:text-white text-[#002F87]"
-            >
-              <img
-                src={
-                  lang.code === 'th' 
-                    ? '/img/th-flag.svg' 
-                    : lang.code === 'en'
-                    ? '/img/us-flag.svg'
-                    : lang.country_flag_url
-                }
-                alt={lang.native_name}
-                className="object-cover rounded-full"
-              />
-              <span className="font-medium text-[18px] uppercase lg:block hidden">
-                {lang.native_name.toUpperCase()}
-              </span>
-            </button>
-          ))}
+          {languages
+            .filter((lang) => lang.code !== currentLang)
+            .map((lang) => (
+              <button
+                key={lang.id || lang.code}
+                onClick={() => handleLanguageChange(lang.code)}
+                className="cursor-pointer w-full flex items-center space-x-2 px-3 py-2 text-left hover:bg-[var(--s-accent-hover)] hover:text-white text-[#002F87]"
+              >
+                <img
+                  src={flagSrc(lang)}
+                  alt={lang.native_name}
+                  className="object-cover rounded-full"
+                />
+                <span className="font-medium text-[18px] uppercase lg:block hidden">
+                  {lang.native_name.toUpperCase()}
+                </span>
+              </button>
+            ))}
         </div>
       )}
     </div>
   );
-} 
+}

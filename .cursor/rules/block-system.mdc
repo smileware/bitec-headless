@@ -1,0 +1,31 @@
+---
+description: How to add and implement GreenShift/ACF React blocks
+globs: src/app/components/BlockRenderer.js,src/app/components/block/**/*.js,src/app/hooks/useBlockQueries.js,src/app/lib/block.js
+alwaysApply: false
+---
+
+# Block system
+
+WordPress HTML → `BlockRenderer` → React block → React Query hook → `lib/block.js` GraphQL.
+
+## Adding a new block (all steps required)
+
+1. CMS outputs `<div id="block-{name}" data-block-identifier-id="...">`
+2. Create `src/app/components/block/{Name}Block.js` with `'use client'`
+3. Register in `BLOCK_MAP` in `BlockRenderer.js` (`startsWith: true` if ID has a dynamic suffix)
+4. Add `GetPageWith{Name}(slug, preferTranslation = false)` in `lib/block.js`
+5. Add `use{Name}()` in `hooks/useBlockQueries.js` (include `slug` + `isTH` in `queryKey`)
+6. Add styles in `css/scss/main.scss`
+
+## Component conventions
+
+- Merge CMS `class` → `className` (attribs use HTML `class`, not React `className`)
+- Match multi-instance blocks via `data-block-identifier-id` / `blockIdentifierId`; fallback index map if needed (see `RetailInformationBlock.js`)
+- Loading: skeleton UI; error/empty: return `null`
+- Prefer React Query hooks over `useEffect` + direct lib calls for new work
+- Keep GreenShift classes (`wp-block-greenshift-blocks-swiper`, `gs-swiper`, etc.)
+
+```js
+// ✅ Register with startsWith when IDs are like block-retail-information-abc
+{ id: 'block-retail-information', component: RetailInformationBlock, startsWith: true }
+```
