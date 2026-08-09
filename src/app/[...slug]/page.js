@@ -4,6 +4,12 @@ import { resolvePageContext } from '../lib/pageContext';
 import PrefetchedBlockContent from '../components/PrefetchedBlockContent';
 import PageContentFallback from '../components/layout/PageContentFallback';
 
+// ISR: pages render on first request, then serve from cache and revalidate in
+// the background every 5 min. We deliberately do NOT use generateStaticParams
+// (full build-time SSG) — the WordPress origin can be cold/slow (~90s), which
+// made builds exceed the 60s per-page limit and risked failing deploys. On-demand
+// ISR keeps builds fast and deploy-safe; pair with a cron warmer to keep first
+// visits fast.
 export const revalidate = 300;
 
 export async function generateMetadata({ params }) {

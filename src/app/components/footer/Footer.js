@@ -163,10 +163,16 @@ export default function Footer({ footerData = null, isServerSide = false }) {
     return (
         <footer className="relative">
 
-            {/* Render the footer content */}
+            {/* Render the footer content.
+                suppressHydrationWarning: the HTML comes from WordPress and uses
+                entity encodings (e.g. &#038;) that the browser normalizes in the
+                DOM, so the hydrated text differs byte-for-byte from the SSR string
+                even though the content is identical. Without this React logs a
+                (harmless but noisy) hydration mismatch for this subtree. */}
             {currentLang === 'th' ? (
                 localFooterData?.translations[0]?.content && (
                     <div
+                        suppressHydrationWarning
                         dangerouslySetInnerHTML={{
                             __html: localFooterData.translations[0].content,
                         }}
@@ -175,16 +181,17 @@ export default function Footer({ footerData = null, isServerSide = false }) {
             ) : (
                 localFooterData?.content && (
                     <div
+                        suppressHydrationWarning
                         dangerouslySetInnerHTML={{
                             __html: localFooterData.content,
                         }}
                     />
                 )
             )}
-            
+
             {/* Add the processed styles to the head */}
             {styleTagsHTML && (
-                <div dangerouslySetInnerHTML={{ __html: styleTagsHTML }} />
+                <div suppressHydrationWarning dangerouslySetInnerHTML={{ __html: styleTagsHTML }} />
             )}
             <button
                 onClick={() => {

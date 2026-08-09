@@ -4,6 +4,8 @@ import { resolvePageContext } from './lib/pageContext';
 import PrefetchedBlockContent from './components/PrefetchedBlockContent';
 import PageContentFallback from './components/layout/PageContentFallback';
 
+export const revalidate = 300;
+
 // No heavy generateMetadata on `/` — layout site metadata paints first.
 // getPageBySlug only runs inside HomeContent (behind Suspense).
 
