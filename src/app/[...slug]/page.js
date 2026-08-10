@@ -131,10 +131,10 @@ async function DynamicPageContent({ params }) {
 }
 
 export default function DynamicPage({ params }) {
-  // Render content directly (no Suspense streaming boundary). The page body was
-  // streaming into a hidden `#S:n` placeholder that the client never revealed —
-  // React abandoned the boundary, so the whole content tree (accordions included)
-  // stayed `display:none` and unclickable, on every page and in production. ISR
-  // still caches the awaited result, so first byte stays fast on warm pages.
+  // Render content directly (no Suspense boundary). On this setup the client
+  // never completes the Suspense reveal — content stays stranded in a hidden
+  // `#S:n` placeholder (accordions unclickable, footer empty). Awaiting directly
+  // is the only configuration where content actually renders. ISR caches the
+  // result so warm pages stay fast; footer parallelism is handled in layout.js.
   return <DynamicPageContent params={params} />;
 }

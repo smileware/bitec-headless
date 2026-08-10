@@ -1,50 +1,60 @@
 import { GraphQLClient, gql } from "graphql-request";
+import { unstable_cache } from "next/cache";
+import { GRAPHQL_CACHE_TAG } from "./api";
 const endpoint = process.env.API_DOMAIN || "https://wordpress-1328545-5763448.cloudwaysapps.com/graphql";
 // Accept: */* required — the host WAF 403s application/json & the graphql-request
 // v7 default. See the note in lib/api.js.
 export const client = new GraphQLClient(endpoint, { headers: { Accept: '*/*' } });
 
-// Server-side function to fetch footer data
-export async function getFooterData() {
-    const query = gql`
-        query GetFooterReusableBlock {
-            reusableBlock(id: "theme-footer", idType: SLUG) {
+const FOOTER_QUERY = gql`
+    query GetFooterReusableBlock {
+        reusableBlock(id: "theme-footer", idType: SLUG) {
+            content
+            translations {
                 content
-                translations {
-                    content
-                }
-                enqueuedStylesheets(first: 100) {
-                    edges {
-                        node {
-                            src
-                            after
-                        }
+            }
+            enqueuedStylesheets(first: 100) {
+                edges {
+                    node {
+                        src
+                        after
                     }
                 }
-                enqueuedScripts(first: 100) {
-                    edges {
-                        node {
-                            src
-                            after
-                        }
+            }
+            enqueuedScripts(first: 100) {
+                edges {
+                    node {
+                        src
+                        after
                     }
                 }
             }
         }
-    `;
-    
-    try {
-        const { reusableBlock } = await client.request(query);
-        
-        // Process the enqueued stylesheets and scripts
-        const processedStyles = processEnqueuedStylesheets(reusableBlock?.enqueuedStylesheets?.edges || []);
-        const processedScripts = processEnqueuedScripts(reusableBlock?.enqueuedScripts?.edges || []);
-        
+    }
+`;
+
+// The footer is the same reusable block on every page and rarely changes, but it
+// was refetched from WordPress on every request (no cache), adding latency to
+// every page. Cache the processed result and revalidate periodically; a failed
+// fetch is NOT cached (the throw propagates out of unstable_cache), so a WP blip
+// won't get pinned as an empty footer.
+const getCachedFooterData = unstable_cache(
+    async () => {
+        const { reusableBlock } = await client.request(FOOTER_QUERY);
         return {
             ...reusableBlock,
-            processedStyles,
-            processedScripts
+            processedStyles: processEnqueuedStylesheets(reusableBlock?.enqueuedStylesheets?.edges || []),
+            processedScripts: processEnqueuedScripts(reusableBlock?.enqueuedScripts?.edges || []),
         };
+    },
+    ['footer-reusable-block'],
+    { revalidate: 300, tags: [GRAPHQL_CACHE_TAG] }
+);
+
+// Server-side function to fetch footer data
+export async function getFooterData() {
+    try {
+        return await getCachedFooterData();
     } catch (error) {
         console.error('Error fetching footer data:', error);
         return {

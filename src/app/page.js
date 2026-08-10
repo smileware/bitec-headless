@@ -38,9 +38,10 @@ async function HomeContent() {
 }
 
 export default function Home() {
-  // Render content directly rather than through a Suspense streaming boundary —
-  // see the note in [...slug]/page.js. Keeps the homepage consistent with the
-  // rest of the site and avoids content getting stranded in a hidden `#S:n`
-  // placeholder. ISR still caches the awaited result.
+  // Render content directly (no Suspense boundary). On this setup the client
+  // never completes the Suspense reveal — content stays stranded in a hidden
+  // `#S:n` placeholder (accordions unclickable, footer empty). Awaiting directly
+  // is the only configuration where content actually renders. ISR caches the
+  // result so warm pages stay fast; footer parallelism is handled in layout.js.
   return <HomeContent />;
 }
