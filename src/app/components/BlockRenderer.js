@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import parse from 'html-react-parser';
+import render from 'dom-serializer';
 import EventCarouselBlock from './block/EventCarouselBlock';
 import NewsActivityBlock from './block/NewsActivityBlock';
 import WhatsOnBlock from './block/WhatsOnBlock';
@@ -51,6 +52,22 @@ export default function BlockRenderer({ content }) {
             // Ensure domNode and attribs exist before processing
             if (!domNode || !domNode.attribs || !domNode.attribs.id) {
                 return undefined;
+            }
+
+            // GreenShift accordion → render as raw, React-uncontrolled HTML.
+            // html-react-parser otherwise makes each item a React element whose
+            // className AND inline style React owns; when the accordion handler
+            // toggles gsopen / sets an inline max-height on click, React's render
+            // flush reverts both, so the panel never opens. dangerouslySetInnerHTML
+            // hands this subtree to the browser as plain DOM the handler can drive.
+            const className = domNode.attribs.class || '';
+            if (className.split(/\s+/).includes('gs-accordion')) {
+                return (
+                    <div
+                        key={domNode.attribs.id}
+                        dangerouslySetInnerHTML={{ __html: render(domNode) }}
+                    />
+                );
             }
 
             const blockId = domNode.attribs.id;

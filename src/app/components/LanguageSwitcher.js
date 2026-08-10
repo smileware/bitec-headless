@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { getWPMLLanguages } from '../lib/languages';
 import { getSlugAndLanguageFromPathname } from '../lib/pageContext';
 import { SkeletonButton } from './ui/Skeleton';
@@ -32,7 +32,6 @@ export default function LanguageSwitcher() {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
   const dropdownRef = useRef(null);
 
@@ -111,7 +110,15 @@ export default function LanguageSwitcher() {
 
     setIsOpen(false);
     setIsSwitching(true);
-    router.push(newUrl);
+    // Full-document navigation instead of router.push. English and Thai share the
+    // same `[...slug]` route, and this page's content streams in through a Suspense
+    // boundary. A client-side transition tries to swap one language's streamed
+    // segment for the other's in place, which leaves React's streaming placeholders
+    // (#S:n) and the previous language's nodes in the DOM — producing duplicated,
+    // zero-size GreenShift accordions that no longer respond to clicks. A hard
+    // navigation renders the target language from a clean document every time,
+    // matching the behaviour that already works on a direct visit.
+    window.location.assign(newUrl);
   };
 
   // With fallbacks we can always show the control; only skeleton on first paint

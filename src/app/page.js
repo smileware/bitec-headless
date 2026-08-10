@@ -1,8 +1,6 @@
-import { Suspense } from 'react';
 import { getPageBySlug } from './lib/api';
 import { resolvePageContext } from './lib/pageContext';
 import PrefetchedBlockContent from './components/PrefetchedBlockContent';
-import PageContentFallback from './components/layout/PageContentFallback';
 
 export const revalidate = 300;
 
@@ -40,9 +38,9 @@ async function HomeContent() {
 }
 
 export default function Home() {
-  return (
-    <Suspense fallback={<PageContentFallback />}>
-      <HomeContent />
-    </Suspense>
-  );
+  // Render content directly rather than through a Suspense streaming boundary —
+  // see the note in [...slug]/page.js. Keeps the homepage consistent with the
+  // rest of the site and avoids content getting stranded in a hidden `#S:n`
+  // placeholder. ISR still caches the awaited result.
+  return <HomeContent />;
 }

@@ -7,7 +7,14 @@ const endpoint = process.env.API_DOMAIN || 'https://wordpress-1328545-5763448.cl
 export const GRAPHQL_CACHE_TAG = 'wordpress-content';
 const GRAPHQL_CACHE_TTL = parseInt(process.env.GRAPHQL_CACHE_TTL || '120', 10);
 
-export const graphQLClient = new GraphQLClient(endpoint);
+// The WordPress host's WAF (Cloudways) returns 403 for GraphQL requests whose
+// Accept header is `application/json` or graphql-request v7's default
+// `application/graphql-response+json` — only `Accept: */*` gets through. Without
+// this override every server-side GraphQL call (page content, footer, global
+// CSS) 403s and takes the whole site down. Verified: */* → 200, others → 403.
+export const graphQLClient = new GraphQLClient(endpoint, {
+  headers: { Accept: '*/*' },
+});
 
 const rawGraphQLRequest = graphQLClient.request.bind(graphQLClient);
 const supportsCache = typeof unstable_cache === 'function';
@@ -175,18 +182,30 @@ async function fetchPageBySlug(slug, language = null) {
 /** Dedupes generateMetadata + page render in the same request */
 export const getPageBySlug = cache(fetchPageBySlug);
 
-// Get only greenshift plugin scripts
+// Get only greenshift plugin scripts.
+// The accordion script is deliberately excluded: it declares top-level
+// identifiers (e.g. `accordionItems`) and is not idempotent, so ScriptLoader's
+// re-execute-on-navigation path throws "Identifier 'accordionItems' has already
+// been declared". Accordion toggling is handled instead by the self-contained
+// GreenShiftAccordion component (a faithful port of that same script), which is
+// safe to run once and works even when WP fails to enqueue the script at all.
+const EXCLUDED_GREENSHIFT_SCRIPTS = [/\/libs\/accordion\//i];
+
 export function getGreenshiftScripts(edges) {
   const scripts = [];
-  
+
   edges.forEach(({ node }) => {
     const { src } = node;
-    
-    if (src && src.includes('greenshift-animation-and-page-builder-blocks')) {
-      scripts.push(src);
+
+    if (!src || !src.includes('greenshift-animation-and-page-builder-blocks')) {
+      return;
     }
+    if (EXCLUDED_GREENSHIFT_SCRIPTS.some((re) => re.test(src))) {
+      return;
+    }
+    scripts.push(src);
   });
-  
+
   return scripts;
 }
 

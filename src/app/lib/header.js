@@ -2,7 +2,9 @@ import { GraphQLClient, gql } from 'graphql-request';
 import { unstable_cache } from 'next/cache';
 
 const endpoint = process.env.API_DOMAIN || 'https://wordpress-1328545-5763448.cloudwaysapps.com/graphql';
-export const client = new GraphQLClient(endpoint);
+// Accept: */* required — the host WAF 403s application/json & the graphql-request
+// v7 default. See the note in lib/api.js.
+export const client = new GraphQLClient(endpoint, { headers: { Accept: '*/*' } });
 
 // Server-side function to fetch all header data in one query (CACHED)
 export async function getHeaderData(language = 'en') {

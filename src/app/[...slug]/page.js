@@ -1,8 +1,6 @@
-import { Suspense } from 'react';
 import { getPageBySlug } from '../lib/api';
 import { resolvePageContext } from '../lib/pageContext';
 import PrefetchedBlockContent from '../components/PrefetchedBlockContent';
-import PageContentFallback from '../components/layout/PageContentFallback';
 
 // ISR: pages render on first request, then serve from cache and revalidate in
 // the background every 5 min. We deliberately do NOT use generateStaticParams
@@ -133,9 +131,10 @@ async function DynamicPageContent({ params }) {
 }
 
 export default function DynamicPage({ params }) {
-  return (
-    <Suspense fallback={<PageContentFallback />}>
-      <DynamicPageContent params={params} />
-    </Suspense>
-  );
+  // Render content directly (no Suspense streaming boundary). The page body was
+  // streaming into a hidden `#S:n` placeholder that the client never revealed —
+  // React abandoned the boundary, so the whole content tree (accordions included)
+  // stayed `display:none` and unclickable, on every page and in production. ISR
+  // still caches the awaited result, so first byte stays fast on warm pages.
+  return <DynamicPageContent params={params} />;
 }

@@ -4,6 +4,7 @@ import { getSiteInfo } from './lib/api';
 import Header from './components/header/Header';
 import Footer from './components/footer/Footer';
 import FluentFormHandler from './components/FluentFormHandler';
+import GreenShiftAccordion from './components/GreenShiftAccordion';
 import NavigationProgress from './components/NavigationProgress';
 import { QueryProvider } from './components/QueryProvider';
 import SiteHeader from './components/layout/SiteHeader';
@@ -52,6 +53,7 @@ export default function RootLayout({ children }) {
               <SiteFooter />
             </Suspense>
             <FluentFormHandler />
+            <GreenShiftAccordion />
           </div>
           <SpeedInsights />
         </QueryProvider>
