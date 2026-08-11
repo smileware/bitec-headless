@@ -81,7 +81,7 @@ export default function Nav({ nav, isMobile = false, onCloseMenu }) {
               href={item.path || item.url || '#'}
               className={`font-medium text-[#161616] flex items-center`}
               onClick={(e) => handleLinkClick(e, item)}
-              prefetch={true}
+              prefetch={false}
             >
 
               {item.menuItemIcon?.menuIcon && (
@@ -120,7 +120,7 @@ export default function Nav({ nav, isMobile = false, onCloseMenu }) {
                       href={child.path || child.url || '#'}
                       className={`block px-2 py-1 text-sm flex items-center ${path.startsWith(child.path || '') ? 'font-bold' : ''}`}
                       onClick={(e) => handleLinkClick(e, child)}
-                      prefetch={true}
+                      prefetch={false}
                     >
                       {child.menuItemIcon?.menuIcon && (
                         <span 

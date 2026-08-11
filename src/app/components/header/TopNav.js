@@ -12,7 +12,7 @@ export default function Nav({ nav }) {
           <Link
             href={item.path || item.url || '#'}
             className={`font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white flex items-center ${path.startsWith(item.path || '') ? 'font-bold text-gray-800 dark:text-white' : ''}`}
-            prefetch={true}
+            prefetch={false}
           >
             {item.menuItemIcon?.menuIcon && (
               <span 
@@ -30,7 +30,7 @@ export default function Nav({ nav }) {
                   <Link
                     href={child.path || child.url || '#'}
                     className={`block px-2 py-1 text-sm hover:text-blue-500 flex items-center ${path.startsWith(child.path || '') ? 'font-bold' : ''}`}
-                    prefetch={true}
+                    prefetch={false}
                   >
                     {child.menuItemIcon?.menuIcon && (
                       <span 

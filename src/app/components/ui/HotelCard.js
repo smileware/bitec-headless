@@ -35,7 +35,7 @@ export default function HotelCard({ hotel }) {
                             ? `/th/hotel/${hotel.translations && hotel.translations[0]?.slug ? hotel.translations[0].slug : hotel.slug}`
                             : `/hotel/${hotel.slug}`
                     }
-                    prefetch={true}
+                    prefetch={false}
                     title={`Permalink to ${currentLang === 'th'
                         ? (hotel.translations && hotel.translations[0]?.title ? hotel.translations[0].title : hotel.title)
                         : hotel.title
@@ -67,7 +67,7 @@ export default function HotelCard({ hotel }) {
                                     ? `/th/hotel/${hotel.translations && hotel.translations[0]?.slug ? hotel.translations[0].slug : hotel.slug}`
                                     : `/hotel/${hotel.slug}`
                             }
-                            prefetch={true}
+                            prefetch={false}
                         >
                             {currentLang === 'th'
                                 ? (hotel.translations && hotel.translations[0]?.title ? hotel.translations[0].title : hotel.title)
@@ -112,4 +112,4 @@ export default function HotelCard({ hotel }) {
             </div>
         </article>
     );
-} 
+}

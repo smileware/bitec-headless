@@ -294,11 +294,6 @@ export async function GetGalleryByTaxonomyType(taxonomySlug, limit = 12) {
                             }
                         }
                     }
-                    translations {
-                        title
-                        slug
-                        date
-                    }
                 }
             }
         }
@@ -387,12 +382,16 @@ export async function GetPageWithDisplayGalleryByType(slug, preferTranslation = 
     }
 }
 
-export async function GetGalleriesByTypes(typeSlugs = null, limit = 12) {
+export async function GetGalleriesByTypes(typeSlugs = null, page = 1, perPage = 12) {
+    const size = Math.min(Math.max(perPage, 1), 24);
+    const offset = (Math.max(page, 1) - 1) * size;
+
     // Query with filters
     const queryWithFilter = gql`
-        query GetGalleriesByTypes($typeSlugs: [String]!, $limit: Int!) {
+        query GetGalleriesByTypes($typeSlugs: [String]!, $size: Int!, $offset: Int!) {
             galleries(
                 where: {
+                    offsetPagination: { size: $size, offset: $offset }
                     taxQuery: {
                         taxArray: [
                             {
@@ -404,8 +403,10 @@ export async function GetGalleriesByTypes(typeSlugs = null, limit = 12) {
                         ]
                     }
                 }
-                first: $limit
             ) {
+                pageInfo {
+                    offsetPagination { total }
+                }
                 nodes {
                     id
                     title
@@ -421,11 +422,6 @@ export async function GetGalleriesByTypes(typeSlugs = null, limit = 12) {
                                 height
                             }
                         }
-                    }
-                    translations {
-                        title
-                        slug
-                        date
                     }
                 }
             }
@@ -434,8 +430,11 @@ export async function GetGalleriesByTypes(typeSlugs = null, limit = 12) {
     
     // Query without filters (get all)
     const queryAll = gql`
-        query GetAllGalleries($limit: Int!) {
-            galleries(first: $limit) {
+        query GetAllGalleries($size: Int!, $offset: Int!) {
+            galleries(where: { offsetPagination: { size: $size, offset: $offset } }) {
+                pageInfo {
+                    offsetPagination { total }
+                }
                 nodes {
                     id
                     title
@@ -451,11 +450,6 @@ export async function GetGalleriesByTypes(typeSlugs = null, limit = 12) {
                                 height
                             }
                         }
-                    }
-                    translations {
-                        title
-                        slug
-                        date
                     }
                 }
             }
@@ -470,20 +464,30 @@ export async function GetGalleriesByTypes(typeSlugs = null, limit = 12) {
             console.log('Fetching galleries by types:', typeSlugs);
             data = await graphQLClient.request(queryWithFilter, {
                 typeSlugs: typeSlugs,
-                limit,
+                size,
+                offset,
             });
         } else {
             // No types selected, fetch all galleries
             console.log('No types selected, fetching all galleries');
             data = await graphQLClient.request(queryAll, {
-                limit,
+                size,
+                offset,
             });
         }
         
-        return data?.galleries?.nodes || [];
+        return {
+            content: data?.galleries?.nodes || [],
+            pageInfo: data?.galleries?.pageInfo || {
+                offsetPagination: { total: 0 },
+            },
+        };
     } catch (error) {
         console.error("GraphQL fetch error for galleries:", error);
-        return [];
+        return {
+            content: [],
+            pageInfo: { offsetPagination: { total: 0 } },
+        };
     }
 }
 

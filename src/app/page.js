@@ -2,7 +2,7 @@ import { getPageBySlug } from './lib/api';
 import { resolvePageContext } from './lib/pageContext';
 import PrefetchedBlockContent from './components/PrefetchedBlockContent';
 
-export const revalidate = 300;
+export const revalidate = 1800;
 
 // No heavy generateMetadata on `/` — layout site metadata paints first.
 // getPageBySlug only runs inside HomeContent (behind Suspense).

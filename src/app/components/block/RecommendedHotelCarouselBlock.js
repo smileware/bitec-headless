@@ -137,6 +137,7 @@ export default function RecommendedHotelCarouselBlock(props) {
                                             </h3>
                                             
                                             <Link 
+                                                prefetch={false}
                                                 href={`/hotel/${hotel.slug}`}
                                                 className="inline-flex gap-[10px] items-center px-[30px] py-[5px] bg-[var(--s-accent)] text-white hover:bg-[var(--s-accent-hover)] text-[22px] transition-colors duration-200 lg:w-auto w-full justify-center"
                                             >

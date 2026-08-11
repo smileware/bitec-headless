@@ -3,9 +3,9 @@ import { resolvePageContext } from '../lib/pageContext';
 import PrefetchedBlockContent from '../components/PrefetchedBlockContent';
 
 // ISR: pages render on first request, then serve from cache and revalidate in
-// the background every 5 min. generateStaticParams returns no paths so the build
+// the background every 30 min. generateStaticParams returns no paths so the build
 // stays light; each slug is generated on its first request and then cached.
-export const revalidate = 300;
+export const revalidate = 1800;
 
 // Empty params keeps the build light while enabling on-demand ISR for every slug.
 export function generateStaticParams() {

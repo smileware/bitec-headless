@@ -48,7 +48,7 @@ const getCachedFooterData = unstable_cache(
         };
     },
     ['footer-reusable-block'],
-    { revalidate: 300, tags: [GRAPHQL_CACHE_TAG] }
+    { revalidate: 1800, tags: [GRAPHQL_CACHE_TAG] }
 );
 
 // Server-side function to fetch footer data

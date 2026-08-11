@@ -720,6 +720,7 @@ export default function HotelMapBlock(props) {
                                             <article className="bg-white h-full">
                                                 <div className="pic relative">
                                                     <Link
+                                                        prefetch={false}
                                                         href={
                                                             currentLang === 'th'
                                                                 ? `/th/hotel/${hotel.translations && hotel.translations[0]?.slug ? hotel.translations[0].slug : hotel.slug}`
@@ -769,6 +770,7 @@ export default function HotelMapBlock(props) {
                                                     <header className="entry-header">
                                                         <h2 className="entry-title text-[#161616] lg:text-[30px] text-[24px] font-[500] leading-[1.2] mb-[10px]">
                                                             <Link
+                                                                prefetch={false}
                                                                 href={
                                                                     currentLang === 'th'
                                                                         ? `/th/hotel/${hotel.translations && hotel.translations[0]?.slug ? hotel.translations[0].slug : hotel.slug}`

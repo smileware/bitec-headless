@@ -3,7 +3,7 @@ import Image from 'next/image';
 import ShareButtons from "../../../components/ShareButtons";
 import GallerySwiper from "../../../components/GallerySwiper";
 
-export const revalidate = 300;
+export const revalidate = 1800;
 
 export function generateStaticParams() {
   return [];

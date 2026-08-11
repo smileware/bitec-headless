@@ -6,7 +6,7 @@ import GalleryCard from '../ui/GalleryCard';
 
 // Custom hook to detect screen size
 function useScreenSize() {
-    const [isMobile, setIsMobile] = useState(false);
+    const [isMobile, setIsMobile] = useState(null);
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 1023);
@@ -34,39 +34,27 @@ export default function GalleryBlock(props) {
     }, [galleryConfig?.displayGalleryByType]);
     
     // Enable query once config is loaded (even if typeSlugs is null, GetGalleriesByTypes will fetch all)
-    const shouldFetchGalleries = !configLoading && galleryConfig !== undefined;
+    const shouldFetchGalleries = !configLoading
+        && galleryConfig !== undefined
+        && isMobile !== null;
     
-    const { data: allGalleries = [], isLoading: galleriesLoading, error: galleriesError } = useGalleriesByTypes(
+    const { data: galleryData, isLoading: galleriesLoading, error: galleriesError } = useGalleriesByTypes(
         typeSlugs,
-        1000,
+        currentPage,
+        PAGE_SIZE,
         shouldFetchGalleries
     );
-    
-    // Debug logging (remove in production)
-    useEffect(() => {
-        if (galleryConfig !== undefined) {
-            console.log('GalleryBlock - Config loaded:', {
-                displayGalleryByType: galleryConfig?.displayGalleryByType,
-                typeSlugs,
-                shouldFetchGalleries,
-                allGalleriesCount: allGalleries.length
-            });
-        }
-    }, [galleryConfig, typeSlugs, shouldFetchGalleries, allGalleries.length]);
 
-    const loading = configLoading || galleriesLoading;
+    const galleries = galleryData?.content || [];
+    const totalGalleries = galleryData?.pageInfo?.offsetPagination?.total || 0;
+
+    const loading = configLoading || galleriesLoading || isMobile === null;
     const error = configError || galleriesError;
 
     // Calculate pagination
     const totalPages = useMemo(() => {
-        return Math.ceil(allGalleries.length / PAGE_SIZE);
-    }, [allGalleries.length, PAGE_SIZE]);
-
-    const displayedGalleries = useMemo(() => {
-        const startIndex = (currentPage - 1) * PAGE_SIZE;
-        const endIndex = startIndex + PAGE_SIZE;
-        return allGalleries.slice(startIndex, endIndex);
-    }, [allGalleries, currentPage, PAGE_SIZE]);
+        return Math.ceil(totalGalleries / PAGE_SIZE);
+    }, [totalGalleries, PAGE_SIZE]);
 
     // Reset to page 1 when PAGE_SIZE changes
     useEffect(() => {
@@ -165,7 +153,7 @@ export default function GalleryBlock(props) {
         );
     }
 
-    if (!allGalleries || allGalleries.length === 0) {
+    if (galleries.length === 0) {
         return (
             <div {...props} className={`display-gallery-block bg-[#F4F4F4] lg:py-[50px] py-[20px] ${props.className || ''}`}>
                 <div className="max-w-[1340px] mx-auto">
@@ -181,7 +169,7 @@ export default function GalleryBlock(props) {
         <div {...props} className={`display-gallery-block bg-[#F4F4F4] lg:py-[50px] py-[20px] ${props.className || ''}`}>
             <div className="max-w-[1340px] mx-auto">
                 <div className="gallery-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {displayedGalleries.map(gallery => (
+                    {galleries.map(gallery => (
                         <GalleryCard key={gallery.id} gallery={gallery} />
                     ))}
                 </div>
@@ -190,4 +178,3 @@ export default function GalleryBlock(props) {
         </div>
     );
 }
-

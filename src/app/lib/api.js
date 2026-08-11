@@ -5,7 +5,10 @@ import { unstable_cache } from 'next/cache';
 
 const endpoint = process.env.API_DOMAIN || 'https://wordpress-1328545-5763448.cloudwaysapps.com/graphql';
 export const GRAPHQL_CACHE_TAG = 'wordpress-content';
-const GRAPHQL_CACHE_TTL = parseInt(process.env.GRAPHQL_CACHE_TTL || '120', 10);
+// WordPress is the origin, not a low-latency application API. Keep successful
+// responses around long enough to absorb traffic spikes; publishing can still
+// invalidate them immediately through /api/revalidate.
+const GRAPHQL_CACHE_TTL = parseInt(process.env.GRAPHQL_CACHE_TTL || '1800', 10);
 
 // The WordPress host's WAF (Cloudways) returns 403 for GraphQL requests whose
 // Accept header is `application/json` or graphql-request v7's default
@@ -49,21 +52,19 @@ async function cachedGraphQLRequest(query, variables = {}, requestHeaders) {
   
   const cacheKey = createCacheKey(query, variables);
   
-  try {
-    const cachedFn = unstable_cache(
-      execute,
-      ['graphql-request', cacheKey],
-      {
-        revalidate: GRAPHQL_CACHE_TTL,
-        tags: [GRAPHQL_CACHE_TAG],
-      }
-    );
-    return await cachedFn();
-  } catch (error) {
-    // Silently fall back to direct request if cache fails
-    // This can happen in edge cases or during development
-    return execute();
-  }
+  const cachedFn = unstable_cache(
+    execute,
+    ['graphql-request', cacheKey],
+    {
+      revalidate: GRAPHQL_CACHE_TTL,
+      tags: [GRAPHQL_CACHE_TAG],
+    }
+  );
+
+  // Do not retry the origin here. An error from unstable_cache normally means
+  // the GraphQL request itself failed. Retrying the same expensive request
+  // doubles both the visitor's timeout and WordPress/PHP load during an outage.
+  return cachedFn();
 }
 
 graphQLClient.request = cachedGraphQLRequest;

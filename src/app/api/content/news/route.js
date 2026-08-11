@@ -6,7 +6,7 @@ import {
 
 export const runtime = 'nodejs';
 
-const CACHE_CONTROL = 'public, s-maxage=120, stale-while-revalidate=600';
+const CACHE_CONTROL = 'public, s-maxage=1800, stale-while-revalidate=86400';
 
 function readInteger(searchParams, name, fallback, min, max) {
     const value = Number.parseInt(searchParams.get(name) || '', 10);

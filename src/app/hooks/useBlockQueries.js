@@ -109,6 +109,7 @@ export function useNewsActivity(page = 1, filter = 'news', perPage = 9) {
         queryFn: () => getNewsActivityQuery(page, perPage, language, filter),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
@@ -119,6 +120,7 @@ export function useNewsActivitySustainability(page = 1, perPage = 6) {
         queryFn: () => getSustainabilityQuery(page, perPage, language),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
@@ -176,6 +178,7 @@ export function useGalleryByTaxonomyType(taxonomySlug, limit = 5, enabled = true
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
         enabled: enabled && !!taxonomySlug,
+        retry: 0,
     });
 }
 
@@ -243,19 +246,21 @@ export function useDisplayGalleryByType() {
     });
 }
 
-export function useGalleriesByTypes(typeSlugs, limit = 1000, enabled = true) {
+export function useGalleriesByTypes(typeSlugs, page = 1, perPage = 12, enabled = true) {
     return useQuery({
-        queryKey: ['galleriesByTypes', typeSlugs, limit],
+        queryKey: ['galleriesByTypes', typeSlugs, page, perPage],
         queryFn: () => typeof window === 'undefined'
-            ? GetGalleriesByTypes(typeSlugs, limit)
+            ? GetGalleriesByTypes(typeSlugs, page, perPage)
             : fetchContentApi('/api/content/galleries', {
                 mode: 'types',
                 typeSlugs: typeSlugs?.join(',') || null,
-                limit,
+                page,
+                perPage,
             }),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
         enabled,
+        retry: 0,
     });
 }
 
@@ -298,6 +303,7 @@ export function useFilteredEvents(filters = {}, enabled = true) {
         staleTime: EVENTS_QUERY_STALE_TIME,
         refetchOnMount: false,
         enabled,
+        retry: 0,
     });
 }
 

@@ -8,11 +8,12 @@ export const client = new GraphQLClient(endpoint, { headers: { Accept: '*/*' } }
 
 // The Cloudways WordPress GraphQL endpoint is intermittently slow/unresponsive.
 // A bare client.request() can hang for 2+ minutes with no timeout. This wraps a
-// request with an abort-based timeout and a single retry so a transient failure
-// throws quickly instead of hanging — and, critically, so it THROWS rather than
+// request with an abort-based timeout. Do not retry at this layer: a cold header
+// loads EN and TH in parallel, so one retry would turn an outage into four
+// concurrent WordPress requests. It THROWS rather than
 // returning empty data (empty data would get cached and hide the nav for
 // 5-30 min). See getHeaderData below.
-async function requestWithRetry(query, variables, { timeoutMs = 8000, retries = 1 } = {}) {
+async function requestWithRetry(query, variables, { timeoutMs = 8000, retries = 0 } = {}) {
     let lastError;
     for (let attempt = 0; attempt <= retries; attempt++) {
         const controller = new AbortController();
@@ -294,4 +295,3 @@ export async function getCTA() {
     const data = await client.request(query);
     return data.themeGeneralSettings || {};
 }
-

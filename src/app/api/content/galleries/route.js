@@ -10,7 +10,7 @@ import {
 
 export const runtime = 'nodejs';
 
-const CACHE_CONTROL = 'public, s-maxage=120, stale-while-revalidate=600';
+const CACHE_CONTROL = 'public, s-maxage=1800, stale-while-revalidate=86400';
 const VALID_SLUG = /^[a-z0-9_-]+$/i;
 
 function readInteger(searchParams, name, fallback, min, max) {
@@ -31,12 +31,18 @@ export async function GET(request) {
         let data;
 
         if (mode === 'types') {
+            const page = readInteger(searchParams, 'page', 1, 1, 1000);
+            const perPage = readInteger(searchParams, 'perPage', 12, 1, 24);
             const typeSlugs = (searchParams.get('typeSlugs') || '')
                 .split(',')
                 .map(readSlug)
                 .filter(Boolean)
                 .slice(0, 20);
-            data = await GetGalleriesByTypes(typeSlugs.length > 0 ? typeSlugs : null, limit);
+            data = await GetGalleriesByTypes(
+                typeSlugs.length > 0 ? typeSlugs : null,
+                page,
+                perPage
+            );
         } else {
             const slug = readSlug(searchParams.get('slug'));
             if (!slug) {

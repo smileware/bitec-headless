@@ -3,7 +3,7 @@ import { getFilteredEvents } from '../../../lib/event';
 
 export const runtime = 'nodejs';
 
-const CACHE_CONTROL = 'public, s-maxage=120, stale-while-revalidate=600';
+const CACHE_CONTROL = 'public, s-maxage=1800, stale-while-revalidate=86400';
 
 function readOptionalInteger(searchParams, name, min, max) {
     const rawValue = searchParams.get(name);

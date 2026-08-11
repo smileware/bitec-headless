@@ -35,18 +35,23 @@ import {
  *
  * @param {{ slug: string, isTH: boolean, language: string }} ctx
  * @param {Set<string>} blockIds
- * @returns {Array<{ queryKey: unknown[], queryFn: Function, staleTime?: number }>}
+ * @returns {Array<{ queryKey: unknown[], queryFn: Function, staleTime?: number, deferToClient?: boolean }>}
  */
 function buildPrefetchJobs(ctx, blockIds) {
   const { slug, isTH, language } = ctx;
   const jobs = [];
   const seen = new Set();
 
-  const add = (queryKey, queryFn, staleTime = BLOCK_QUERY_STALE_TIME) => {
+  const add = (
+    queryKey,
+    queryFn,
+    staleTime = BLOCK_QUERY_STALE_TIME,
+    deferToClient = false
+  ) => {
     const key = JSON.stringify(queryKey);
     if (seen.has(key)) return;
     seen.add(key);
-    jobs.push({ queryKey, queryFn, staleTime });
+    jobs.push({ queryKey, queryFn, staleTime, deferToClient });
   };
 
   // --- Phase 2: simple CPT / list blocks ---
@@ -72,14 +77,18 @@ function buildPrefetchJobs(ctx, blockIds) {
   if (blockIds.has('block-news-activity')) {
     add(
       ['newsActivity', 1, language, 'news', 9],
-      () => getNewsActivityContent(1, 9, language, 'news')
+      () => getNewsActivityContent(1, 9, language, 'news'),
+      BLOCK_QUERY_STALE_TIME,
+      true
     );
   }
 
   if (blockIds.has('block-news-activity-sustainability')) {
     add(
       ['newsActivitySustainability', 1, language, 6],
-      () => getNewsActivitySustainability(1, 6, language)
+      () => getNewsActivitySustainability(1, 6, language),
+      BLOCK_QUERY_STALE_TIME,
+      true
     );
   }
 
@@ -198,12 +207,21 @@ export async function prefetchBlockQueries(queryClient, { content, slug, isTH, l
     return;
   }
 
+  // Dynamic archives already have same-origin CDN-cached API routes. Starting
+  // their GraphQL queries here and abandoning the wait after the budget expires
+  // leaves the PHP work running, while hydration starts a second identical API
+  // request in the browser. Defer those jobs so exactly one origin request runs.
+  const serverJobs = jobs.filter((job) => !job.deferToClient);
+  if (serverJobs.length === 0) {
+    return;
+  }
+
   // Cap wait so slow WP block queries cannot block streaming for many seconds.
   // Whatever finished in time is dehydrated; the rest fall back to client fetch.
   const budgetMs = parseInt(process.env.BLOCK_PREFETCH_BUDGET_MS || '2000', 10);
 
   const prefetchAll = Promise.allSettled(
-    jobs.map(({ queryKey, queryFn, staleTime }) =>
+    serverJobs.map(({ queryKey, queryFn, staleTime }) =>
       queryClient.prefetchQuery({
         queryKey,
         queryFn,
@@ -215,7 +233,7 @@ export async function prefetchBlockQueries(queryClient, { content, slug, isTH, l
       if (result.status === 'rejected') {
         console.error(
           '[prefetchBlockQueries] Failed:',
-          jobs[index].queryKey,
+          serverJobs[index].queryKey,
           result.reason
         );
       }
