@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { getFooterData, generateStyleTags } from "../../lib/footer";
+import { fetchContentApi } from "../../lib/clientContentApi";
+import { generateStyleTags } from "../../lib/footerStyles";
 import { usePathname } from 'next/navigation';
 
 
@@ -29,7 +30,7 @@ export default function Footer({ footerData = null, isServerSide = false }) {
         (async () => {
           setIsLoading(true);
           try {
-            const data = await getFooterData();
+            const data = await fetchContentApi('/api/content/chrome', { type: 'footer' });
             if (!cancelled) setLocalFooterData(data);
           } catch (error) {
             console.error("Error loading footer data:", error);

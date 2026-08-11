@@ -5,8 +5,8 @@ import ShareButtons from "../../components/ShareButtons";
 import { notFound } from 'next/navigation';
 
 // ISR: no paths are pre-rendered during the build. Each post is generated on its
-// first request, then served from cache and revalidated every 30 min.
-export const revalidate = 1800;
+// first request, then served from cache with a two-hour webhook fallback.
+export const revalidate = 7200;
 
 export function generateStaticParams() {
   return [];

@@ -1,44 +1,118 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { GRAPHQL_CACHE_TAG } from '../../lib/api';
 
-const DEFAULT_TAG = GRAPHQL_CACHE_TAG;
+export const runtime = 'nodejs';
 
-async function handleRequest(request) {
-    const { searchParams } = new URL(request.url);
-    const secret = searchParams.get('secret');
+const CONTENT_TYPES = new Set([
+    'page',
+    'post',
+    'event',
+    'gallery',
+    'hotel',
+    'navigation',
+    'footer',
+]);
+const VALID_SLUG = /^[\p{L}\p{N}/_-]+$/u;
 
-    if (!process.env.REVALIDATE_SECRET || secret !== process.env.REVALIDATE_SECRET) {
-        return NextResponse.json({ success: false, message: 'Invalid token' }, { status: 401 });
-    }
-
-    const body = request.method === 'POST' ? await request.json().catch(() => ({})) : {};
-    const tag = body.tag || searchParams.get('tag');
-    const path = body.path || searchParams.get('path');
-    const actions = {};
-
-    if (tag) {
-        await revalidateTag(tag);
-        actions.tag = tag;
-    }
-
-    if (path) {
-        await revalidatePath(path);
-        actions.path = path;
-    }
-
-    if (!tag && !path) {
-        await revalidateTag(DEFAULT_TAG);
-        actions.tag = DEFAULT_TAG;
-    }
-
-    return NextResponse.json({ revalidated: true, ...actions });
+function unauthorized() {
+    return NextResponse.json(
+        { success: false, message: 'Invalid token' },
+        { status: 401, headers: { 'Cache-Control': 'no-store' } }
+    );
 }
 
-export async function GET(request) {
-    return handleRequest(request);
+function invalid(message) {
+    return NextResponse.json(
+        { success: false, message },
+        { status: 400, headers: { 'Cache-Control': 'no-store' } }
+    );
+}
+
+function secretsMatch(expected, supplied) {
+    if (!expected || !supplied) return false;
+    const expectedBuffer = Buffer.from(expected);
+    const suppliedBuffer = Buffer.from(supplied);
+    return expectedBuffer.length === suppliedBuffer.length
+        && crypto.timingSafeEqual(expectedBuffer, suppliedBuffer);
+}
+
+function normalizeSlug(value) {
+    if (!value) return null;
+    if (typeof value !== 'string' || value.length > 200 || value.includes('..')) return null;
+    const slug = value.replace(/^\/+|\/+$/g, '');
+    return slug && VALID_SLUG.test(slug) ? slug.toLowerCase() : null;
+}
+
+function normalizePaths(value) {
+    if (value === undefined) return [];
+    if (!Array.isArray(value) || value.length > 20) return null;
+
+    const paths = [];
+    for (const candidate of value) {
+        if (
+            typeof candidate !== 'string'
+            || candidate.length < 1
+            || candidate.length > 300
+            || !candidate.startsWith('/')
+            || candidate.includes('..')
+            || /[\r\n]/.test(candidate)
+        ) {
+            return null;
+        }
+        paths.push(candidate.replace(/\/{2,}/g, '/'));
+    }
+    return [...new Set(paths)];
 }
 
 export async function POST(request) {
-    return handleRequest(request);
+    const suppliedSecret = request.headers.get('x-revalidate-secret');
+    if (
+        !secretsMatch(process.env.REVALIDATE_SECRET, suppliedSecret)
+    ) {
+        return unauthorized();
+    }
+
+    const body = await request.json().catch(() => null);
+    if (!body || !CONTENT_TYPES.has(body.contentType)) {
+        return invalid('Invalid content type');
+    }
+
+    const slug = normalizeSlug(body.slug);
+    if (body.slug && !slug) return invalid('Invalid slug');
+    const paths = normalizePaths(body.paths);
+    if (!paths) return invalid('Invalid paths');
+
+    const tags = new Set([`wp:${body.contentType}`]);
+    if (slug) tags.add(`wp:${body.contentType}:${slug}`);
+
+    for (const tag of tags) {
+        revalidateTag(tag, 'max');
+    }
+    for (const path of paths) {
+        revalidatePath(path);
+    }
+
+    return NextResponse.json(
+        {
+            revalidated: true,
+            contentType: body.contentType,
+            tags: [...tags],
+            paths,
+        },
+        { headers: { 'Cache-Control': 'no-store' } }
+    );
+}
+
+export function GET() {
+    return NextResponse.json(
+        { success: false, message: 'Method not allowed' },
+        {
+            status: 405,
+            headers: {
+                Allow: 'POST',
+                'Cache-Control': 'no-store',
+            },
+        }
+    );
 }

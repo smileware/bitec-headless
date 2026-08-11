@@ -6,7 +6,7 @@ export const defaultQueryOptions = {
   queries: {
     staleTime: 15 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    retry: 1,
+    retry: 0,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,

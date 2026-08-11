@@ -1,10 +1,5 @@
-import { GraphQLClient, gql } from "graphql-request";
-import { unstable_cache } from "next/cache";
-import { GRAPHQL_CACHE_TAG } from "./api";
-const endpoint = process.env.API_DOMAIN || "https://wordpress-1328545-5763448.cloudwaysapps.com/graphql";
-// Accept: */* required — the host WAF 403s application/json & the graphql-request
-// v7 default. See the note in lib/api.js.
-export const client = new GraphQLClient(endpoint, { headers: { Accept: '*/*' } });
+import { gql } from "graphql-request";
+import { requestGraphQL } from "./api";
 
 const FOOTER_QUERY = gql`
     query GetFooterReusableBlock {
@@ -35,28 +30,30 @@ const FOOTER_QUERY = gql`
 
 // The footer is the same reusable block on every page and rarely changes, but it
 // was refetched from WordPress on every request (no cache), adding latency to
-// every page. Cache the processed result and revalidate periodically; a failed
-// fetch is NOT cached (the throw propagates out of unstable_cache), so a WP blip
-// won't get pinned as an empty footer.
-const getCachedFooterData = unstable_cache(
-    async () => {
-        const { reusableBlock } = await client.request(FOOTER_QUERY);
-        return {
-            ...reusableBlock,
-            processedStyles: processEnqueuedStylesheets(reusableBlock?.enqueuedStylesheets?.edges || []),
-            processedScripts: processEnqueuedScripts(reusableBlock?.enqueuedScripts?.edges || []),
-        };
-    },
-    ['footer-reusable-block'],
-    { revalidate: 1800, tags: [GRAPHQL_CACHE_TAG] }
-);
+// every page. The shared GraphQL wrapper caches only a validated response, so a
+// WordPress blip cannot pin an empty footer.
+async function getCachedFooterData({ signal } = {}) {
+    const { reusableBlock } = await requestGraphQL(FOOTER_QUERY, {}, {
+        signal,
+        tags: ['wp:footer'],
+        validate: (result) => Boolean(result?.reusableBlock?.content),
+    });
+    return {
+        ...reusableBlock,
+        processedStyles: processEnqueuedStylesheets(reusableBlock?.enqueuedStylesheets?.edges || []),
+        processedScripts: processEnqueuedScripts(reusableBlock?.enqueuedScripts?.edges || []),
+    };
+}
 
 // Server-side function to fetch footer data
-export async function getFooterData() {
+export async function getFooterData({ throwOnError = false, signal } = {}) {
     try {
-        return await getCachedFooterData();
+        return await getCachedFooterData({ signal });
     } catch (error) {
-        console.error('Error fetching footer data:', error);
+        if (error?.name !== 'AbortError') {
+            console.error(`[footer] outcome=error name=${error?.name || 'Error'}`);
+        }
+        if (throwOnError) throw error;
         return {
             content: '',
             processedStyles: [],

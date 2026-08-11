@@ -1,6 +1,6 @@
 import { gql } from 'graphql-request';
 import { cache } from 'react';
-import { graphQLClient, getGreenshiftScripts } from './api';
+import { graphQLClient, requestGraphQL } from './api';
 
 export const getGalleryBySlug = cache(getGalleryBySlugRaw);
 
@@ -68,7 +68,12 @@ async function getGalleryBySlugRaw(slug) {
 } 
 
 
-export async function GetGalleryByTaxonomyType(taxonomySlug, limit = 12, after = null) {
+export async function GetGalleryByTaxonomyType(
+    taxonomySlug,
+    limit = 12,
+    after = null,
+    options = {}
+) {
     const query = `
         query GalleriesByType($slug: [String], $first: Int, $after: String) {
             galleries(
@@ -125,7 +130,7 @@ export async function GetGalleryByTaxonomyType(taxonomySlug, limit = 12, after =
         after: after,
     };
 
-    const data = await graphQLClient.request(query, variables);
+    const data = await requestGraphQL(query, variables, options);
 
     if (!data?.galleries?.nodes) {
         return { galleries: [], pageInfo: { hasNextPage: false, endCursor: null } };
@@ -137,7 +142,7 @@ export async function GetGalleryByTaxonomyType(taxonomySlug, limit = 12, after =
     };
 }
 
-export async function getGalleryTypeBySlug(slug) {
+export async function getGalleryTypeBySlug(slug, options = {}) {
     const query = `
         query GalleryTypeBySlug($slug: [String]) {
             galleryTypes(where: { slug: $slug }) {
@@ -151,6 +156,6 @@ export async function getGalleryTypeBySlug(slug) {
         }
     `;
     const variables = { slug: [slug] };
-    const data = await graphQLClient.request(query, variables);
+    const data = await requestGraphQL(query, variables, options);
     return data.galleryTypes?.nodes?.[0] || null;
 }

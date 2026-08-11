@@ -366,7 +366,7 @@ export async function getAllEventCategories() {
         return categoriesWithPosts;
 
     } catch (error) {
-        console.error('Error fetching event categories:', error);
+        console.error(`[events] operation=categories outcome=error name=${error?.name || 'Error'}`);
         return [];
     }
 }
@@ -433,9 +433,10 @@ export async function getFilteredEvents(filters = {}) {
         }
     `;
     
-    // Fetch a large number of events to ensure we get all relevant ones
+    // Legacy server-only fallback. Dynamic archives use the bounded lean REST
+    // path in eventContent.js; never restore an unbounded GraphQL fan-out here.
     const variables = { 
-        first: 1000 // Fetch more events to ensure we don't miss any
+        first: 24
     };
     
     const data = await graphQLClient.request(query, variables);
@@ -554,7 +555,7 @@ export async function getFilteredEvents(filters = {}) {
 export async function getAllEventYears() {
     const query = gql`
         query GetAllEventYears {
-            events(first: 1000, where: {orderby: {field: DATE, order: DESC}}) {
+            events(first: 24, where: {orderby: {field: DATE, order: DESC}}) {
                 nodes {
                     eventFieldGroup {
                         eventStartdate
@@ -584,5 +585,3 @@ export async function getAllEventYears() {
     // Convert to array and sort in descending order (newest first)
     return Array.from(years).sort((a, b) => b - a);
 }
-
-

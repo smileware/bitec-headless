@@ -13,7 +13,7 @@ import GlobalCmsStyles from './components/layout/GlobalCmsStyles';
 import './globals.css';
 import './css/scss/main.scss';
 
-export const revalidate = 1800;
+export const revalidate = 7200;
 
 export async function generateMetadata() {
   try {

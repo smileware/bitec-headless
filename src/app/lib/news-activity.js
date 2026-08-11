@@ -12,9 +12,15 @@ const NEWS_ACTIVITY_CATEGORY_IDS = {
     blog: ['54'],
 };
 
-export async function getNewsActivityContent(page = 1, perPage = 9, language = 'en', filter = 'news') {
+export async function getNewsActivityContent(
+    page = 1,
+    perPage = 9,
+    language = 'en',
+    filter = 'news',
+    options = {}
+) {
     const categoryIds = NEWS_ACTIVITY_CATEGORY_IDS[filter] || NEWS_ACTIVITY_CATEGORY_IDS.news;
-    return getPostsFromRest({ page, perPage, language, categoryIds });
+    return getPostsFromRest({ page, perPage, language, categoryIds }, options);
 }
 
 const wordpressOrigin = (
@@ -30,6 +36,15 @@ function decodeTitle(value = '') {
         .replace(/&#039;|&apos;/g, "'")
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>');
+}
+
+function cacheTtlFor(value) {
+    const source = String(value);
+    let hash = 0;
+    for (let index = 0; index < source.length; index += 1) {
+        hash = ((hash << 5) - hash + source.charCodeAt(index)) | 0;
+    }
+    return 3600 + (Math.abs(hash) % 3601);
 }
 
 function normalizeRestPost(post, language) {
@@ -55,7 +70,7 @@ function normalizeRestPost(post, language) {
     };
 }
 
-async function getPostsFromRest({ page, perPage, language, categoryIds }) {
+async function getPostsFromRest({ page, perPage, language, categoryIds }, { signal } = {}) {
     const size = Math.min(Math.max(perPage, 1), 24);
     const offset = (Math.max(page, 1) - 1) * size;
     const url = new URL('/wp-json/wp/v2/posts', wordpressOrigin);
@@ -70,10 +85,11 @@ async function getPostsFromRest({ page, perPage, language, categoryIds }) {
     url.searchParams.set('_fields', 'id,slug,title,date,_links,_embedded');
 
     const response = await fetch(url, {
+        signal,
         headers: { Accept: 'application/json' },
         next: {
-            revalidate: 1800,
-            tags: [GRAPHQL_CACHE_TAG],
+            revalidate: cacheTtlFor(url),
+            tags: [GRAPHQL_CACHE_TAG, 'wp:post'],
         },
     });
 
@@ -114,15 +130,22 @@ async function postExistsInRest(slug, language) {
     return posts.length > 0;
 }
 
-// Wrapped in React cache() so metadata + page body (and both language variants
-// that resolve the same base post) share ONE GraphQL request per render instead
-// of hitting the Cloudways endpoint 2x per page load. Combined with the page-level
-// ISR (revalidate) below, Cloudways is hit at most once per post per 30 min.
+function normalizeWordPressSlug(slug) {
+    // WordPress stores non-ASCII post_name values with lowercase percent
+    // escapes. Next route params can preserve uppercase escapes, which REST
+    // accepts but WPGraphQL's SLUG lookup compares case-sensitively.
+    return String(slug || '').replace(/%[0-9A-F]{2}/g, (escape) => escape.toLowerCase());
+}
+
+// Wrapped in React cache() so metadata + page body share one lookup per render
+// instead of hitting Cloudways twice. Route-level ISR provides the two-hour
+// fallback; the webhook normally revalidates an edited detail path earlier.
 export const getPostBySlug = cache(getPostBySlugRaw);
 
 async function getPostBySlugRaw(slug, language = 'en') {
+    const normalizedSlug = normalizeWordPressSlug(slug);
     const query = gql`
-        query GetPublishedPostBySlugV2($slug: ID!) {
+        query GetPublishedPostBySlugV3($slug: ID!) {
             post(id: $slug, idType: SLUG) {
                 id
                 slug
@@ -130,6 +153,9 @@ async function getPostBySlugRaw(slug, language = 'en') {
                 date
                 excerpt
                 content
+                language {
+                    code
+                }
                 featuredImage {
                     node {
                         sourceUrl
@@ -148,6 +174,9 @@ async function getPostBySlugRaw(slug, language = 'en') {
                     title
                     excerpt
                     content
+                    language {
+                        code
+                    }
                     greenshiftInlineCss
                     enqueuedStylesheets(first: 50) {
                         edges { node { handle, after } }
@@ -169,7 +198,7 @@ async function getPostBySlugRaw(slug, language = 'en') {
         }
     `;
 
-    const variables = { slug };
+    const variables = { slug: normalizedSlug };
     // Detail pages already have route-level ISR. Bypass the generic data cache
     // here so a transient successful `{ post: null }` response cannot poison a
     // published article for the whole cache TTL.
@@ -177,8 +206,8 @@ async function getPostBySlugRaw(slug, language = 'en') {
     const post = data.post;
 
     if (!post) {
-        if (await postExistsInRest(slug, language)) {
-            throw new Error(`GraphQL returned null for published post: ${slug}`);
+        if (await postExistsInRest(normalizedSlug, language)) {
+            throw new Error('GraphQL returned null for a published post');
         }
         return null;
     }
@@ -192,15 +221,20 @@ async function getPostBySlugRaw(slug, language = 'en') {
         }));
     }
 
-    if (language === 'th' && post.translations && post.translations.length > 0) {
-        const thaiTranslation = post.translations[0];
+    const requestedLanguage = language === 'th' ? 'th' : 'en';
+    const postLanguage = post.language?.code?.toLowerCase();
+    const requestedTranslation = post.translations?.find(
+        (translation) => translation?.language?.code?.toLowerCase() === requestedLanguage
+    );
+
+    if (postLanguage && postLanguage !== requestedLanguage && requestedTranslation) {
         return {
             ...post,
-            title: thaiTranslation.title || post.title,
-            excerpt: thaiTranslation.excerpt || post.excerpt,
-            content: thaiTranslation.content || post.content,
-            slug: thaiTranslation.slug || post.slug,
-            greenshiftInlineCss: thaiTranslation.greenshiftInlineCss || post.greenshiftInlineCss,
+            title: requestedTranslation.title || post.title,
+            excerpt: requestedTranslation.excerpt || post.excerpt,
+            content: requestedTranslation.content || post.content,
+            slug: requestedTranslation.slug || post.slug,
+            greenshiftInlineCss: requestedTranslation.greenshiftInlineCss || post.greenshiftInlineCss,
             greenshiftScripts: getGreenshiftScripts(post.enqueuedScripts?.edges || [])
         };
     }
@@ -213,11 +247,16 @@ async function getPostBySlugRaw(slug, language = 'en') {
 
 
 
-export async function getNewsActivitySustainability(page = 1, perPage = 6, language = 'en') {
+export async function getNewsActivitySustainability(
+    page = 1,
+    perPage = 6,
+    language = 'en',
+    options = {}
+) {
     // Category IDs for news and activity - different IDs for English and Thai
     const categoryIds = language === 'th' 
         ? ['47']
         : ['33'];
 
-    return getPostsFromRest({ page, perPage, language, categoryIds });
+    return getPostsFromRest({ page, perPage, language, categoryIds }, options);
 }

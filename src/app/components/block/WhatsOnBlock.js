@@ -103,7 +103,6 @@ export default function WhatsOnBlock(props) {
     // Use refs to track if we've initialized to prevent infinite loops
     const categoriesInitialized = useRef(false);
     const yearsInitialized = useRef(false);
-    const lastEventsLength = useRef(0);
     
     // Set categories and years when data loads (only once)
     useEffect(() => {
@@ -120,20 +119,23 @@ export default function WhatsOnBlock(props) {
         }
     }, [yearsData.length]);
 
-    // Update events when result changes - only if length actually changed
+    // Never keep events from the previous filter visible while the next query
+    // is loading. This also avoids treating equal-length result sets as equal.
+    useEffect(() => {
+        setEvents([]);
+        setHasMore(false);
+        setTotalEvents(0);
+        setPage(1);
+    }, [filters.categoryId, filters.eventType, filters.month, filters.year, perPage]);
+
     useEffect(() => {
         if (eventsResult && eventsResult.events) {
-            const currentLength = eventsResult.events.length;
-            // Only update if the events array length changed (new data arrived)
-            if (currentLength !== lastEventsLength.current) {
-                setEvents(eventsResult.events);
-                setHasMore(eventsResult.hasMore || false);
-                setTotalEvents(eventsResult.total || 0);
-                setPage(1);
-                lastEventsLength.current = currentLength;
-            }
+            setEvents(eventsResult.events);
+            setHasMore(eventsResult.hasMore || false);
+            setTotalEvents(eventsResult.total || 0);
+            setPage(1);
         }
-    }, [eventsResult?.events?.length, eventsResult?.hasMore, eventsResult?.total]);
+    }, [eventsResult]);
 
     const loading = eventsLoading;
 
@@ -141,22 +143,21 @@ export default function WhatsOnBlock(props) {
         if (!hasMore || loadingMore) return;
         
         setLoadingMore(true);
-        console.log('Loading more events... Current page:', page, 'Current events:', events.length);
-        
         try {
             const nextPage = page + 1;
             const perPage = isMobile ? 6 : 12; // 6 for mobile, 12 for desktop
             const result = await fetchContentApi('/api/content/events', {
+                mode: 'filtered',
                 ...filters,
                 page: nextPage,
-                perPage: perPage
+                perPage: perPage,
+                language: pathname.startsWith('/th') ? 'th' : 'en',
             });
             
             
             // Simply append the new events
             setEvents(prev => {
                 const updatedEvents = [...prev, ...result.events];
-                console.log('Updated events total:', updatedEvents.length);
                 return updatedEvents;
             });
             setHasMore(result.hasMore);

@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
-import { getWPMLLanguages } from '../lib/languages';
 import { getSlugAndLanguageFromPathname } from '../lib/pageContext';
-import { SkeletonButton } from './ui/Skeleton';
 
 const FALLBACK_LANGUAGES = [
   {
@@ -28,8 +26,7 @@ function flagSrc(lang) {
 }
 
 export default function LanguageSwitcher() {
-  const [languages, setLanguages] = useState(FALLBACK_LANGUAGES);
-  const [loading, setLoading] = useState(true);
+  const languages = FALLBACK_LANGUAGES;
   const [isOpen, setIsOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const pathname = usePathname();
@@ -40,29 +37,6 @@ export default function LanguageSwitcher() {
     () => getSlugAndLanguageFromPathname(pathname).language,
     [pathname]
   );
-
-  // Fetch WPML list once (not on every pathname change).
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchLanguages() {
-      try {
-        const langs = await getWPMLLanguages();
-        if (!cancelled && langs?.length) {
-          setLanguages(langs);
-        }
-      } catch (error) {
-        console.error('Error loading languages:', error);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    fetchLanguages();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     setIsSwitching(false);
@@ -120,12 +94,6 @@ export default function LanguageSwitcher() {
     // matching the behaviour that already works on a direct visit.
     window.location.assign(newUrl);
   };
-
-  // With fallbacks we can always show the control; only skeleton on first paint
-  // before fallbacks are applied (effectively never after first render).
-  if (loading && languages.length === 0) {
-    return <SkeletonButton className="language-switcher" />;
-  }
 
   if (languages.length <= 1) {
     return null;

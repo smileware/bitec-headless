@@ -4,69 +4,40 @@ import { useQuery } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
 import { getSlugAndLanguageFromPathname } from '../lib/pageContext';
 import { BLOCK_QUERY_STALE_TIME, EVENTS_QUERY_STALE_TIME } from '../lib/queryDefaults';
-import {
-    GetPageWithEventHallCarousel,
-    GetPageWithBitecLiveHallCarousel,
-    GetHotels,
-    GetPageWithQueryGalleryByType,
-    GetGalleryByTaxonomyType,
-    GetPageWithPhotoGallery,
-    GetPageWithBitecLiveFacilities,
-    GetPageWithBitecLiveGallery,
-    GetPageWithSimpleGalleryCarousel,
-    GetPageWithTabToAccordion,
-    GetPageWithRetailInformation,
-    GetPageWithDisplayGalleryByType,
-    GetGalleriesByTypes,
-    GetAllHotels,
-    GetAllCategories,
-    GetRecommendedHotels,
-} from '../lib/block';
-import {
-    getFilteredEvents,
-    getAllEventCategories,
-    getAllEventYears,
-    getRecentEvents,
-    getRecentBitecLiveEvents,
-} from '../lib/event';
-import {
-    getNewsActivityContent,
-    getNewsActivitySustainability,
-} from '../lib/news-activity';
 import { fetchContentApi } from '../lib/clientContentApi';
 
-function getNewsActivityQuery(page, perPage, language, filter) {
-    if (typeof window === 'undefined') {
-        return getNewsActivityContent(page, perPage, language, filter);
-    }
-
+function getNewsActivityQuery(page, perPage, language, filter, signal) {
     return fetchContentApi('/api/content/news', {
         page,
         perPage,
         language,
         filter,
-    });
+    }, { signal });
 }
 
-function getSustainabilityQuery(page, perPage, language) {
-    if (typeof window === 'undefined') {
-        return getNewsActivitySustainability(page, perPage, language);
-    }
-
+function getSustainabilityQuery(page, perPage, language, signal) {
     return fetchContentApi('/api/content/news', {
         type: 'sustainability',
         page,
         perPage,
         language,
-    });
+    }, { signal });
 }
 
-function getFilteredEventsQuery(filters) {
-    if (typeof window === 'undefined') {
-        return getFilteredEvents(filters);
-    }
+function getEventsQuery(mode, params, signal) {
+    return fetchContentApi('/api/content/events', { mode, ...params }, { signal });
+}
 
-    return fetchContentApi('/api/content/events', filters);
+function getHotelsQuery(mode, params, signal) {
+    return fetchContentApi('/api/content/hotels', { mode, ...params }, { signal });
+}
+
+function getPageBlockQuery(operation, params, signal) {
+    return fetchContentApi(
+        '/api/content/page-blocks',
+        { operation, ...params },
+        { signal }
+    );
 }
 
 function useSlugAndLanguage() {
@@ -75,20 +46,28 @@ function useSlugAndLanguage() {
 }
 
 export function useRecentEvents(limit = 9) {
+    const { language } = useSlugAndLanguage();
     return useQuery({
-        queryKey: ['recentEvents', limit],
-        queryFn: () => getRecentEvents(limit),
+        queryKey: ['recentEvents', limit, language],
+        queryFn: ({ signal }) => getEventsQuery('recent', { limit, language }, signal),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
 export function useRecentBitecLiveEvents(locationId = 'Bitec Live', limit = 9) {
+    const { language } = useSlugAndLanguage();
     return useQuery({
-        queryKey: ['recentBitecLiveEvents', locationId, limit],
-        queryFn: () => getRecentBitecLiveEvents(locationId, limit),
+        queryKey: ['recentBitecLiveEvents', locationId, limit, language],
+        queryFn: ({ signal }) => getEventsQuery(
+            'bitec-live',
+            { locationId, limit, language },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
@@ -96,9 +75,14 @@ export function useRecommendedHotels(limit = 8) {
     const { isTH } = useSlugAndLanguage();
     return useQuery({
         queryKey: ['recommendedHotels', limit, isTH],
-        queryFn: () => GetRecommendedHotels(limit, isTH),
+        queryFn: ({ signal }) => getHotelsQuery(
+            'recommended',
+            { limit, language: isTH ? 'th' : 'en' },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
@@ -106,7 +90,7 @@ export function useNewsActivity(page = 1, filter = 'news', perPage = 9) {
     const { language } = useSlugAndLanguage();
     return useQuery({
         queryKey: ['newsActivity', page, language, filter, perPage],
-        queryFn: () => getNewsActivityQuery(page, perPage, language, filter),
+        queryFn: ({ signal }) => getNewsActivityQuery(page, perPage, language, filter, signal),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
         retry: 0,
@@ -117,7 +101,7 @@ export function useNewsActivitySustainability(page = 1, perPage = 6) {
     const { language } = useSlugAndLanguage();
     return useQuery({
         queryKey: ['newsActivitySustainability', page, language, perPage],
-        queryFn: () => getSustainabilityQuery(page, perPage, language),
+        queryFn: ({ signal }) => getSustainabilityQuery(page, perPage, language, signal),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
         retry: 0,
@@ -129,9 +113,14 @@ export function useEventHallCarousel() {
 
     return useQuery({
         queryKey: ['eventHallCarousel', slug, isTH],
-        queryFn: () => GetPageWithEventHallCarousel(slug, isTH),
+        queryFn: ({ signal }) => getPageBlockQuery(
+            'event-hall-carousel',
+            { slug, language: isTH ? 'th' : 'en' },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
@@ -140,18 +129,24 @@ export function useBitecLiveHallCarousel() {
 
     return useQuery({
         queryKey: ['bitecLiveHallCarousel', slug, isTH],
-        queryFn: () => GetPageWithBitecLiveHallCarousel(slug, isTH),
+        queryFn: ({ signal }) => getPageBlockQuery(
+            'bitec-live-hall-carousel',
+            { slug, language: isTH ? 'th' : 'en' },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
 export function useHotels(limit = 8) {
     return useQuery({
         queryKey: ['hotels', limit],
-        queryFn: () => GetHotels(limit),
+        queryFn: ({ signal }) => getHotelsQuery('list', { limit }, signal),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
@@ -160,21 +155,24 @@ export function useQueryGalleryByType() {
 
     return useQuery({
         queryKey: ['queryGalleryByType', slug, isTH],
-        queryFn: () => GetPageWithQueryGalleryByType(slug, isTH),
+        queryFn: ({ signal }) => getPageBlockQuery(
+            'query-gallery-by-type',
+            { slug, language: isTH ? 'th' : 'en' },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
 export function useGalleryByTaxonomyType(taxonomySlug, limit = 5, enabled = true) {
     return useQuery({
         queryKey: ['galleryByTaxonomy', taxonomySlug, limit],
-        queryFn: () => typeof window === 'undefined'
-            ? GetGalleryByTaxonomyType(taxonomySlug, limit)
-            : fetchContentApi('/api/content/galleries', {
+        queryFn: ({ signal }) => fetchContentApi('/api/content/galleries', {
                 slug: taxonomySlug,
                 limit,
-            }),
+            }, { signal }),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
         enabled: enabled && !!taxonomySlug,
@@ -187,9 +185,14 @@ export function usePhotoGallery() {
 
     return useQuery({
         queryKey: ['photoGallery', slug, isTH],
-        queryFn: () => GetPageWithPhotoGallery(slug, isTH),
+        queryFn: ({ signal }) => getPageBlockQuery(
+            'photo-gallery',
+            { slug, language: isTH ? 'th' : 'en' },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
@@ -198,9 +201,14 @@ export function useBitecLiveFacilities() {
 
     return useQuery({
         queryKey: ['bitecLiveFacilities', slug, isTH],
-        queryFn: () => GetPageWithBitecLiveFacilities(slug, isTH),
+        queryFn: ({ signal }) => getPageBlockQuery(
+            'bitec-live-facilities',
+            { slug, language: isTH ? 'th' : 'en' },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
@@ -209,9 +217,14 @@ export function useBitecLiveGallery() {
 
     return useQuery({
         queryKey: ['bitecLiveGallery', slug, isTH],
-        queryFn: () => GetPageWithBitecLiveGallery(slug, isTH),
+        queryFn: ({ signal }) => getPageBlockQuery(
+            'bitec-live-gallery',
+            { slug, language: isTH ? 'th' : 'en' },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
@@ -220,18 +233,28 @@ export function useSimpleGalleryCarousel() {
 
     return useQuery({
         queryKey: ['simpleGalleryCarousel', slug],
-        queryFn: () => GetPageWithSimpleGalleryCarousel(slug),
+        queryFn: ({ signal }) => getPageBlockQuery(
+            'simple-gallery-carousel',
+            { slug },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
 export function useTabAccordion(slug = 'plan-and-event') {
     return useQuery({
         queryKey: ['tabAccordion', slug],
-        queryFn: () => GetPageWithTabToAccordion(slug),
+        queryFn: ({ signal }) => getPageBlockQuery(
+            'tab-accordion',
+            { slug },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
@@ -240,23 +263,26 @@ export function useDisplayGalleryByType() {
 
     return useQuery({
         queryKey: ['displayGalleryByType', slug, isTH],
-        queryFn: () => GetPageWithDisplayGalleryByType(slug, isTH),
+        queryFn: ({ signal }) => getPageBlockQuery(
+            'display-gallery-by-type',
+            { slug, language: isTH ? 'th' : 'en' },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
 export function useGalleriesByTypes(typeSlugs, page = 1, perPage = 12, enabled = true) {
     return useQuery({
         queryKey: ['galleriesByTypes', typeSlugs, page, perPage],
-        queryFn: () => typeof window === 'undefined'
-            ? GetGalleriesByTypes(typeSlugs, page, perPage)
-            : fetchContentApi('/api/content/galleries', {
+        queryFn: ({ signal }) => fetchContentApi('/api/content/galleries', {
                 mode: 'types',
                 typeSlugs: typeSlugs?.join(',') || null,
                 page,
                 perPage,
-            }),
+            }, { signal }),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
         enabled,
@@ -269,9 +295,14 @@ export function useAllHotels() {
 
     return useQuery({
         queryKey: ['allHotels', isTH],
-        queryFn: () => GetAllHotels(isTH),
+        queryFn: ({ signal }) => getHotelsQuery(
+            'all',
+            { language: isTH ? 'th' : 'en' },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
@@ -280,13 +311,19 @@ export function useAllCategories() {
 
     return useQuery({
         queryKey: ['allCategories', isTH],
-        queryFn: () => GetAllCategories(isTH),
+        queryFn: ({ signal }) => getHotelsQuery(
+            'categories',
+            { language: isTH ? 'th' : 'en' },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
 export function useFilteredEvents(filters = {}, enabled = true) {
+    const { language } = useSlugAndLanguage();
     const queryKey = [
         'filteredEvents',
         filters.categoryId,
@@ -295,11 +332,16 @@ export function useFilteredEvents(filters = {}, enabled = true) {
         filters.year,
         filters.page,
         filters.perPage,
+        language,
     ];
 
     return useQuery({
         queryKey,
-        queryFn: () => getFilteredEventsQuery(filters),
+        queryFn: ({ signal }) => getEventsQuery(
+            'filtered',
+            { ...filters, language },
+            signal
+        ),
         staleTime: EVENTS_QUERY_STALE_TIME,
         refetchOnMount: false,
         enabled,
@@ -308,20 +350,24 @@ export function useFilteredEvents(filters = {}, enabled = true) {
 }
 
 export function useEventCategories() {
+    const { language } = useSlugAndLanguage();
     return useQuery({
-        queryKey: ['eventCategories'],
-        queryFn: () => getAllEventCategories(),
+        queryKey: ['eventCategories', language],
+        queryFn: ({ signal }) => getEventsQuery('categories', { language }, signal),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
 export function useEventYears() {
+    const { language } = useSlugAndLanguage();
     return useQuery({
-        queryKey: ['eventYears'],
-        queryFn: () => getAllEventYears(),
+        queryKey: ['eventYears', language],
+        queryFn: ({ signal }) => getEventsQuery('years', { language }, signal),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }
 
@@ -329,8 +375,13 @@ export function useRetailInformation() {
     const { slug, isTH } = useSlugAndLanguage();
     return useQuery({
         queryKey: ['retailInformation', slug, isTH],
-        queryFn: () => GetPageWithRetailInformation(slug, isTH),
+        queryFn: ({ signal }) => getPageBlockQuery(
+            'retail-information',
+            { slug, language: isTH ? 'th' : 'en' },
+            signal
+        ),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
+        retry: 0,
     });
 }

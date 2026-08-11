@@ -1,9 +1,5 @@
-import { GraphQLClient, gql } from 'graphql-request';
-
-const endpoint = process.env.API_DOMAIN || 'https://wordpress-1328545-5763448.cloudwaysapps.com/graphql';
-// Accept: */* required — the host WAF 403s application/json & the graphql-request
-// v7 default. See the note in lib/api.js.
-const client = new GraphQLClient(endpoint, { headers: { Accept: '*/*' } });
+import { gql } from 'graphql-request';
+import { requestGraphQL } from './api';
 
 export async function getWPMLLanguages() {
   const query = gql`
@@ -22,10 +18,10 @@ export async function getWPMLLanguages() {
   `;
 
   try {
-    const data = await client.request(query);
+    const data = await requestGraphQL(query, {}, { tags: ['wp:navigation'] });
     return data.languages || [];
   } catch (error) {
-    console.error('Error fetching languages:', error);
+    console.error(`[languages] operation=list outcome=error name=${error?.name || 'Error'}`);
     return [];
   }
 }
@@ -45,10 +41,12 @@ export async function getCurrentPageTranslations(slug) {
   `;
 
   try {
-    const data = await client.request(query, { slug });
+    const data = await requestGraphQL(query, { slug }, {
+      tags: ['wp:page', `wp:page:${slug}`],
+    });
     return data.pageBy?.translations || [];
   } catch (error) {
-    console.error('Error fetching page translations:', error);
+    console.error(`[languages] operation=translations outcome=error name=${error?.name || 'Error'}`);
     return [];
   }
-} 
+}

@@ -1,55 +1,17 @@
-import { GraphQLClient, gql } from 'graphql-request';
-import { unstable_cache } from 'next/cache';
-
-const endpoint = process.env.API_DOMAIN || 'https://wordpress-1328545-5763448.cloudwaysapps.com/graphql';
-// Accept: */* required — the host WAF 403s application/json & the graphql-request
-// v7 default. See the note in lib/api.js.
-export const client = new GraphQLClient(endpoint, { headers: { Accept: '*/*' } });
-
-// The Cloudways WordPress GraphQL endpoint is intermittently slow/unresponsive.
-// A bare client.request() can hang for 2+ minutes with no timeout. This wraps a
-// request with an abort-based timeout. Do not retry at this layer: a cold header
-// loads EN and TH in parallel, so one retry would turn an outage into four
-// concurrent WordPress requests. It THROWS rather than
-// returning empty data (empty data would get cached and hide the nav for
-// 5-30 min). See getHeaderData below.
-async function requestWithRetry(query, variables, { timeoutMs = 8000, retries = 0 } = {}) {
-    let lastError;
-    for (let attempt = 0; attempt <= retries; attempt++) {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), timeoutMs);
-        try {
-            return await client.request({ document: query, variables, signal: controller.signal });
-        } catch (error) {
-            lastError = error;
-        } finally {
-            clearTimeout(timer);
-        }
-    }
-    throw lastError;
-}
+import { gql } from 'graphql-request';
+import { requestGraphQL } from './api';
 
 // Server-side function to fetch all header data in one query (CACHED).
 // If the underlying fetch throws, unstable_cache does NOT cache the rejection,
 // so the next request retries the endpoint instead of serving a poisoned
 // (empty) header. The caller (SiteHeader / Suspense) is responsible for a
 // graceful fallback when this rejects.
-export async function getHeaderData(language = 'en') {
-    // Use unstable_cache to cache header data (menus don't change often)
-    return unstable_cache(
-        async () => {
-            return await fetchHeaderDataFromGraphQL(language);
-        },
-        [`header-data-${language}`],
-        {
-            revalidate: 30 * 60, // Cache for 30 minutes (menus rarely change)
-            tags: ['header-menu'],
-        }
-    )();
+export async function getHeaderData(language = 'en', options = {}) {
+    return fetchHeaderDataFromGraphQL(language, options);
 }
 
 // Internal function to actually fetch from GraphQL
-async function fetchHeaderDataFromGraphQL(language = 'en') {
+async function fetchHeaderDataFromGraphQL(language = 'en', options = {}) {
     const primaryMenuId = language === 'th' ? 12 : 3;
     const topMenuId = language === 'th' ? 13 : 4;
     const mobileMenuId = language === 'th' ? 16 : 15;
@@ -150,7 +112,11 @@ async function fetchHeaderDataFromGraphQL(language = 'en') {
         mobileMenuId 
     };
 
-    const data = await requestWithRetry(query, variables);
+    const data = await requestGraphQL(query, variables, {
+        signal: options.signal,
+        tags: ['wp:navigation', `wp:navigation:${language}`],
+        validate: (result) => (result?.primaryMenu?.menuItems?.nodes || []).length > 0,
+    });
 
     // Treat a response with no primary menu items as a failure too — a "success"
     // with empty menus would otherwise get cached and hide the nav. Throw so the
@@ -196,7 +162,7 @@ export async function getPrimaryMenu(language = 'en') {
     `;
 
     const variables = { menuId: menuId };
-    const data = await client.request(query, variables);
+    const data = await requestGraphQL(query, variables, { tags: ['wp:navigation'] });
     const menuItems = data.menu?.menuItems?.nodes || [];
     return {
       menuItems: menuItems
@@ -227,7 +193,7 @@ export async function getMobileMenu(language = 'en') {
   `;
 
   const variables = { menuId: menuId };
-  const data = await client.request(query, variables);
+  const data = await requestGraphQL(query, variables, { tags: ['wp:navigation'] });
   const menuMobileItems = data.menu?.menuItems?.nodes || [];
   return {
     menuMobileItems: menuMobileItems
@@ -254,7 +220,7 @@ export async function getTopMenu(language = 'en') {
     `;
 
     const variables = { menuId: menuId };
-    const data = await client.request(query, variables);
+    const data = await requestGraphQL(query, variables, { tags: ['wp:navigation'] });
     const menuTopItems = data.menu?.menuItems?.nodes || [];
     return {
       menuTopItems: menuTopItems
@@ -292,6 +258,6 @@ export async function getCTA() {
       }
     `;
 
-    const data = await client.request(query);
+    const data = await requestGraphQL(query, {}, { tags: ['wp:navigation'] });
     return data.themeGeneralSettings || {};
 }

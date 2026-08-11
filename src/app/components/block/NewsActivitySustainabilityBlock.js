@@ -7,14 +7,13 @@ import { useNewsActivitySustainability } from '../../hooks/useBlockQueries';
 export default function NewsActivitySustainabilityBlock(props) {
     const [currentPage, setCurrentPage] = useState(1);
 
-    const { data, isLoading, isFetching } = useNewsActivitySustainability(currentPage, 6);
+    const { data, isLoading } = useNewsActivitySustainability(currentPage, 6);
     const news = data?.content || [];
     const pageInfo = data?.pageInfo;
     const totalPages = pageInfo?.offsetPagination?.total
         ? Math.ceil(pageInfo.offsetPagination.total / 6)
         : 0;
-    const loading = isLoading || (isFetching && news.length === 0);
-    const showOverlaySpinner = isFetching && news.length > 0;
+    const loading = isLoading;
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
@@ -106,11 +105,6 @@ export default function NewsActivitySustainabilityBlock(props) {
 
             {renderPagination()}
 
-            {showOverlaySpinner && (
-                <div className="text-center py-4">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                </div>
-            )}
         </div>
     );
 }

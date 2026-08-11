@@ -1,7 +1,29 @@
 import { gql } from "graphql-request";
-import { graphQLClient } from "./api";
+import { graphQLClient, requestGraphQL } from "./api";
 
-export async function GetPageWithBitecLiveGallery(slug, preferTranslation = false) {
+function handleBlockRequestError(error, options, fallback, message) {
+    // A 1.5s prefetch-budget cancellation is expected: the client continues
+    // through the allowlisted same-origin API. Keep real origin failures noisy.
+    if (error?.name !== 'AbortError') {
+        console.error(`${message} name=${error?.name || 'Error'}`);
+    }
+    if (options?.throwOnError) throw error;
+    return fallback;
+}
+
+function withPageCacheTags(slug, options = {}) {
+    const normalizedSlug = String(slug || '').replace(/^\/+|\/+$/g, '').toLowerCase();
+    return {
+        ...options,
+        tags: [
+            ...(options.tags || []),
+            'wp:page',
+            ...(normalizedSlug ? [`wp:page:${normalizedSlug}`] : []),
+        ],
+    };
+}
+
+export async function GetPageWithBitecLiveGallery(slug, preferTranslation = false, options = {}) {
     const query = gql`
         query GetPageWithBitecLiveGallery($uri: String!) {
             pageBy(uri: $uri) {
@@ -41,10 +63,9 @@ export async function GetPageWithBitecLiveGallery(slug, preferTranslation = fals
     const variables = { uri: slug };
     let data;
     try {
-        data = await graphQLClient.request(query, variables);
+        data = await requestGraphQL(query, variables, withPageCacheTags(slug, options));
     } catch (error) {
-        console.error("GraphQL fetch error:", error);
-        return [];
+        return handleBlockRequestError(error, options, [], "GraphQL fetch error:");
     }
     // Manage Translate Content.
     const baseBlocks = data?.pageBy?.editorBlocks || [];
@@ -69,7 +90,7 @@ export async function GetPageWithBitecLiveGallery(slug, preferTranslation = fals
     return images;
 }
 
-export async function GetPageWithBitecLiveFacilities(slug, preferTranslation = false) {
+export async function GetPageWithBitecLiveFacilities(slug, preferTranslation = false, options = {}) {
     const query = gql`
         query GetPageWithBitecLiveFacilities($uri: String!) {
             pageBy(uri: $uri) {
@@ -145,11 +166,10 @@ export async function GetPageWithBitecLiveFacilities(slug, preferTranslation = f
     const variables = { uri: slug };
     let data;
     try {
-        data = await graphQLClient.request(query, variables);
+        data = await requestGraphQL(query, variables, withPageCacheTags(slug, options));
       
     } catch (error) {
-        console.error("GraphQL fetch error:", error);
-        return [];
+        return handleBlockRequestError(error, options, [], "GraphQL fetch error:");
     }
 
     const baseBlocks = data?.pageBy?.editorBlocks || [];
@@ -170,7 +190,7 @@ export async function GetPageWithBitecLiveFacilities(slug, preferTranslation = f
     return facilities;
 }
 
-export async function GetPageWithQueryGalleryByType(slug, preferTranslation = false) {
+export async function GetPageWithQueryGalleryByType(slug, preferTranslation = false, options = {}) {
     const query = gql`
         query GetPageWithQueryGalleryByType($uri: String!) {
             pageBy(uri: $uri) {
@@ -228,10 +248,9 @@ export async function GetPageWithQueryGalleryByType(slug, preferTranslation = fa
     const variables = { uri: slug };
     let data;
     try {
-        data = await graphQLClient.request(query, variables);
+        data = await requestGraphQL(query, variables, withPageCacheTags(slug, options));
     } catch (error) {
-        console.error("GraphQL fetch error:", error);
-        return null;
+        return handleBlockRequestError(error, options, null, "GraphQL fetch error:");
     }
 
     const baseBlocks = data?.pageBy?.editorBlocks || [];
@@ -242,7 +261,6 @@ export async function GetPageWithQueryGalleryByType(slug, preferTranslation = fa
     const galleryBlock = blocks.find((block) => block?.blockQueryGalleryByType);
 
     if (!galleryBlock) {
-        console.log("No gallery block found");
         return null;
     }
 
@@ -259,7 +277,7 @@ export async function GetPageWithQueryGalleryByType(slug, preferTranslation = fa
     return result;
 }
 
-export async function GetGalleryByTaxonomyType(taxonomySlug, limit = 12) {
+export async function GetGalleryByTaxonomyType(taxonomySlug, limit = 12, options = {}) {
     // Query galleries filtered by taxonomy slug
     const taxonomyQuery = gql`
         query GetGalleryByTaxonomyType($taxonomySlug: [String]!, $limit: Int!) {
@@ -300,18 +318,17 @@ export async function GetGalleryByTaxonomyType(taxonomySlug, limit = 12) {
     `;
 
     try {
-        const data = await graphQLClient.request(taxonomyQuery, {
+        const data = await requestGraphQL(taxonomyQuery, {
             taxonomySlug: [taxonomySlug],
             limit,
-        });
+        }, options);
         return data?.galleries?.nodes || [];
     } catch (error) {
-        console.error("GraphQL fetch error for gallery items:", error);
-        return [];
+        return handleBlockRequestError(error, options, [], "GraphQL fetch error for gallery items:");
     }
 }
 
-export async function GetPageWithDisplayGalleryByType(slug, preferTranslation = false) {
+export async function GetPageWithDisplayGalleryByType(slug, preferTranslation = false, options = {}) {
     const query = gql`
         query GetPageWithDisplayGalleryByType($uri: String!) {
             pageBy(uri: $uri) {
@@ -356,7 +373,7 @@ export async function GetPageWithDisplayGalleryByType(slug, preferTranslation = 
     const variables = { uri: slug };
     
     try {
-        const data = await graphQLClient.request(query, variables);
+        const data = await requestGraphQL(query, variables, withPageCacheTags(slug, options));
         const baseBlocks = data?.pageBy?.editorBlocks || [];
         const transBlocks = data?.pageBy?.translations?.[0]?.editorBlocks || [];
         const blocks = (preferTranslation && transBlocks?.length) ? transBlocks : baseBlocks;
@@ -364,7 +381,6 @@ export async function GetPageWithDisplayGalleryByType(slug, preferTranslation = 
         const galleryBlock = blocks.find((block) => block?.blockDisplayGalleryByType);
         
         if (!galleryBlock) {
-            console.log("No display gallery block found");
             return null;
         }
         
@@ -377,12 +393,11 @@ export async function GetPageWithDisplayGalleryByType(slug, preferTranslation = 
             displayGalleryByType: selectedTypes.length > 0 ? selectedTypes : null,
         };
     } catch (error) {
-        console.error("GraphQL fetch error:", error);
-        return null;
+        return handleBlockRequestError(error, options, null, "GraphQL fetch error:");
     }
 }
 
-export async function GetGalleriesByTypes(typeSlugs = null, page = 1, perPage = 12) {
+export async function GetGalleriesByTypes(typeSlugs = null, page = 1, perPage = 12, options = {}) {
     const size = Math.min(Math.max(perPage, 1), 24);
     const offset = (Math.max(page, 1) - 1) * size;
 
@@ -461,19 +476,17 @@ export async function GetGalleriesByTypes(typeSlugs = null, page = 1, perPage = 
         
         if (typeSlugs && typeSlugs.length > 0) {
             // Fetch galleries by selected types
-            console.log('Fetching galleries by types:', typeSlugs);
-            data = await graphQLClient.request(queryWithFilter, {
+            data = await requestGraphQL(queryWithFilter, {
                 typeSlugs: typeSlugs,
                 size,
                 offset,
-            });
+            }, options);
         } else {
             // No types selected, fetch all galleries
-            console.log('No types selected, fetching all galleries');
-            data = await graphQLClient.request(queryAll, {
+            data = await requestGraphQL(queryAll, {
                 size,
                 offset,
-            });
+            }, options);
         }
         
         return {
@@ -483,15 +496,14 @@ export async function GetGalleriesByTypes(typeSlugs = null, page = 1, perPage = 
             },
         };
     } catch (error) {
-        console.error("GraphQL fetch error for galleries:", error);
-        return {
+        return handleBlockRequestError(error, options, {
             content: [],
             pageInfo: { offsetPagination: { total: 0 } },
-        };
+        }, "GraphQL fetch error for galleries:");
     }
 }
 
-export async function GetPageWithTabToAccordion(slug) {
+export async function GetPageWithTabToAccordion(slug, options = {}) {
     const query = gql`
         query GetPageWithTabToAccordion($uri: String!) {
             pageBy(uri: $uri) {
@@ -523,16 +535,14 @@ export async function GetPageWithTabToAccordion(slug) {
     const variables = { uri: slug };
     let data;
     try {
-        data = await graphQLClient.request(query, variables);
+        data = await requestGraphQL(query, variables, withPageCacheTags(slug, options));
     } catch (error) {
-        console.error("GraphQL fetch error:", error);
-        return null;
+        return handleBlockRequestError(error, options, null, "GraphQL fetch error:");
     }
     const blocks = data?.pageBy?.editorBlocks || [];
     const tabBlock = blocks.find((block) => block?.blockTabToAccordion);
 
     if (!tabBlock) {
-        console.log("No tab to accordion block found");
         return null;
     }
 
@@ -553,7 +563,7 @@ export async function GetPageWithTabToAccordion(slug) {
     };
 }
 
-export async function GetPageWithEventHallCarousel(slug, preferTranslation = false) {
+export async function GetPageWithEventHallCarousel(slug, preferTranslation = false, options = {}) {
     const query = gql`
         query GetPageWithEventHallCarousel($uri: String!) {
             pageBy(uri: $uri) {
@@ -669,10 +679,9 @@ export async function GetPageWithEventHallCarousel(slug, preferTranslation = fal
     const variables = { uri: slug };
     let data;
     try {
-        data = await graphQLClient.request(query, variables);
+        data = await requestGraphQL(query, variables, withPageCacheTags(slug, options));
     } catch (error) {
-        console.error("GraphQL fetch error:", error);
-        return null;
+        return handleBlockRequestError(error, options, null, "GraphQL fetch error:");
     }
 
     // Manage Translate Content.
@@ -685,7 +694,6 @@ export async function GetPageWithEventHallCarousel(slug, preferTranslation = fal
     );
 
     if (eventHallBlocks.length === 0) {
-        console.log("No event hall carousel blocks found");
         return null;
     }
 
@@ -741,7 +749,7 @@ export async function GetPageWithEventHallCarousel(slug, preferTranslation = fal
     };
 }
 
-export async function GetPageWithBitecLiveHallCarousel(slug, preferTranslation = false) {
+export async function GetPageWithBitecLiveHallCarousel(slug, preferTranslation = false, options = {}) {
     const query = gql`
         query GetPageWithBitecLiveHallCarousel($uri: String!) {
             pageBy(uri: $uri) {
@@ -797,10 +805,9 @@ export async function GetPageWithBitecLiveHallCarousel(slug, preferTranslation =
     const variables = { uri: slug };
     let data;
     try {
-        data = await graphQLClient.request(query, variables);
+        data = await requestGraphQL(query, variables, withPageCacheTags(slug, options));
     } catch (error) {
-        console.error("GraphQL fetch error:", error);
-        return null;
+        return handleBlockRequestError(error, options, null, "GraphQL fetch error:");
     }
 
     // Manage Translate Content.
@@ -813,7 +820,6 @@ export async function GetPageWithBitecLiveHallCarousel(slug, preferTranslation =
     );
     
     if (!bitecLiveHallBlocks.length) {
-        console.log("No BitecLive hall carousel block found");
         return null;
     }
     
@@ -839,7 +845,7 @@ export async function GetPageWithBitecLiveHallCarousel(slug, preferTranslation =
     return { bitecLiveHalls };
 }
 
-export async function GetPageWithPhotoGallery(slug, preferTranslation = false) {
+export async function GetPageWithPhotoGallery(slug, preferTranslation = false, options = {}) {
     const query = gql`
         query GetPageWithPhotoGallery($uri: String!) {
             pageBy(uri: $uri) {
@@ -887,10 +893,14 @@ export async function GetPageWithPhotoGallery(slug, preferTranslation = false) {
     const variables = { uri: slug };
     let data;
     try {
-        data = await graphQLClient.request(query, variables);
+        data = await requestGraphQL(query, variables, withPageCacheTags(slug, options));
     } catch (error) {
-        console.error("GraphQL fetch error:", error);
-        return { photoGalleries: [] };
+        return handleBlockRequestError(
+            error,
+            options,
+            { photoGalleries: [] },
+            "GraphQL fetch error:"
+        );
     }
     
 
@@ -929,7 +939,7 @@ export async function GetPageWithPhotoGallery(slug, preferTranslation = false) {
     return { photoGalleries: photoGalleries };
 }
 
-export async function GetPageWithSimpleGalleryCarousel(slug) {
+export async function GetPageWithSimpleGalleryCarousel(slug, options = {}) {
     const query = gql`
         query GetPageWithSimpleGalleryCarousel($uri: String!) {
             pageBy(uri: $uri) {
@@ -957,10 +967,14 @@ export async function GetPageWithSimpleGalleryCarousel(slug) {
     const variables = { uri: slug };
     let data;
     try {
-        data = await graphQLClient.request(query, variables);
+        data = await requestGraphQL(query, variables, withPageCacheTags(slug, options));
     } catch (error) {
-        console.error("GraphQL fetch error:", error);
-        return { simpleGalleryCarousels: [] };
+        return handleBlockRequestError(
+            error,
+            options,
+            { simpleGalleryCarousels: [] },
+            "GraphQL fetch error:"
+        );
     }
     
     const blocks = data?.pageBy?.editorBlocks || [];
@@ -993,7 +1007,7 @@ export async function GetPageWithSimpleGalleryCarousel(slug) {
     return { simpleGalleryCarousels: simpleGalleryCarousels };
 }
 
-export async function GetHotels(limit = 8) {
+export async function GetHotels(limit = 8, options = {}) {
     const query = gql`
         query GetHotels($limit: Int!) {
             hotels(
@@ -1039,15 +1053,14 @@ export async function GetHotels(limit = 8) {
     `;
 
     try {
-        const data = await graphQLClient.request(query, { limit });
+        const data = await requestGraphQL(query, { limit }, options);
         return data?.hotels?.nodes || [];
     } catch (error) {
-        console.error("GraphQL fetch error for hotels:", error);
-        return [];
+        return handleBlockRequestError(error, options, [], "GraphQL fetch error for hotels:");
     }
 }
 
-export async function GetRecommendedHotels(limit = 8, isTH = false) {
+export async function GetRecommendedHotels(limit = 8, isTH = false, options = {}) {
     const terms = isTH ? ["recommend-th"] : ["recommend", "highlight"];
     const query = gql`
         query GetRecommendedHotels($limit: Int!, $terms: [String]) {
@@ -1130,7 +1143,7 @@ export async function GetRecommendedHotels(limit = 8, isTH = false) {
     `;
 
     try {
-        const data = await graphQLClient.request(query, { limit, terms });
+        const data = await requestGraphQL(query, { limit, terms }, options);
         const nodes = data?.hotels?.nodes || [];
       
         if (!isTH) return nodes;
@@ -1151,12 +1164,16 @@ export async function GetRecommendedHotels(limit = 8, isTH = false) {
         });
         
     } catch (error) {
-        console.error("GraphQL fetch error for recommended hotels:", error);
-        return [];
+        return handleBlockRequestError(
+            error,
+            options,
+            [],
+            "GraphQL fetch error for recommended hotels:"
+        );
     }
 }
 
-export async function GetAllHotels(isTH = false) {
+export async function GetAllHotels(isTH = false, options = {}) {
     const query = gql`
         query GetAllHotels {
             hotels(
@@ -1230,7 +1247,7 @@ export async function GetAllHotels(isTH = false) {
     `;
 
     try {
-        const data = await graphQLClient.request(query);
+        const data = await requestGraphQL(query, {}, options);
         const nodes = data?.hotels?.nodes || [];
     
         // EN (default)
@@ -1252,13 +1269,17 @@ export async function GetAllHotels(isTH = false) {
           };
         });
     } catch (error) {
-        console.error("GraphQL fetch error for hotels with coordinates:", error);
-        return [];
+        return handleBlockRequestError(
+            error,
+            options,
+            [],
+            "GraphQL fetch error for hotels with coordinates:"
+        );
     }
 }
 
 
-export async function GetAllCategories(isTH = false) {
+export async function GetAllCategories(isTH = false, options = {}) {
     const query = gql`
       query GetAllCategories {
         hotelCategories {
@@ -1279,7 +1300,7 @@ export async function GetAllCategories(isTH = false) {
     `;
     
     try {
-        const data = await graphQLClient.request(query);
+        const data = await requestGraphQL(query, {}, options);
         const nodes = data?.hotelCategories?.nodes ?? [];
         const cats = nodes
             .map(c => {
@@ -1295,12 +1316,16 @@ export async function GetAllCategories(isTH = false) {
         return cats.map(({ count, ...rest }) => rest);
 
     } catch (error) {
-        console.error("GraphQL fetch error for hotels with coordinates:", error);
-        return [];
+        return handleBlockRequestError(
+            error,
+            options,
+            [],
+            "GraphQL fetch error for hotel categories:"
+        );
     }
 }
 
-export async function GetPageWithRetailInformation(slug, preferTranslation = false) {
+export async function GetPageWithRetailInformation(slug, preferTranslation = false, options = {}) {
     const query = gql`
         query GetPageWithRetailInformation($uri: String!) {
             pageBy(uri: $uri) {
@@ -1369,10 +1394,14 @@ export async function GetPageWithRetailInformation(slug, preferTranslation = fal
     const variables = { uri: slug };
     let data;
     try {
-        data = await graphQLClient.request(query, variables);
+        data = await requestGraphQL(query, variables, withPageCacheTags(slug, options));
     } catch (error) {
-        console.error("GraphQL fetch error for retail information:", error);
-        return [];
+        return handleBlockRequestError(
+            error,
+            options,
+            [],
+            "GraphQL fetch error for retail information:"
+        );
     }
 
     const baseBlocks = data?.pageBy?.editorBlocks || [];

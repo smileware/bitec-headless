@@ -14,8 +14,10 @@ WordPress HTML → `BlockRenderer` → React block → React Query hook → `lib
 2. Create `src/app/components/block/{Name}Block.js` with `'use client'`
 3. Register in `BLOCK_MAP` in `BlockRenderer.js` (`startsWith: true` if ID has a dynamic suffix)
 4. Add `GetPageWith{Name}(slug, preferTranslation = false)` in `lib/block.js`
-5. Add `use{Name}()` in `hooks/useBlockQueries.js` (include `slug` + `isTH` in `queryKey`)
-6. Add styles in `css/scss/main.scss`
+5. Register an allowlisted operation in `/api/content/page-blocks`; never accept a raw query from the browser
+6. Add `use{Name}()` in `hooks/useBlockQueries.js` using `fetchContentApi` (include `slug` + `isTH` in `queryKey`)
+7. Register the identical server prefetch key/function and pass its AbortSignal to the domain helper
+8. Add styles in `css/scss/main.scss`
 
 ## Component conventions
 

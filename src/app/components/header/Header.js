@@ -8,7 +8,7 @@ import Nav from "./Nav";
 import TopNav from "./TopNav";
 import LanguageSwitcher from "../LanguageSwitcher";
 
-import { getPrimaryMenu, getTopMenu, getCTA, getMobileMenu, getHeaderData } from '../../lib/header';
+import { fetchContentApi } from '../../lib/clientContentApi';
 import { SkeletonText, SkeletonButton } from '../ui/Skeleton';
 
 export default function Header({ headerData = null, isServerSide = false }) {
@@ -59,7 +59,10 @@ export default function Header({ headerData = null, isServerSide = false }) {
             setIsMenuRefreshing(true);
             try {
                 // Use the new server-side function for better performance
-                const data = await getHeaderData(currentLang);
+                const data = await fetchContentApi('/api/content/chrome', {
+                    type: 'header',
+                    language: currentLang,
+                });
                 setMenuItems(data.primaryMenu?.menuItems || []);
                 setMenuTopItems(data.topMenu?.menuTopItems || []);
                 setMenuMobileItems(data.mobileMenu?.menuMobileItems || []);

@@ -1,4 +1,4 @@
-export async function fetchContentApi(path, params = {}) {
+export async function fetchContentApi(path, params = {}, { signal } = {}) {
     const searchParams = new URLSearchParams();
 
     Object.entries(params).forEach(([key, value]) => {
@@ -9,6 +9,7 @@ export async function fetchContentApi(path, params = {}) {
 
     const response = await fetch(`${path}?${searchParams.toString()}`, {
         headers: { Accept: 'application/json' },
+        signal,
     });
 
     if (!response.ok) {

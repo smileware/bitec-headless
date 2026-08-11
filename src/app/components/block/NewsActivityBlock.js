@@ -8,13 +8,12 @@ export default function NewsActivityBlock(props) {
     const [currentPage, setCurrentPage] = useState(1);
     const [activeFilter, setActiveFilter] = useState('news');
 
-    const { data, isLoading, isFetching } = useNewsActivity(currentPage, activeFilter, 9);
+    const { data, isLoading } = useNewsActivity(currentPage, activeFilter, 9);
     const news = data?.content || [];
     const totalPages = data?.pageInfo?.offsetPagination?.total
         ? Math.ceil(data.pageInfo.offsetPagination.total / 9)
         : 0;
-    const loading = isLoading || (isFetching && news.length === 0);
-    const showOverlaySpinner = isFetching && news.length > 0;
+    const loading = isLoading;
 
     const handleFilterChange = (filter) => {
         if (filter === activeFilter) return;
@@ -192,11 +191,6 @@ export default function NewsActivityBlock(props) {
 
             {renderPagination()}
 
-            {showOverlaySpinner && (
-                <div className="text-center py-4">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                </div>
-            )}
         </div>
     );
 }

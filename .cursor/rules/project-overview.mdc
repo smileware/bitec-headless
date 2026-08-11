@@ -30,6 +30,6 @@ Next.js App Router frontend for BITEC. Content comes from **WordPress + WPML + G
 
 - Stay in `.js` — do not introduce TypeScript, next-intl, or a `locales/` folder
 - Prefer **relative imports** matching existing files; do not mass-migrate to `@/`
-- Server pages fetch page HTML + inject GreenShift CSS/scripts; blocks are `'use client'` and fetch ACF data themselves
+- Server pages fetch page HTML + inject GreenShift CSS/scripts; blocks are `'use client'` and fetch ACF data through allowlisted same-origin content APIs
 - Preserve GreenShift wrapper classes and page `greenshiftInlineCss` / `ScriptLoader` behavior
 - Env names only: `API_DOMAIN`, `GRAPHQL_CACHE_TTL`, `SKIP_GRAPHQL_CACHE`, `REVALIDATE_SECRET`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`

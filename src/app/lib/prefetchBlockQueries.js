@@ -23,7 +23,7 @@ import {
   getFilteredEvents,
   getAllEventCategories,
   getAllEventYears,
-} from './event';
+} from './eventContent';
 import {
   getNewsActivityContent,
   getNewsActivitySustainability,
@@ -56,22 +56,32 @@ function buildPrefetchJobs(ctx, blockIds) {
 
   // --- Phase 2: simple CPT / list blocks ---
   if (blockIds.has('block-event-carousel')) {
-    add(['recentEvents', 9], () => getRecentEvents(9));
+    add(['recentEvents', 9, language], ({ signal }) =>
+      getRecentEvents(9, { signal, language })
+    );
   }
 
   if (blockIds.has('block-bitec-live-carousel')) {
     add(
-      ['recentBitecLiveEvents', 'Bitec Live', 9],
-      () => getRecentBitecLiveEvents('Bitec Live', 9)
+      ['recentBitecLiveEvents', 'Bitec Live', 9, language],
+      ({ signal }) => getRecentBitecLiveEvents(
+        'Bitec Live',
+        9,
+        { signal, language }
+      )
     );
   }
 
   if (blockIds.has('block-query-hotel-carousel')) {
-    add(['hotels', 8], () => GetHotels(8));
+    add(['hotels', 8], ({ signal }) =>
+      GetHotels(8, { signal, throwOnError: true })
+    );
   }
 
   if (blockIds.has('block-recommended-hotel-carousel')) {
-    add(['recommendedHotels', 8, isTH], () => GetRecommendedHotels(8, isTH));
+    add(['recommendedHotels', 8, isTH], ({ signal }) =>
+      GetRecommendedHotels(8, isTH, { signal, throwOnError: true })
+    );
   }
 
   if (blockIds.has('block-news-activity')) {
@@ -111,79 +121,88 @@ function buildPrefetchJobs(ctx, blockIds) {
         defaultFilters.year,
         defaultFilters.page,
         defaultFilters.perPage,
+        language,
       ],
-      () => getFilteredEvents(defaultFilters),
+      ({ signal }) => getFilteredEvents(defaultFilters, { signal, language }),
       EVENTS_QUERY_STALE_TIME
     );
-    add(['eventCategories'], () => getAllEventCategories());
-    add(['eventYears'], () => getAllEventYears());
+    add(['eventCategories', language], ({ signal }) =>
+      getAllEventCategories({ signal, language })
+    );
+    add(['eventYears', language], ({ signal }) =>
+      getAllEventYears({ signal, language })
+    );
   }
 
   // --- Phase 3: ACF GetPageWith* / map ---
   if (blockIds.has('block-event-hall-carousel')) {
-    add(['eventHallCarousel', slug, isTH], () =>
-      GetPageWithEventHallCarousel(slug, isTH)
+    add(['eventHallCarousel', slug, isTH], ({ signal }) =>
+      GetPageWithEventHallCarousel(slug, isTH, { signal, throwOnError: true })
     );
   }
 
   if (blockIds.has('block-bitec-live-hall-carousel')) {
-    add(['bitecLiveHallCarousel', slug, isTH], () =>
-      GetPageWithBitecLiveHallCarousel(slug, isTH)
+    add(['bitecLiveHallCarousel', slug, isTH], ({ signal }) =>
+      GetPageWithBitecLiveHallCarousel(slug, isTH, { signal, throwOnError: true })
     );
   }
 
   if (blockIds.has('block-retail-information')) {
-    add(['retailInformation', slug, isTH], () =>
-      GetPageWithRetailInformation(slug, isTH)
+    add(['retailInformation', slug, isTH], ({ signal }) =>
+      GetPageWithRetailInformation(slug, isTH, { signal, throwOnError: true })
     );
   }
 
   if (blockIds.has('block-photo-gallery')) {
-    add(['photoGallery', slug, isTH], () =>
-      GetPageWithPhotoGallery(slug, isTH)
+    add(['photoGallery', slug, isTH], ({ signal }) =>
+      GetPageWithPhotoGallery(slug, isTH, { signal, throwOnError: true })
     );
   }
 
   if (blockIds.has('block-simple-gallery-carousel')) {
-    add(['simpleGalleryCarousel', slug], () =>
-      GetPageWithSimpleGalleryCarousel(slug)
+    add(['simpleGalleryCarousel', slug], ({ signal }) =>
+      GetPageWithSimpleGalleryCarousel(slug, { signal, throwOnError: true })
     );
   }
 
   if (blockIds.has('block-bitec-live-gallery')) {
-    add(['bitecLiveGallery', slug, isTH], () =>
-      GetPageWithBitecLiveGallery(slug, isTH)
+    add(['bitecLiveGallery', slug, isTH], ({ signal }) =>
+      GetPageWithBitecLiveGallery(slug, isTH, { signal, throwOnError: true })
     );
   }
 
   if (blockIds.has('block-bitec-live-facilities')) {
-    add(['bitecLiveFacilities', slug, isTH], () =>
-      GetPageWithBitecLiveFacilities(slug, isTH)
+    add(['bitecLiveFacilities', slug, isTH], ({ signal }) =>
+      GetPageWithBitecLiveFacilities(slug, isTH, { signal, throwOnError: true })
     );
   }
 
   if (blockIds.has('block-query-gallery-by-type')) {
     // Config only; dependent taxonomy fetch stays client-side
-    add(['queryGalleryByType', slug, isTH], () =>
-      GetPageWithQueryGalleryByType(slug, isTH)
+    add(['queryGalleryByType', slug, isTH], ({ signal }) =>
+      GetPageWithQueryGalleryByType(slug, isTH, { signal, throwOnError: true })
     );
   }
 
   if (blockIds.has('block-display-gallery')) {
-    add(['displayGalleryByType', slug, isTH], () =>
-      GetPageWithDisplayGalleryByType(slug, isTH)
+    add(['displayGalleryByType', slug, isTH], ({ signal }) =>
+      GetPageWithDisplayGalleryByType(slug, isTH, { signal, throwOnError: true })
     );
   }
 
   if (blockIds.has('block-tab-accordion')) {
-    add(['tabAccordion', 'plan-and-event'], () =>
-      GetPageWithTabToAccordion('plan-and-event')
+    add(['tabAccordion', 'plan-and-event'], ({ signal }) =>
+      GetPageWithTabToAccordion('plan-and-event', { signal, throwOnError: true })
     );
   }
 
   if (blockIds.has('block-hotel-map')) {
-    add(['allHotels', isTH], () => GetAllHotels(isTH));
-    add(['allCategories', isTH], () => GetAllCategories(isTH));
+    add(['allHotels', isTH], ({ signal }) =>
+      GetAllHotels(isTH, { signal, throwOnError: true })
+    );
+    add(['allCategories', isTH], ({ signal }) =>
+      GetAllCategories(isTH, { signal, throwOnError: true })
+    );
   }
 
   return jobs;
@@ -218,7 +237,7 @@ export async function prefetchBlockQueries(queryClient, { content, slug, isTH, l
 
   // Cap wait so slow WP block queries cannot block streaming for many seconds.
   // Whatever finished in time is dehydrated; the rest fall back to client fetch.
-  const budgetMs = parseInt(process.env.BLOCK_PREFETCH_BUDGET_MS || '2000', 10);
+  const budgetMs = parseInt(process.env.BLOCK_PREFETCH_BUDGET_MS || '1500', 10);
 
   const prefetchAll = Promise.allSettled(
     serverJobs.map(({ queryKey, queryFn, staleTime }) =>
@@ -229,21 +248,36 @@ export async function prefetchBlockQueries(queryClient, { content, slug, isTH, l
       })
     )
   ).then((results) => {
-    results.forEach((result, index) => {
+    results.forEach((result) => {
       if (result.status === 'rejected') {
-        console.error(
-          '[prefetchBlockQueries] Failed:',
-          serverJobs[index].queryKey,
-          result.reason
-        );
+        if (result.reason?.name !== 'AbortError') {
+          console.error('[block-prefetch] outcome=error');
+        }
       }
     });
   });
 
+  let timedOut = false;
+  let timer;
   await Promise.race([
     prefetchAll,
-    new Promise((resolve) => setTimeout(resolve, budgetMs)),
+    new Promise((resolve) => {
+      timer = setTimeout(() => {
+        timedOut = true;
+        resolve();
+      }, budgetMs);
+    }),
   ]);
+  clearTimeout(timer);
+
+  if (timedOut) {
+    await Promise.all(
+      serverJobs.map(({ queryKey }) =>
+        queryClient.cancelQueries({ queryKey, exact: true })
+      )
+    );
+    await prefetchAll;
+  }
 }
 
 /**

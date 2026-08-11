@@ -4,7 +4,7 @@ import Image from 'next/image';
 import ShareButtons from "../../components/ShareButtons";
 import EventCard from "../../components/ui/EventCard";
 
-export const revalidate = 1800;
+export const revalidate = 7200;
 
 export function generateStaticParams() {
   return [];
