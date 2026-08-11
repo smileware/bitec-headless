@@ -6,7 +6,33 @@ const endpoint = process.env.API_DOMAIN || 'https://wordpress-1328545-5763448.cl
 // v7 default. See the note in lib/api.js.
 export const client = new GraphQLClient(endpoint, { headers: { Accept: '*/*' } });
 
-// Server-side function to fetch all header data in one query (CACHED)
+// The Cloudways WordPress GraphQL endpoint is intermittently slow/unresponsive.
+// A bare client.request() can hang for 2+ minutes with no timeout. This wraps a
+// request with an abort-based timeout and a single retry so a transient failure
+// throws quickly instead of hanging — and, critically, so it THROWS rather than
+// returning empty data (empty data would get cached and hide the nav for
+// 5-30 min). See getHeaderData below.
+async function requestWithRetry(query, variables, { timeoutMs = 8000, retries = 1 } = {}) {
+    let lastError;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            return await client.request({ document: query, variables, signal: controller.signal });
+        } catch (error) {
+            lastError = error;
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+    throw lastError;
+}
+
+// Server-side function to fetch all header data in one query (CACHED).
+// If the underlying fetch throws, unstable_cache does NOT cache the rejection,
+// so the next request retries the endpoint instead of serving a poisoned
+// (empty) header. The caller (SiteHeader / Suspense) is responsible for a
+// graceful fallback when this rejects.
 export async function getHeaderData(language = 'en') {
     // Use unstable_cache to cache header data (menus don't change often)
     return unstable_cache(
@@ -123,30 +149,28 @@ async function fetchHeaderDataFromGraphQL(language = 'en') {
         mobileMenuId 
     };
 
-    try {
-        const data = await client.request(query, variables);
-        
-        return {
-            primaryMenu: {
-                menuItems: data.primaryMenu?.menuItems?.nodes || []
-            },
-            topMenu: {
-                menuTopItems: data.topMenu?.menuItems?.nodes || []
-            },
-            mobileMenu: {
-                menuMobileItems: data.mobileMenu?.menuItems?.nodes || []
-            },
-            cta: data.themeGeneralSettings
-        };
-    } catch (error) {
-        console.error('Error fetching header data:', error);
-        return {
-            primaryMenu: { menuItems: [] },
-            topMenu: { menuTopItems: [] },
-            mobileMenu: { menuMobileItems: [] },
-            cta: null
-        };
+    const data = await requestWithRetry(query, variables);
+
+    // Treat a response with no primary menu items as a failure too — a "success"
+    // with empty menus would otherwise get cached and hide the nav. Throw so the
+    // cache stays unpoisoned and the next request retries.
+    const primaryItems = data.primaryMenu?.menuItems?.nodes || [];
+    if (primaryItems.length === 0) {
+        throw new Error('Header GraphQL returned no primary menu items');
     }
+
+    return {
+        primaryMenu: {
+            menuItems: primaryItems
+        },
+        topMenu: {
+            menuTopItems: data.topMenu?.menuItems?.nodes || []
+        },
+        mobileMenu: {
+            menuMobileItems: data.mobileMenu?.menuItems?.nodes || []
+        },
+        cta: data.themeGeneralSettings
+    };
 }
 
 export async function getPrimaryMenu(language = 'en') {

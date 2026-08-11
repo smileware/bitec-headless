@@ -109,13 +109,6 @@ async function fetchPageBySlug(slug, language = null) {
         slug
         title
         content
-        blocks(
-          attributes: false
-          dynamicContent: false
-          htmlContent: false
-          originalContent: true
-          postTemplate: false
-        )
         greenshiftInlineCss
         enqueuedStylesheets(first: 50) {
           edges { node { handle, after } }
@@ -144,13 +137,6 @@ async function fetchPageBySlug(slug, language = null) {
           enqueuedStylesheets(first: 50) {
             edges { node { handle, after } }
           }
-          blocks(
-            attributes: false
-            dynamicContent: false
-            htmlContent: false
-            originalContent: true
-            postTemplate: false
-          )
         }
       }
     }

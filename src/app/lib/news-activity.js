@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { gql } from 'graphql-request';
 import { graphQLClient, getGreenshiftScripts, extractGreenshiftCss } from './api';
 
@@ -65,7 +66,13 @@ export async function getNewsActivityContent(page = 1, perPage = 9, language = '
     };
 }
 
-export async function getPostBySlug(slug, language = 'en') {
+// Wrapped in React cache() so metadata + page body (and both language variants
+// that resolve the same base post) share ONE GraphQL request per render instead
+// of hitting the Cloudways endpoint 2x per page load. Combined with the page-level
+// ISR (revalidate) below, Cloudways is hit at most once per post per 5 min.
+export const getPostBySlug = cache(getPostBySlugRaw);
+
+async function getPostBySlugRaw(slug, language = 'en') {
     const query = gql`
         query GetPostBySlug($slug: ID!) {
             post(id: $slug, idType: SLUG) {

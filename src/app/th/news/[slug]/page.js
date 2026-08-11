@@ -3,6 +3,11 @@ import ScriptLoader from '../../../components/ScriptLoader';
 import Image from 'next/image';
 import ShareButtons from "../../../components/ShareButtons";
 
+// ISR: first visitor renders the post on-demand, then it's served from cache and
+// revalidated in the background every 5 min. No generateStaticParams — we don't
+// pre-render all posts at build time (cold WP can't handle that; see project notes).
+export const revalidate = 300;
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const post = await getPostBySlug(slug, 'th');
