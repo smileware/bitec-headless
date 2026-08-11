@@ -1,7 +1,10 @@
 import { gql } from 'graphql-request';
+import { cache } from 'react';
 import { graphQLClient, getGreenshiftScripts, extractGreenshiftCss } from './api';
 
-export async function getEventBySlug(slug) {
+export const getEventBySlug = cache(getEventBySlugRaw);
+
+async function getEventBySlugRaw(slug) {
     const query = gql`
         query GetEventBySlug($slug: String!) {
             eventBy(slug: $slug) {
@@ -581,6 +584,5 @@ export async function getAllEventYears() {
     // Convert to array and sort in descending order (newest first)
     return Array.from(years).sort((a, b) => b - a);
 }
-
 
 

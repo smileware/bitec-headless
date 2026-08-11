@@ -3,12 +3,14 @@ import { resolvePageContext } from '../lib/pageContext';
 import PrefetchedBlockContent from '../components/PrefetchedBlockContent';
 
 // ISR: pages render on first request, then serve from cache and revalidate in
-// the background every 5 min. We deliberately do NOT use generateStaticParams
-// (full build-time SSG) — the WordPress origin can be cold/slow (~90s), which
-// made builds exceed the 60s per-page limit and risked failing deploys. On-demand
-// ISR keeps builds fast and deploy-safe; pair with a cron warmer to keep first
-// visits fast.
+// the background every 5 min. generateStaticParams returns no paths so the build
+// stays light; each slug is generated on its first request and then cached.
 export const revalidate = 300;
+
+// Empty params keeps the build light while enabling on-demand ISR for every slug.
+export function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;

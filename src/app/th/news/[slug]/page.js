@@ -3,10 +3,13 @@ import ScriptLoader from '../../../components/ScriptLoader';
 import Image from 'next/image';
 import ShareButtons from "../../../components/ShareButtons";
 
-// ISR: first visitor renders the post on-demand, then it's served from cache and
-// revalidated in the background every 5 min. No generateStaticParams — we don't
-// pre-render all posts at build time (cold WP can't handle that; see project notes).
+// ISR: no paths are pre-rendered during the build. Each post is generated on its
+// first request, then served from cache and revalidated every 5 min.
 export const revalidate = 300;
+
+export function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -152,4 +155,4 @@ export default async function ThaiNewsPage({ params }) {
             <ScriptLoader scripts={post.greenshiftScripts} />
         </div>
     );
-} 
+}

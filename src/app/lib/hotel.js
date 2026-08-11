@@ -1,8 +1,10 @@
 import { gql } from "graphql-request";
+import { cache } from "react";
 import { graphQLClient, getGreenshiftScripts, extractGreenshiftCss } from "./api";
 
-export async function getHotelBySlug(slug) {
-    console.log(slug);
+export const getHotelBySlug = cache(getHotelBySlugRaw);
+
+async function getHotelBySlugRaw(slug) {
     const query = gql`
         query GetHotelBySlug($slug: String!) {
             hotelBy(slug: $slug) {

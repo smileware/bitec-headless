@@ -1,8 +1,8 @@
 "use client";
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { GetGalleryByTaxonomyType, getGalleryTypeBySlug } from '../../lib/gallery';
 import GalleryCard from '../../components/ui/GalleryCard';
+import { fetchContentApi } from '../../lib/clientContentApi';
 
 function useScreenSize() {
     const [isMobile, setIsMobile] = useState(false);
@@ -25,7 +25,7 @@ export default function GalleryTypeArchive({ params }) {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
-    const [prevCursors, setPrevCursors] = useState([]);
+    const [pageCursors, setPageCursors] = useState({ 1: null });
     const [term, setTerm] = useState(null);
 
 
@@ -33,32 +33,36 @@ export default function GalleryTypeArchive({ params }) {
 
     const fetchGalleries = async (page = 1, pageSize = PAGE_SIZE) => {
         setLoading(true);
-        let after = null;
-        let cursors = [];
-        if (page > 1) {
-            let cursor = null;
-            for (let i = 1; i < page; i++) {
-                const res = await GetGalleryByTaxonomyType(slug, pageSize, cursor);
-                if (!res.pageInfo?.hasNextPage) break;
-                cursor = res.pageInfo.endCursor;
-                cursors.push(cursor);
-            }
-            after = cursors[cursors.length - 1] || null;
-        }
-        const res = await GetGalleryByTaxonomyType(slug, pageSize, after);
+        const after = pageCursors[page] ?? null;
+        const res = await fetchContentApi('/api/content/galleries', {
+            mode: 'archive',
+            slug,
+            limit: pageSize,
+            after,
+        });
         setGalleries(res.galleries);
         setPageInfo(res.pageInfo);
-        setPrevCursors(cursors);
+        if (res.pageInfo?.hasNextPage && res.pageInfo.endCursor) {
+            setPageCursors(previous => ({
+                ...previous,
+                [page]: after,
+                [page + 1]: res.pageInfo.endCursor,
+            }));
+        }
         setLoading(false);
         setTotalPages(res.pageInfo.hasNextPage ? page + 1 : page);
     };
 
     const fetchTerm = async () => {
-        const termData = await getGalleryTypeBySlug(slug);
+        const termData = await fetchContentApi('/api/content/galleries', {
+            mode: 'term',
+            slug,
+        });
         setTerm(termData);
     } 
 
     useEffect(() => {
+        setPageCursors({ 1: null });
         fetchGalleries(1, PAGE_SIZE);
         setCurrentPage(1);
         fetchTerm();

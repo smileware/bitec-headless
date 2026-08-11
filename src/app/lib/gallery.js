@@ -1,7 +1,10 @@
 import { gql } from 'graphql-request';
+import { cache } from 'react';
 import { graphQLClient, getGreenshiftScripts } from './api';
 
-export async function getGalleryBySlug(slug) {
+export const getGalleryBySlug = cache(getGalleryBySlugRaw);
+
+async function getGalleryBySlugRaw(slug) {
     const query = gql`
         query GetGalleryBySlug($slug: String!) {
             galleryBy(slug: $slug) {

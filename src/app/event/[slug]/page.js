@@ -4,6 +4,12 @@ import Image from 'next/image';
 import ShareButtons from "../../components/ShareButtons";
 import EventCard from "../../components/ui/EventCard";
 
+export const revalidate = 300;
+
+export function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const event = await getEventBySlug(slug);

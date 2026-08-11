@@ -3,6 +3,12 @@ import Image from 'next/image';
 import ShareButtons from "../../../components/ShareButtons";
 import GallerySwiper from "../../../components/GallerySwiper";
 
+export const revalidate = 300;
+
+export function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const gallery = await getGalleryBySlug(slug);
@@ -134,4 +140,4 @@ export default async function GalleryPage({ params }) {
             </article>
         </div>
     );
-} 
+}

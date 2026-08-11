@@ -10,13 +10,9 @@ export default function NewsActivitySustainabilityBlock(props) {
     const { data, isLoading, isFetching } = useNewsActivitySustainability(currentPage, 6);
     const news = data?.content || [];
     const pageInfo = data?.pageInfo;
-    const hasNextPage = !!pageInfo?.hasNextPage;
-    // Preserve prior pagination heuristic when offset total is absent
     const totalPages = pageInfo?.offsetPagination?.total
         ? Math.ceil(pageInfo.offsetPagination.total / 6)
-        : hasNextPage
-            ? currentPage + 1
-            : Math.max(currentPage, 1);
+        : 0;
     const loading = isLoading || (isFetching && news.length === 0);
     const showOverlaySpinner = isFetching && news.length > 0;
 
@@ -25,7 +21,7 @@ export default function NewsActivitySustainabilityBlock(props) {
     };
 
     const renderPagination = () => {
-        if (totalPages <= 1 && !hasNextPage) return null;
+        if (totalPages <= 1) return null;
 
         const pages = [];
         const maxVisiblePages = 5;

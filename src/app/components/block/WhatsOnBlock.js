@@ -3,8 +3,8 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import EventCard from '../ui/EventCard';
 import Skeleton from '../ui/Skeleton';
-import { getFilteredEvents } from '../../lib/event';
 import { useFilteredEvents, useEventCategories, useEventYears } from '../../hooks/useBlockQueries';
+import { fetchContentApi } from '../../lib/clientContentApi';
 import { usePathname } from 'next/navigation';
 
 export default function WhatsOnBlock(props) {
@@ -146,7 +146,7 @@ export default function WhatsOnBlock(props) {
         try {
             const nextPage = page + 1;
             const perPage = isMobile ? 6 : 12; // 6 for mobile, 12 for desktop
-            const result = await getFilteredEvents({
+            const result = await fetchContentApi('/api/content/events', {
                 ...filters,
                 page: nextPage,
                 perPage: perPage

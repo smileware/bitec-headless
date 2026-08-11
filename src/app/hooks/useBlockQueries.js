@@ -33,6 +33,41 @@ import {
     getNewsActivityContent,
     getNewsActivitySustainability,
 } from '../lib/news-activity';
+import { fetchContentApi } from '../lib/clientContentApi';
+
+function getNewsActivityQuery(page, perPage, language, filter) {
+    if (typeof window === 'undefined') {
+        return getNewsActivityContent(page, perPage, language, filter);
+    }
+
+    return fetchContentApi('/api/content/news', {
+        page,
+        perPage,
+        language,
+        filter,
+    });
+}
+
+function getSustainabilityQuery(page, perPage, language) {
+    if (typeof window === 'undefined') {
+        return getNewsActivitySustainability(page, perPage, language);
+    }
+
+    return fetchContentApi('/api/content/news', {
+        type: 'sustainability',
+        page,
+        perPage,
+        language,
+    });
+}
+
+function getFilteredEventsQuery(filters) {
+    if (typeof window === 'undefined') {
+        return getFilteredEvents(filters);
+    }
+
+    return fetchContentApi('/api/content/events', filters);
+}
 
 function useSlugAndLanguage() {
     const pathname = usePathname();
@@ -71,7 +106,7 @@ export function useNewsActivity(page = 1, filter = 'news', perPage = 9) {
     const { language } = useSlugAndLanguage();
     return useQuery({
         queryKey: ['newsActivity', page, language, filter, perPage],
-        queryFn: () => getNewsActivityContent(page, perPage, language, filter),
+        queryFn: () => getNewsActivityQuery(page, perPage, language, filter),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
     });
@@ -81,7 +116,7 @@ export function useNewsActivitySustainability(page = 1, perPage = 6) {
     const { language } = useSlugAndLanguage();
     return useQuery({
         queryKey: ['newsActivitySustainability', page, language, perPage],
-        queryFn: () => getNewsActivitySustainability(page, perPage, language),
+        queryFn: () => getSustainabilityQuery(page, perPage, language),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
     });
@@ -132,7 +167,12 @@ export function useQueryGalleryByType() {
 export function useGalleryByTaxonomyType(taxonomySlug, limit = 5, enabled = true) {
     return useQuery({
         queryKey: ['galleryByTaxonomy', taxonomySlug, limit],
-        queryFn: () => GetGalleryByTaxonomyType(taxonomySlug, limit),
+        queryFn: () => typeof window === 'undefined'
+            ? GetGalleryByTaxonomyType(taxonomySlug, limit)
+            : fetchContentApi('/api/content/galleries', {
+                slug: taxonomySlug,
+                limit,
+            }),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
         enabled: enabled && !!taxonomySlug,
@@ -206,7 +246,13 @@ export function useDisplayGalleryByType() {
 export function useGalleriesByTypes(typeSlugs, limit = 1000, enabled = true) {
     return useQuery({
         queryKey: ['galleriesByTypes', typeSlugs, limit],
-        queryFn: () => GetGalleriesByTypes(typeSlugs, limit),
+        queryFn: () => typeof window === 'undefined'
+            ? GetGalleriesByTypes(typeSlugs, limit)
+            : fetchContentApi('/api/content/galleries', {
+                mode: 'types',
+                typeSlugs: typeSlugs?.join(',') || null,
+                limit,
+            }),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
         enabled,
@@ -248,7 +294,7 @@ export function useFilteredEvents(filters = {}, enabled = true) {
 
     return useQuery({
         queryKey,
-        queryFn: () => getFilteredEvents(filters),
+        queryFn: () => getFilteredEventsQuery(filters),
         staleTime: EVENTS_QUERY_STALE_TIME,
         refetchOnMount: false,
         enabled,
