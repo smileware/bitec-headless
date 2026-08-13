@@ -3,6 +3,7 @@ import ScriptLoader from "../../../components/ScriptLoader";
 import Image from 'next/image';
 import ShareButtons from "../../../components/ShareButtons";
 import EventCard from "../../../components/ui/EventCard";
+import { notFound } from 'next/navigation';
 
 export const revalidate = 7200;
 
@@ -47,12 +48,7 @@ export default async function EventPage({ params }) {
     const relatedEvents = event ? await getRelatedEvents(event.id, 3) : [];
 
     if (!event) {
-        return (
-            <div>
-                <h1>Event not found</h1>
-                <p>Could not find event: {slug}</p>
-            </div>
-        );
+        notFound();
     }
 
     return (

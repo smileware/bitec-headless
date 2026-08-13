@@ -1,6 +1,7 @@
 import { getPageBySlug } from './lib/api';
 import { resolvePageContext } from './lib/pageContext';
 import PrefetchedBlockContent from './components/PrefetchedBlockContent';
+import { notFound } from 'next/navigation';
 
 export const revalidate = 7200;
 
@@ -11,7 +12,7 @@ async function HomeContent() {
   const page = await getPageBySlug('/', null);
 
   if (!page) {
-    return <div>Page not found</div>;
+    notFound();
   }
 
   const { slug, isTH, language } = resolvePageContext({

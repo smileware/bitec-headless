@@ -2,6 +2,7 @@ import { getGalleryBySlug } from "../../../lib/gallery";
 import Image from 'next/image';
 import ShareButtons from "../../../components/ShareButtons";
 import GallerySwiper from "../../../components/GallerySwiper";
+import { notFound } from 'next/navigation';
 
 export const revalidate = 7200;
 
@@ -11,7 +12,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const gallery = await getGalleryBySlug(slug);
+  const gallery = await getGalleryBySlug(slug, 'th');
   if (!gallery) return {};
 
   const title = gallery.title || 'แกลเลอรี่';
@@ -39,15 +40,11 @@ export async function generateMetadata({ params }) {
 
 export default async function GalleryPage({ params }) {
     const { slug } = await params;
-    const gallery = await getGalleryBySlug(slug);
+    const gallery = await getGalleryBySlug(slug, 'th');
     const currentLang = 'th';
 
     if (!gallery) {
-        return (
-            <div>
-                <h1>Page not found</h1>
-            </div>
-        );
+        notFound();
     }
 
     const formatGalleryDate = () => {

@@ -167,11 +167,14 @@ export function useQueryGalleryByType() {
 }
 
 export function useGalleryByTaxonomyType(taxonomySlug, limit = 5, enabled = true) {
+    const { language } = useSlugAndLanguage();
+
     return useQuery({
-        queryKey: ['galleryByTaxonomy', taxonomySlug, limit],
+        queryKey: ['galleryByTaxonomy', taxonomySlug, limit, language],
         queryFn: ({ signal }) => fetchContentApi('/api/content/galleries', {
                 slug: taxonomySlug,
                 limit,
+                language,
             }, { signal }),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,
@@ -275,13 +278,16 @@ export function useDisplayGalleryByType() {
 }
 
 export function useGalleriesByTypes(typeSlugs, page = 1, perPage = 12, enabled = true) {
+    const { language } = useSlugAndLanguage();
+
     return useQuery({
-        queryKey: ['galleriesByTypes', typeSlugs, page, perPage],
+        queryKey: ['galleriesByTypes', typeSlugs, page, perPage, language],
         queryFn: ({ signal }) => fetchContentApi('/api/content/galleries', {
                 mode: 'types',
                 typeSlugs: typeSlugs?.join(',') || null,
                 page,
                 perPage,
+                language,
             }, { signal }),
         staleTime: BLOCK_QUERY_STALE_TIME,
         refetchOnMount: false,

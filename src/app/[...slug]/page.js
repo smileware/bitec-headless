@@ -1,6 +1,7 @@
 import { getPageBySlug } from '../lib/api';
 import { resolvePageContext } from '../lib/pageContext';
 import PrefetchedBlockContent from '../components/PrefetchedBlockContent';
+import { notFound } from 'next/navigation';
 
 // ISR: pages render on first request, then serve from cache and revalidate in
 // the background every 30 min. generateStaticParams returns no paths so the build
@@ -91,15 +92,7 @@ async function DynamicPageContent({ params }) {
 
   const page = await getPageBySlug(actualSlug, language);
   if (!page) {
-    return (
-      <div>
-        <h1>Page not found</h1>
-        <p>
-          Could not find page: {actualSlug} in language:{' '}
-          {language || 'default'}
-        </p>
-      </div>
-    );
+    notFound();
   }
 
   let displayBlocks = page.content;

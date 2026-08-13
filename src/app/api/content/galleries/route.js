@@ -10,6 +10,7 @@ import { contentError, contentJson } from '../../../lib/contentApiResponse';
 import {
     readContentEnum,
     readContentInteger,
+    readContentLanguage,
 } from '../../../lib/contentApiValidation';
 
 export const runtime = 'nodejs';
@@ -30,11 +31,14 @@ export async function GET(request) {
         fallback: 12,
         max: 24,
     });
+    const languageResult = readContentLanguage(searchParams);
     if (!modeResult.valid) return contentError('Invalid gallery mode', 400, startedAt);
     if (!limitResult.valid) return contentError('Invalid limit', 400, startedAt);
+    if (!languageResult.valid) return contentError('Invalid language', 400, startedAt);
 
     const mode = modeResult.value;
     const limit = limitResult.value;
+    const language = languageResult.value;
 
     try {
         let data;
@@ -65,6 +69,7 @@ export async function GET(request) {
                 typeSlugs.length > 0 ? typeSlugs : null,
                 pageResult.value,
                 perPageResult.value,
+                language,
                 originOptions
             );
         } else {
@@ -81,12 +86,16 @@ export async function GET(request) {
                 ) {
                     return contentError('Invalid gallery cursor', 400, startedAt);
                 }
-                data = await getGalleryArchive(slug, limit, rawAfter, originOptions);
+                data = await getGalleryArchive(slug, limit, rawAfter, {
+                    ...originOptions,
+                    language,
+                });
             } else if (mode === 'term') {
                 data = await getGalleryTypeBySlug(slug, originOptions);
             } else {
                 data = await getGalleryPreview(slug, limit, {
                     ...originOptions,
+                    language,
                 });
             }
         }

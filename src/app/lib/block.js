@@ -278,11 +278,18 @@ export async function GetPageWithQueryGalleryByType(slug, preferTranslation = fa
 }
 
 export async function GetGalleryByTaxonomyType(taxonomySlug, limit = 12, options = {}) {
+    const language = options.language === 'th' ? 'th' : 'en';
+
     // Query galleries filtered by taxonomy slug
     const taxonomyQuery = gql`
-        query GetGalleryByTaxonomyType($taxonomySlug: [String]!, $limit: Int!) {
+        query GetGalleryByTaxonomyType(
+            $taxonomySlug: [String]!
+            $limit: Int!
+            $language: String!
+        ) {
             galleries(
                 where: {
+                    language: $language
                     taxQuery: {
                         taxArray: [
                             {
@@ -321,6 +328,7 @@ export async function GetGalleryByTaxonomyType(taxonomySlug, limit = 12, options
         const data = await requestGraphQL(taxonomyQuery, {
             taxonomySlug: [taxonomySlug],
             limit,
+            language,
         }, options);
         return data?.galleries?.nodes || [];
     } catch (error) {
@@ -397,16 +405,29 @@ export async function GetPageWithDisplayGalleryByType(slug, preferTranslation = 
     }
 }
 
-export async function GetGalleriesByTypes(typeSlugs = null, page = 1, perPage = 12, options = {}) {
+export async function GetGalleriesByTypes(
+    typeSlugs = null,
+    page = 1,
+    perPage = 12,
+    language = 'en',
+    options = {}
+) {
     const size = Math.min(Math.max(perPage, 1), 24);
     const offset = (Math.max(page, 1) - 1) * size;
+    const contentLanguage = language === 'th' ? 'th' : 'en';
 
     // Query with filters
     const queryWithFilter = gql`
-        query GetGalleriesByTypes($typeSlugs: [String]!, $size: Int!, $offset: Int!) {
+        query GetGalleriesByTypes(
+            $typeSlugs: [String]!
+            $size: Int!
+            $offset: Int!
+            $language: String!
+        ) {
             galleries(
                 where: {
                     offsetPagination: { size: $size, offset: $offset }
+                    language: $language
                     taxQuery: {
                         taxArray: [
                             {
@@ -445,8 +466,13 @@ export async function GetGalleriesByTypes(typeSlugs = null, page = 1, perPage = 
     
     // Query without filters (get all)
     const queryAll = gql`
-        query GetAllGalleries($size: Int!, $offset: Int!) {
-            galleries(where: { offsetPagination: { size: $size, offset: $offset } }) {
+        query GetAllGalleries($size: Int!, $offset: Int!, $language: String!) {
+            galleries(
+                where: {
+                    offsetPagination: { size: $size, offset: $offset }
+                    language: $language
+                }
+            ) {
                 pageInfo {
                     offsetPagination { total }
                 }
@@ -480,12 +506,14 @@ export async function GetGalleriesByTypes(typeSlugs = null, page = 1, perPage = 
                 typeSlugs: typeSlugs,
                 size,
                 offset,
+                language: contentLanguage,
             }, options);
         } else {
             // No types selected, fetch all galleries
             data = await requestGraphQL(queryAll, {
                 size,
                 offset,
+                language: contentLanguage,
             }, options);
         }
         

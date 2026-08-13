@@ -3,6 +3,7 @@ import ScriptLoader from '../../components/ScriptLoader';
 import Image from 'next/image';
 import ShareButtons from "../../components/ShareButtons";
 import GallerySwiper from "../../components/GallerySwiper";
+import { notFound } from 'next/navigation';
 
 export const revalidate = 7200;
 
@@ -44,12 +45,7 @@ export default async function HotelPage({ params }) {
     const hotel = await getHotelBySlug(slug);
 
     if (!hotel) {
-        return (
-            <div>
-                <h1>Hotel not found</h1>
-                <p>Could not find hotel: {slug}</p>
-            </div>
-        );
+        notFound();
     }
 
     return (

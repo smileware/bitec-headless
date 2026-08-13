@@ -3,6 +3,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import GalleryCard from '../../components/ui/GalleryCard';
 import { fetchContentApi } from '../../lib/clientContentApi';
+import NotFoundState from '../../components/ui/NotFoundState';
 
 function useScreenSize() {
     const [isMobile, setIsMobile] = useState(false);
@@ -27,6 +28,7 @@ export default function GalleryTypeArchive({ params }) {
     const [totalPages, setTotalPages] = useState(0);
     const [pageCursors, setPageCursors] = useState({ 1: null });
     const [term, setTerm] = useState(null);
+    const [termLoading, setTermLoading] = useState(true);
 
 
     const PAGE_SIZE = isMobile ? 6 : 12;
@@ -39,6 +41,7 @@ export default function GalleryTypeArchive({ params }) {
             slug,
             limit: pageSize,
             after,
+            language: 'en',
         });
         setGalleries(res.galleries);
         setPageInfo(res.pageInfo);
@@ -54,11 +57,19 @@ export default function GalleryTypeArchive({ params }) {
     };
 
     const fetchTerm = async () => {
-        const termData = await fetchContentApi('/api/content/galleries', {
-            mode: 'term',
-            slug,
-        });
-        setTerm(termData);
+        setTermLoading(true);
+        try {
+            const termData = await fetchContentApi('/api/content/galleries', {
+                mode: 'term',
+                slug,
+                language: 'en',
+            });
+            setTerm(termData);
+        } catch {
+            setTerm(null);
+        } finally {
+            setTermLoading(false);
+        }
     } 
 
     useEffect(() => {
@@ -128,7 +139,7 @@ export default function GalleryTypeArchive({ params }) {
         );
     };
 
-    if (loading && galleries.length === 0) {
+    if ((loading || termLoading) && galleries.length === 0) {
         return (
             <div className="bg-[#F4F4F4] lg:py-[50px] py-[40px] px-[20px]">
                 <div className="max-w-[1340px] mx-auto">
@@ -151,6 +162,10 @@ export default function GalleryTypeArchive({ params }) {
                 </div>
             </div>
         );
+    }
+
+    if (!termLoading && !term) {
+        return <NotFoundState language="en" />;
     }
 
     return (
